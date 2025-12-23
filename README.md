@@ -1,4 +1,4 @@
-# 🌱 Cropify - Agri-Marketing Platform
+# 🌱 E-Manddi -- Agri-Marketing Platform
 
 Cropify is a modern, user-friendly web application designed to bridge the gap between farmers and consumers. It provides a digital marketplace where farmers can sell their produce directly, and customers can buy fresh, high-quality products. The platform supports different user roles, product management, a shopping cart, and a feedback system.
 
