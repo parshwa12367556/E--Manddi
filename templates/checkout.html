@@ -1,0 +1,455 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Checkout - Cropify</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <style>
+        :root {
+            --primary-color: #005f73;
+            --secondary-color: #0a9396;
+            --accent-color: #ee9b00;
+            --light-bg: #f5f7fb;
+            --text-dark: #333;
+        }
+
+        body {
+            background-color: var(--light-bg);
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            color: var(--text-dark);
+        }
+
+        .navbar {
+            background: linear-gradient(135deg, var(--primary-color), var(--secondary-color)) !important;
+            box-shadow: 0 2px 15px rgba(0, 0, 0, 0.1);
+        }
+
+        .page-header {
+            margin-bottom: 2rem;
+            color: var(--primary-color);
+            font-weight: 700;
+            position: relative;
+            padding-bottom: 15px;
+        }
+
+        .page-header::after {
+            content: '';
+            position: absolute;
+            bottom: 0;
+            left: 0;
+            width: 60px;
+            height: 4px;
+            background-color: var(--accent-color);
+            border-radius: 2px;
+        }
+
+        .card {
+            border: none;
+            border-radius: 15px;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.05);
+            margin-bottom: 1.5rem;
+            overflow: hidden;
+        }
+
+        .card-header {
+            background-color: #fff;
+            border-bottom: 1px solid #f0f0f0;
+            padding: 1.25rem 1.5rem;
+            font-weight: 600;
+            color: var(--primary-color);
+            font-size: 1.1rem;
+        }
+
+        .card-body {
+            padding: 1.5rem;
+        }
+
+        .form-control {
+            border-radius: 8px;
+            padding: 0.75rem 1rem;
+            border: 1px solid #dee2e6;
+            background-color: #fcfcfc;
+        }
+
+        .form-control:focus {
+            box-shadow: 0 0 0 3px rgba(10, 147, 150, 0.15);
+            border-color: var(--secondary-color);
+        }
+
+        /* Payment Options */
+        .payment-option {
+            border: 1px solid #e0e0e0;
+            border-radius: 10px;
+            padding: 1rem;
+            margin-bottom: 1rem;
+            cursor: pointer;
+            transition: all 0.2s ease;
+            display: flex;
+            align-items: center;
+        }
+
+        .payment-option:hover {
+            border-color: var(--secondary-color);
+            background-color: rgba(10, 147, 150, 0.02);
+        }
+
+        .payment-option.selected {
+            border-color: var(--secondary-color);
+            background-color: rgba(10, 147, 150, 0.05);
+            box-shadow: 0 4px 10px rgba(0, 0, 0, 0.05);
+            position: relative;
+        }
+
+        .payment-option.selected::after {
+            content: '\f00c';
+            font-family: 'Font Awesome 5 Free';
+            font-weight: 900;
+            position: absolute;
+            right: 15px;
+            color: var(--secondary-color);
+        }
+
+        .form-check-input {
+            margin-right: 1rem;
+        }
+
+        .payment-icon {
+            font-size: 1.2rem;
+            color: var(--primary-color);
+            margin-right: 15px;
+            width: 25px;
+            text-align: center;
+        }
+        .payment-logos {
+            display: flex;
+            align-items: center;
+        }
+
+        /* Order Summary */
+        .checkout-summary {
+            background-color: white;
+            border-radius: 15px;
+            padding: 1.5rem;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.05);
+            position: sticky;
+            top: 20px;
+        }
+
+        .summary-title {
+            font-size: 1.2rem;
+            font-weight: 700;
+            color: var(--primary-color);
+            margin-bottom: 1.5rem;
+            padding-bottom: 1rem;
+            border-bottom: 2px solid #f0f0f0;
+        }
+
+        .list-group-item {
+            border: none;
+            padding: 0.75rem 0;
+            border-bottom: 1px dashed #eee;
+        }
+
+        .list-group-item:last-child {
+            border-bottom: none;
+        }
+
+        .btn-place-order {
+            background: linear-gradient(135deg, var(--primary-color), var(--secondary-color));
+            border: none;
+            border-radius: 10px;
+            padding: 1rem;
+            font-weight: 600;
+            letter-spacing: 0.5px;
+            box-shadow: 0 4px 15px rgba(0, 95, 115, 0.3);
+            transition: transform 0.2s, box-shadow 0.2s;
+            margin-top: 1rem;
+        }
+
+        .btn-place-order:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 6px 20px rgba(0, 95, 115, 0.4);
+            color: white;
+        }
+    </style>
+    <script src="https://checkout.razorpay.com/v1/checkout.js"></script>
+</head>
+
+<body>
+    <nav class="navbar navbar-expand-lg navbar-dark mb-4">
+        <div class="container">
+            <a class="navbar-brand fw-bold" href="{{ url_for('index') }}">E-Mandi</a>
+            <div class="navbar-nav ms-auto">
+                <a class="nav-link" href="{{ url_for('cart') }}">Back to Cart</a>
+            </div>
+        </div>
+    </nav>
+
+    <div class="container mb-5">
+        <h2 class="page-header">Checkout</h2>
+
+        <!-- Flash Messages -->
+        {% with messages = get_flashed_messages(with_categories=true) %}
+        {% if messages %}
+        {% for category, message in messages %}
+        <div class="alert alert-{{ category if category != 'error' else 'danger' }} alert-dismissible fade show">
+            {{ message }}
+            <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+        </div>
+        {% endfor %}
+        {% endif %}
+        {% endwith %}
+
+        <div class="row">
+            <!-- Checkout Form -->
+            <div class="col-md-8">
+                <div class="card mb-4">
+                    <div class="card-header bg-white py-3">
+                        <h5 class="mb-0"><i class="fas fa-map-marker-alt me-2"></i>Shipping Details</h5>
+                    </div>
+                    <div class="card-body">
+                        <form id="checkout-form" action="{{ url_for('checkout') }}" method="POST">
+                            <div class="mb-3">
+                                <label for="shipping_address" class="form-label fw-bold text-muted">Shipping Address
+                                    <span class="text-danger">*</span></label>
+                                <textarea class="form-control" id="shipping_address" name="shipping_address" rows="4"
+                                    placeholder="Enter your full delivery address here..." required></textarea>
+                            </div>
+
+                            <h5 class="mt-4 mb-3 fw-bold text-muted">Payment Method</h5>
+
+                            <div class="payment-option" onclick="selectPayment('cod')">
+                                <input class="form-check-input" type="radio" name="payment_mode" id="cod" value="COD"
+                                    checked>
+                                <label class="form-check-label w-100" for="cod">
+                                    <i class="fas fa-money-bill-wave payment-icon"></i> Cash on Delivery (COD)
+                                </label>
+                            </div>
+
+                            <div class="payment-option" onclick="selectPayment('upi')">
+                                <input class="form-check-input" type="radio" name="payment_mode" id="upi" value="UPI">
+                                <label class="form-check-label w-100" for="upi">
+                                    <i class="fas fa-qrcode payment-icon"></i> UPI (Scan QR Code)
+                                </label>
+                            </div>
+
+                            <div class="payment-option" onclick="selectPayment('online')">
+                                <input class="form-check-input" type="radio" name="payment_mode" id="online"
+                                    value="Razorpay">
+                                <label class="form-check-label w-100 d-flex justify-content-between align-items-center" for="online">
+                                    <div>
+                                        <i class="fas fa-credit-card payment-icon"></i>
+                                        <span>Online Payment</span>
+                                        <div class="text-muted small mt-1">Cards, UPI, Netbanking & Wallets</div>
+                                    </div>
+                                    <div class="payment-logos fs-4 text-muted">
+                                        <i class="fab fa-cc-visa mx-1"></i><i class="fab fa-cc-mastercard mx-1"></i><i class="fab fa-google-pay mx-1"></i>
+                                    </div>
+                                </label>
+                            </div>
+
+                            <!-- UPI QR Section (Hidden by default) -->
+                            <div id="upi-section" class="mb-4 d-none text-center p-3 border rounded bg-light">
+                                <h6>Scan to Pay</h6>
+                                <img src="{{ upi_qr_url }}" alt="UPI QR Code" class="img-fluid mb-2"
+                                    style="max-width: 200px;">
+                                <p class="small text-muted">Scan using any UPI app (GPay, PhonePe, Paytm)</p>
+                                <p class="mb-0"><strong>UPI ID:</strong> {{ upi_id }}</p>
+                            </div>
+
+                            <button type="submit" class="btn btn-primary btn-lg w-100 btn-place-order"
+                                id="place-order-btn">Place Order <i class="fas fa-arrow-right ms-2"></i></button>
+                        </form>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Order Summary -->
+            <div class="col-md-4">
+                <div class="checkout-summary shadow-sm">
+                    <h4 class="summary-title">Order Summary</h4>
+                    <ul class="list-group list-group-flush mb-3">
+                        {% for item in cart_product %}
+                        <li class="list-group-item d-flex justify-content-between lh-sm px-0">
+                            <div>
+                                <h6 class="my-0">{{ item.name }}</h6>
+                                <small class="text-muted">Qty: {{ item.quantity }}</small>
+                            </div>
+                            <span class="text-muted">₹{{ "%.2f"|format(item.total) }}</span>
+                        </li>
+                        {% endfor %}
+
+                        <!-- Subtotal -->
+                        <li class="list-group-item d-flex justify-content-between lh-sm px-0">
+                            <span>Subtotal</span>
+                            <span class="text-muted">₹{{ "%.2f"|format(total_amount) }}</span>
+                        </li>
+
+                        <!-- Shipping Charge -->
+                        <li class="list-group-item d-flex justify-content-between lh-sm px-0">
+                            <div>
+                                <h6 class="my-0">Shipping Charge</h6>
+                                <small class="text-muted">
+                                    {% if shipping_charge == 0 %}
+                                    Free (Orders > ₹600)
+                                    {% else %}
+                                    Standard Delivery
+                                    {% endif %}
+                                </small>
+                            </div>
+                            <span class="text-muted">
+                                {% if shipping_charge == 0 %}
+                                <span class="text-success">Free</span>
+                                {% else %}
+                                ₹{{ "%.2f"|format(shipping_charge) }}
+                                {% endif %}
+                            </span>
+                        </li>
+
+                        <li class="summary-item total d-flex justify-content-between px-0">
+                            <span>Total (INR)</span>
+                            <span class="text-success">₹{{ "%.2f"|format(grand_total) }}</span>
+                        </li>
+                    </ul>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        const placeOrderBtn = document.getElementById('place-order-btn');
+        const upiSection = document.getElementById('upi-section');
+
+        // Helper to handle payment option styling and UI updates
+        function selectPayment(id) {
+            const radio = document.getElementById(id);
+            if (!radio) return;
+            
+            radio.checked = true;
+            document.querySelectorAll('.payment-option').forEach(el => el.classList.remove('selected'));
+            radio.closest('.payment-option').classList.add('selected');
+            
+            // Update UI based on selection
+            updatePaymentUI(radio.value);
+        }
+
+        function updatePaymentUI(selectedValue) {
+            // Toggle UPI QR code display
+            if (selectedValue === 'UPI') {
+                upiSection.classList.remove('d-none');
+            } else {
+                upiSection.classList.add('d-none');
+            }
+
+            // Update button text
+            if (selectedValue === 'Razorpay') {
+                placeOrderBtn.innerHTML = 'Proceed to Secure Payment <i class="fas fa-lock ms-2"></i>';
+            } else {
+                placeOrderBtn.innerHTML = 'Place Order <i class="fas fa-arrow-right ms-2"></i>';
+            }
+        }
+
+        // Initialize selection state and UI on page load
+        document.addEventListener('DOMContentLoaded', () => {
+            const checkedRadio = document.querySelector('input[name="payment_mode"]:checked');
+            if (checkedRadio) {
+                checkedRadio.closest('.payment-option').classList.add('selected');
+                updatePaymentUI(checkedRadio.value);
+            }
+        });
+
+        // Handle Form Submission
+        document.getElementById('checkout-form').addEventListener('submit', function (e) {
+            const paymentMode = document.querySelector('input[name="payment_mode"]:checked').value;
+            const address = document.getElementById('shipping_address').value;
+
+            if (!address.trim()) {
+                alert('Please enter a valid shipping address.');
+                e.preventDefault();
+                return;
+            }
+
+            if (paymentMode === 'Razorpay') {
+                e.preventDefault(); // Stop form submission to handle Razorpay
+
+                // Show loading state on button
+                placeOrderBtn.innerHTML = '<span class="spinner-border spinner-border-sm" role="status" aria-hidden="true"></span> Processing...';
+                placeOrderBtn.disabled = true;
+
+                fetch("{{ url_for('create_payment') }}", { method: 'POST' })
+                    .then(response => response.json())
+                    .then(data => {
+                        if (data.error) {
+                            alert(data.error);
+                            // Restore button state on error
+                            updatePaymentUI('Razorpay');
+                            placeOrderBtn.disabled = false;
+                            return;
+                        }
+
+                        var options = {
+                            "key": data.key_id,
+                            "amount": data.amount,
+                            "currency": "INR",
+                            "name": "E-Mandi",
+                            "description": "Order Payment",
+                            "order_id": data.order_id,
+                            "handler": function (response) {
+                                // Verify Payment
+                                fetch("{{ url_for('verify_payment') }}", {
+                                    method: 'POST',
+                                    headers: { 'Content-Type': 'application/json' },
+                                    body: JSON.stringify({
+                                        razorpay_order_id: response.razorpay_order_id,
+                                        razorpay_payment_id: response.razorpay_payment_id,
+                                        razorpay_signature: response.razorpay_signature,
+                                        shipping_address: address // Send address for saving
+                                    })
+                                })
+                                    .then(res => res.json())
+                                    .then(data => {
+                                        if (data.success) {
+                                            window.location.href = "{{ url_for('orderconformation', order_id=0) }}".replace('0', data.order_id);
+                                        } else {
+                                            alert('Payment verification failed: ' + (data.error || 'Unknown error'));
+                                        }
+                                    })
+                                    .catch(err => {
+                                        console.error(err);
+                                        alert('Error verifying payment.');
+                                    });
+                            },
+                            "modal": {
+                                "ondismiss": function(){
+                                    // Restore button when user closes the Razorpay modal
+                                    updatePaymentUI('Razorpay');
+                                    placeOrderBtn.disabled = false;
+                                }
+                            },
+                            "prefill": {
+                                "email": data.user_email,
+                                "contact": data.user_phone
+                            },
+                            "theme": { "color": "#198754" }
+                        };
+                        var rzp1 = new Razorpay(options);
+                        rzp1.open();
+                    })
+                    .catch(err => {
+                        console.error(err);
+                        alert('Error initiating payment.');
+                        // Restore button state on error
+                        updatePaymentUI('Razorpay');
+                        placeOrderBtn.disabled = false;
+                    });
+            }
+            // For COD and UPI, let the form submit naturally
+        });
+    </script>
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/js/bootstrap.bundle.min.js"></script>
+</body>
+
+</html>

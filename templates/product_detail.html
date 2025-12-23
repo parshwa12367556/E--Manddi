@@ -1,0 +1,261 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{{ product.name }} - Product Details</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <style>
+        :root {
+            --primary-dark: #005f73;
+            --primary-orange: #ee9b00;
+            --light-bg: #f8f9fa;
+            --dark-text: #333333;
+            --warning: #ffc107;
+        }
+        body { background-color: var(--light-bg); }
+        .navbar { background-color: var(--primary-dark) !important; }
+        .product-image {
+            width: 100%;
+            height: auto;
+            max-height: 500px;
+            object-fit: cover;
+            border-radius: 15px;
+            box-shadow: 0 5px 20px rgba(0,0,0,0.1);
+        }
+        .product-details-card {
+            background: white;
+            border-radius: 15px;
+            padding: 30px;
+            box-shadow: 0 5px 20px rgba(0,0,0,0.05);
+        }
+        .rating-stars .fa-star { color: var(--warning); }
+        .review-form, .reviews-section {
+            margin-top: 40px;
+            background: white;
+            border-radius: 15px;
+            padding: 30px;
+            box-shadow: 0 5px 20px rgba(0,0,0,0.05);
+        }
+        .review-item {
+            border-bottom: 1px solid #eee;
+            padding: 20px 0;
+        }
+        .review-item:last-child { border-bottom: none; }
+        .review-author { font-weight: 600; }
+        .star-rating-input {
+            direction: rtl;
+            display: inline-block;
+            padding: 0;
+        }
+        .star-rating-input > input { display: none; }
+        .star-rating-input > label {
+            color: #ddd;
+            cursor: pointer;
+            font-size: 2rem;
+            transition: color 0.2s;
+        }
+        .star-rating-input > input:checked ~ label,
+        .star-rating-input > label:hover,
+        .star-rating-input > label:hover ~ label {
+            color: var(--warning);
+        }
+    </style>
+</head>
+<body>
+    <!-- Navbar -->
+    <nav class="navbar navbar-expand-lg navbar-dark mb-4">
+        <div class="container">
+            <a class="navbar-brand fw-bold" href="{{ url_for('index') }}">E-Mandi</a>
+            <div class="navbar-nav ms-auto">
+                <a class="nav-link" href="{{ url_for('product') }}">Back to Products</a>
+                <a class="nav-link" href="{{ url_for('cart') }}">
+                    <i class="fas fa-shopping-cart"></i> Cart <span id="cart-count" class="badge bg-light text-dark">{{ cart_count }}</span>
+                </a>
+                {% if 'user_id' in session %}
+                <a class="nav-link" href="{{ url_for('logout') }}">Logout</a>
+                {% endif %}
+            </div>
+        </div>
+    </nav>
+
+    <div class="container my-5">
+        <!-- Flash Messages -->
+        {% with messages = get_flashed_messages(with_categories=true) %}
+            {% if messages %}
+                {% for category, message in messages %}
+                    <div class="alert alert-{{ category if category != 'error' else 'danger' }} alert-dismissible fade show">
+                        {{ message }}
+                        <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+                    </div>
+                {% endfor %}
+            {% endif %}
+        {% endwith %}
+
+        <div class="product-details-card">
+            <div class="row">
+                <div class="col-md-6">
+                    <img src="{{ product.image or 'https://via.placeholder.com/500' }}" alt="{{ product.name }}" class="product-image">
+                </div>
+                <div class="col-md-6 d-flex flex-column">
+                    <h1 class="fw-bold">{{ product.name }}</h1>
+                    <span class="badge bg-secondary mb-3" style="width: fit-content;">{{ product.category|capitalize }}</span>
+                    
+                    <div class="d-flex align-items-center mb-3 rating-stars">
+                        {% for i in range(avg_rating|round|int) %}<i class="fas fa-star"></i>{% endfor %}
+                        {% for i in range(5 - (avg_rating|round|int)) %}<i class="far fa-star"></i>{% endfor %}
+                        <span class="ms-2 text-muted">({{ review_count }} reviews)</span>
+                    </div>
+
+                    <h2 class="text-success fw-bold mb-3">₹{{ "%.2f"|format(product.price) }}</h2>
+                    
+                    <p class="text-muted">{{ product.description or 'No description available for this product.' }}</p>
+
+                    <div class="mt-auto">
+                        <p><strong>Availability:</strong> 
+                            {% if product.quantity > 0 %}
+                                <span class="text-success">{{ product.quantity }} in stock</span>
+                            {% else %}
+                                <span class="text-danger">Out of Stock</span>
+                            {% endif %}
+                        </p>
+                        {% if product.quantity > 0 %}
+                        <button data-product-id="{{ product.id }}" class="btn btn-success btn-lg w-100 add-to-cart-btn">
+                            <i class="fas fa-cart-plus me-2"></i> Add to Cart
+                        </button>
+                        {% else %}
+                        <button class="btn btn-secondary btn-lg w-100" disabled>Out of Stock</button>
+                        {% endif %}
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Review Submission Form -->
+        {% if can_review %}
+        <div class="review-form">
+            <h3 class="mb-4">Write a Review</h3>
+            <form action="{{ url_for('product_detail', product_id=product.id) }}" method="POST">
+                <div class="mb-3">
+                    <label class="form-label">Your Rating</label>
+                    <div class="star-rating-input">
+                        <input type="radio" name="rating" id="rating-5" value="5" required><label for="rating-5" class="fas fa-star"></label>
+                        <input type="radio" name="rating" id="rating-4" value="4"><label for="rating-4" class="fas fa-star"></label>
+                        <input type="radio" name="rating" id="rating-3" value="3"><label for="rating-3" class="fas fa-star"></label>
+                        <input type="radio" name="rating" id="rating-2" value="2"><label for="rating-2" class="fas fa-star"></label>
+                        <input type="radio" name="rating" id="rating-1" value="1"><label for="rating-1" class="fas fa-star"></label>
+                    </div>
+                </div>
+                <div class="mb-3">
+                    <label for="review_text" class="form-label">Your Review</label>
+                    <textarea class="form-control" id="review_text" name="review_text" rows="4" placeholder="Share your thoughts about the product..."></textarea>
+                </div>
+                <button type="submit" class="btn btn-primary">Submit Review</button>
+            </form>
+        </div>
+        {% endif %}
+
+        <!-- Existing Reviews -->
+        <div class="reviews-section">
+            <h3 class="mb-4">Customer Reviews ({{ review_count }})</h3>
+            {% if reviews_with_users %}
+                {% for review, user_name in reviews_with_users %}
+                <div class="review-item">
+                    <div class="d-flex justify-content-between">
+                        <span class="review-author">{{ user_name }}</span>
+                        <span class="text-muted small">{{ review.created_at.strftime('%b %d, %Y') }}</span>
+                    </div>
+                    <div class="rating-stars my-2">
+                        {% for i in range(review.rating) %}<i class="fas fa-star"></i>{% endfor %}
+                        {% for i in range(5 - review.rating) %}<i class="far fa-star"></i>{% endfor %}
+                    </div>
+                    <p class="mb-0">{{ review.review_text }}</p>
+                </div>
+                {% endfor %}
+            {% else %}
+                <p class="text-muted">Be the first to review this product!</p>
+            {% endif %}
+        </div>
+    </div>
+
+    <!-- Bootstrap Toast for Notifications -->
+    <div class="position-fixed bottom-0 end-0 p-3" style="z-index: 11">
+        <div id="liveToast" class="toast hide" role="alert" aria-live="assertive" aria-atomic="true">
+            <div class="toast-header">
+                <strong class="me-auto">Notification</strong>
+                <button type="button" class="btn-close" data-bs-dismiss="toast" aria-label="Close"></button>
+            </div>
+            <div class="toast-body" id="toastMessage">
+                <!-- Message goes here -->
+            </div>
+        </div>
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/js/bootstrap.bundle.min.js"></script>
+    <script>
+        document.addEventListener('DOMContentLoaded', function () {
+            const toastEl = document.getElementById('liveToast');
+            const toast = new bootstrap.Toast(toastEl, { delay: 3000 });
+
+            function showToast(message, type = 'info') {
+                const toastMessage = document.getElementById('toastMessage');
+                const toastHeader = toastEl.querySelector('.toast-header');
+
+                toastEl.classList.remove('bg-success', 'bg-danger', 'text-white');
+                toastHeader.classList.remove('bg-success', 'bg-danger', 'text-white');
+
+                if (type === 'success') {
+                    toastEl.classList.add('bg-success', 'text-white');
+                    toastHeader.classList.add('bg-success', 'text-white');
+                } else if (type === 'error') {
+                    toastEl.classList.add('bg-danger', 'text-white');
+                    toastHeader.classList.add('bg-danger', 'text-white');
+                }
+
+                toastMessage.textContent = message;
+                toast.show();
+            }
+
+            const addToCartBtn = document.querySelector('.add-to-cart-btn');
+            if (addToCartBtn) {
+                addToCartBtn.addEventListener('click', function (event) {
+                    event.preventDefault();
+                    const productId = this.dataset.productId;
+                    const originalHtml = this.innerHTML;
+
+                    this.innerHTML = '<span class="spinner-border spinner-border-sm" role="status" aria-hidden="true"></span> Adding...';
+                    this.disabled = true;
+
+                    fetch(`/add_to_cart/${productId}`)
+                        .then(response => response.json())
+                        .then(data => {
+                            if (data.success) {
+                                const cartCountEl = document.getElementById('cart-count');
+                                if (cartCountEl) {
+                                    cartCountEl.textContent = data.cart_count;
+                                }
+                                showToast(data.message, 'success');
+                                this.innerHTML = '<i class="fas fa-check me-2"></i> Added!';
+                                setTimeout(() => {
+                                    this.innerHTML = originalHtml;
+                                    this.disabled = false;
+                                }, 2000);
+                            } else {
+                                showToast(data.message || 'An error occurred.', 'error');
+                                this.innerHTML = originalHtml;
+                                this.disabled = false;
+                            }
+                        })
+                        .catch(error => {
+                            console.error('Error:', error);
+                            showToast('An error occurred. Please try again.', 'error');
+                            this.innerHTML = originalHtml;
+                            this.disabled = false;
+                        });
+                });
+            }
+        });
+    </script>
+</body>
+</html>

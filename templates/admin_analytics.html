@@ -1,0 +1,515 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Analytics - Admin Dashboard</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <style>
+        :root {
+            --primary-dark: #005f73;
+            --primary-orange: #ee9b00;
+            --light-bg: #f5f7fb;
+            --dark-text: #333333;
+            --danger: #dc3545;
+        }
+
+        body {
+            background-color: var(--light-bg);
+            color: var(--dark-text);
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+        }
+
+        .navbar-dark.bg-dark {
+            background: linear-gradient(135deg, var(--primary-dark) 0%, #0a9396 100%) !important;
+        }
+
+        .sidebar {
+            background: white;
+            min-height: 100vh;
+            box-shadow: 2px 0 10px rgba(0, 0, 0, 0.05);
+        }
+
+        .sidebar .nav-link {
+            color: var(--dark-text);
+        }
+
+        .sidebar .nav-link.active,
+        .sidebar .nav-link:hover {
+            background-color: rgba(0, 95, 115, 0.1);
+            color: var(--primary-dark);
+        }
+
+        .card {
+            border: none;
+            border-radius: 12px;
+            box-shadow: 0 2px 10px rgba(0, 0, 0, 0.05);
+        }
+
+        .card-header {
+            background: linear-gradient(90deg, var(--primary-dark), #0a9396);
+            color: white;
+        }
+
+        .chart-container {
+            position: relative;
+            height: 300px;
+        }
+
+        .notification-badge {
+            position: absolute;
+            top: -5px;
+            right: -5px;
+            background: var(--danger);
+            color: white;
+            border-radius: 50%;
+            width: 18px;
+            height: 18px;
+            font-size: 0.7rem;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        /* Footer */
+        footer {
+            background-color: #001219;
+            color: white;
+            padding: 70px 0 20px;
+        }
+
+        .footer-content {
+            display: grid;
+            grid-template-columns: repeat(4, 1fr);
+            gap: 40px;
+            margin-bottom: 40px;
+        }
+
+        .footer-column h3 {
+            font-size: 1.3rem;
+            font-weight: 600;
+            margin-bottom: 25px;
+            position: relative;
+            padding-bottom: 10px;
+        }
+
+        .footer-column h3::after {
+            content: '';
+            position: absolute;
+            width: 40px;
+            height: 3px;
+            background-color: var(--primary-orange);
+            bottom: 0;
+            left: 0;
+        }
+
+        .footer-column p {
+            color: #bbb;
+            line-height: 1.7;
+            margin-bottom: 20px;
+        }
+
+        .footer-links {
+            list-style: none;
+            padding: 0;
+            margin: 0;
+        }
+
+        .footer-links li {
+            margin-bottom: 12px;
+        }
+
+        .footer-links a {
+            color: #bbb;
+            text-decoration: none;
+            transition: all 0.3s ease;
+            display: inline-block;
+        }
+
+        .footer-links a:hover {
+            color: var(--primary-orange);
+            transform: translateX(5px);
+        }
+
+        .contact-info {
+            list-style: none;
+            padding: 0;
+            margin: 0;
+        }
+
+        .contact-info li {
+            display: flex;
+            align-items: flex-start;
+            margin-bottom: 15px;
+            color: #bbb;
+            line-height: 1.6;
+        }
+
+        .contact-info i {
+            margin-right: 12px;
+            color: var(--primary-orange);
+            width: 20px;
+            text-align: center;
+            flex-shrink: 0;
+        }
+
+        .social-links {
+            display: flex;
+            margin-top: 20px;
+        }
+
+        .social-links a {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            width: 40px;
+            height: 40px;
+            background-color: rgba(255, 255, 255, 0.1);
+            border-radius: 50%;
+            margin-right: 10px;
+            transition: all 0.3s ease;
+            text-decoration: none;
+            color: white;
+        }
+
+        .social-links a:hover {
+            background-color: var(--primary-orange);
+            transform: translateY(-5px);
+        }
+
+        .copyright {
+            text-align: center;
+            padding-top: 25px;
+            border-top: 1px solid rgba(255, 255, 255, 0.1);
+            color: #bbb;
+            font-size: 0.9rem;
+        }
+
+        /* Responsive Design */
+        @media (max-width: 1200px) {
+            .hero-title {
+                font-size: 2.8rem;
+            }
+        }
+
+        @media (max-width: 992px) {
+            .footer-content {
+                grid-template-columns: repeat(2, 1fr);
+            }
+
+            .hero-title {
+                font-size: 2.5rem;
+            }
+
+            .feature-card {
+                margin-bottom: 30px;
+            }
+        }
+
+        @media (max-width: 768px) {
+            .hero-section {
+                padding: 80px 0 60px;
+            }
+
+            .hero-title {
+                font-size: 2rem;
+            }
+
+            .hero-subtitle {
+                font-size: 1.1rem;
+            }
+
+            .section-title {
+                font-size: 2rem;
+            }
+
+            .stat-number {
+                font-size: 2.5rem;
+            }
+        }
+
+        @media (max-width: 576px) {
+            .footer-content {
+                grid-template-columns: 1fr;
+            }
+
+            .social-links {
+                justify-content: flex-start;
+            }
+
+            .btn-success,
+            .btn-outline-light {
+                width: 100%;
+                margin-bottom: 10px;
+            }
+
+            .hero-title {
+                font-size: 1.8rem;
+            }
+        }
+
+        /* Animation */
+        @keyframes fadeInUp {
+            from {
+                opacity: 0;
+                transform: translateY(30px);
+            }
+
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        .fade-in {
+            animation: fadeInUp 0.8s ease-out;
+        }
+    </style>
+</head>
+
+<body>
+    <!-- Top Navigation -->
+    <nav class="navbar navbar-expand-lg navbar-dark bg-dark">
+        <div class="container-fluid">
+            <a class="navbar-brand" href="{{ url_for('admin') }}"><i class="fas fa-seedling me-2"></i>Admin
+                Dashboard</a>
+            <div class="d-flex align-items-center">
+                <div class="dropdown me-3 position-relative">
+                    <button class="btn btn-outline-light btn-sm dropdown-toggle position-relative" type="button"
+                        data-bs-toggle="dropdown">
+                        <i class="fas fa-bell"></i>
+                        {% if pending_orders_count > 0 or low_stock_count > 0 %}
+                        <span class="notification-badge">{{ pending_orders_count + low_stock_count }}</span>
+                        {% endif %}
+                    </button>
+                    <div class="dropdown-menu dropdown-menu-end">
+                        <h6 class="dropdown-header">Notifications</h6>
+                        {% if pending_orders_count > 0 %}<a class="dropdown-item"
+                            href="{{ url_for('admin_orders') }}"><i class="fas fa-clock text-warning me-2"></i>{{
+                            pending_orders_count }} pending orders</a>{% endif %}
+                        {% if low_stock_count > 0 %}<a class="dropdown-item" href="{{ url_for('admin_products') }}"><i
+                                class="fas fa-exclamation-triangle text-danger me-2"></i>{{ low_stock_count }} low stock
+                            items</a>{% endif %}
+                        {% if pending_orders_count == 0 and low_stock_count == 0 %}<span
+                            class="dropdown-item text-muted">No new notifications</span>{% endif %}
+                    </div>
+                </div>
+                <div class="dropdown">
+                    <button class="btn btn-outline-light btn-sm dropdown-toggle" type="button"
+                        data-bs-toggle="dropdown">
+                        <i class="fas fa-user-circle me-1"></i> {{ session.user_name }}
+                    </button>
+                    <div class="dropdown-menu dropdown-menu-end">
+                        <a class="dropdown-item" href="{{ url_for('logout') }}"><i
+                                class="fas fa-sign-out-alt me-2"></i>Logout</a>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </nav>
+
+    <div class="container-fluid">
+        <div class="row">
+            <!-- Sidebar -->
+            <nav class="col-lg-2 col-md-3 d-none d-md-block sidebar p-3">
+                <ul class="nav flex-column">
+                    <li class="nav-item"><a class="nav-link {% if active_page == 'dashboard' %}active{% endif %}"
+                            href="{{ url_for('admin') }}"><i class="fas fa-tachometer-alt"></i> Dashboard</a></li>
+                    <li class="nav-item"><a class="nav-link {% if active_page == 'orders' %}active{% endif %}"
+                            href="{{ url_for('admin_orders') }}"><i class="fas fa-shopping-cart"></i> Orders</a></li>
+                    <li class="nav-item"><a class="nav-link {% if active_page == 'products' %}active{% endif %}"
+                            href="{{ url_for('admin_products') }}"><i class="fas fa-box"></i> Products</a></li>
+                    <li class="nav-item"><a class="nav-link {% if active_page == 'users' %}active{% endif %}"
+                            href="{{ url_for('admin_users') }}"><i class="fas fa-users"></i> Users</a></li>
+                    <li class="nav-item"><a class="nav-link {% if active_page == 'analytics' %}active{% endif %}"
+                            href="{{ url_for('admin_analytics') }}"><i class="fas fa-chart-bar"></i> Analytics</a></li>
+                    <li class="nav-item"><a class="nav-link {% if active_page == 'categories' %}active{% endif %}"
+                            href="{{ url_for('admin_categories') }}"><i class="fas fa-tags"></i> Categories</a></li>
+                    <li class="nav-item"><a class="nav-link {% if active_page == 'reviews' %}active{% endif %}"
+                            href="{{ url_for('admin_reviews') }}"><i class="fas fa-star"></i> Reviews</a></li>
+                </ul>
+            </nav>
+
+            <!-- Main Content -->
+            <main class="col-lg-10 col-md-9 ms-sm-auto px-4 py-3">
+                <div class="d-flex justify-content-between align-items-center mb-4">
+                    <div>
+                        <h1 class="h3 mb-1">Analytics</h1>
+                        <p class="text-muted mb-0">Deep dive into your sales and product data.</p>
+                    </div>
+                    <div class="btn-group" role="group" aria-label="Analytics Period">
+                        <a href="{{ url_for('admin_analytics', period='weekly') }}" class="btn btn-outline-primary {% if period == 'weekly' %}active{% endif %}">Weekly</a>
+                        <a href="{{ url_for('admin_analytics', period='monthly') }}" class="btn btn-outline-primary {% if period == 'monthly' or not period %}active{% endif %}">Monthly</a>
+                        <a href="{{ url_for('admin_analytics', period='yearly') }}" class="btn btn-outline-primary {% if period == 'yearly' %}active{% endif %}">Yearly</a>
+                    </div>
+                </div>
+
+                <div class="row">
+                    <!-- Sales Chart -->
+                    <div class="col-lg-8 mb-4">
+                        <div class="card h-100">
+                            <div class="card-header d-flex justify-content-between align-items-center">
+                                <h5 class="mb-0"><i class="fas fa-chart-line me-2"></i>Sales Overview ({{ period|capitalize }})</h5>
+                            </div>
+                            <div class="card-body">
+                                <div class="chart-container">
+                                    <canvas id="analyticsSalesChart"></canvas>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Category Distribution -->
+                    <div class="col-lg-4 mb-4">
+                        <div class="card h-100">
+                            <div class="card-header">
+                                <h5 class="mb-0"><i class="fas fa-chart-pie me-2"></i>Product Category Distribution</h5>
+                            </div>
+                            <div class="card-body">
+                                <div class="chart-container">
+                                    <canvas id="analyticsCategoryChart"></canvas>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </main>
+        </div>
+    </div>
+    <footer>
+        <div class="container">
+            <div class="footer-content">
+                <div class="footer-column">
+                    <h3>E-Mandi - Online Marketplace</h3>
+                    <p>Your one-stop destination for fresh farm products directly from farmers to your doorstep.</p>
+                    <div class="social-links">
+                        <a href="https://www.facebook.com/mr_parshwa_patil/"><i class="fab fa-facebook-f"></i></a>
+                        <a href="https://www.twitter.com/mr_parshwa_patil/"><i class="fab fa-twitter"></i></a>
+                        <a href="https://www.instagram.com/mr_parshwa_patil/"><i class="fab fa-instagram"></i></a>
+                        <a href="#"><i class="fab fa-pinterest"></i></a>
+                    </div>
+                </div>
+                <div class="footer-column">
+                    <h3>Quick Links</h3>
+                    <ul class="footer-links">
+                        <li><a href="{{ url_for('index') }}">Home</a></li>
+                        <li><a href="{{ url_for('product') }}">Products</a></li>
+                        <li><a href="{{ url_for('feedback') }}">Feedback</a></li>
+                        <li><a href="{{ url_for('login') }}">Login</a></li>
+                        <li><a href="{{ url_for('register') }}">Register</a></li>
+                    </ul>
+                </div>
+                <div class="footer-column">
+                    <h3>Customer Service</h3>
+                    <ul class="footer-links">
+                        <li><a href="{{ url_for('shipping_info') }}">Shipping Info</a></li>
+                        <li><a href="{{ url_for('return_policy') }}">Return Policy</a></li>
+                        <li><a href="{{ url_for('faqs') }}">FAQs</a></li>
+                        <li><a href="{{ url_for('privacy_policy') }}">Privacy Policy</a></li>
+                        <li><a href="{{ url_for('terms_and_conditions') }}">Terms & Conditions</a></li>
+                    </ul>
+                </div>
+                <div class="footer-column">
+                    <h3>Contact Info</h3>
+                    <ul class="contact-info">
+                        <li><i class="fas fa-map-marker-alt"></i> XYZ colony, New York</li>
+                        <li><i class="fas fa-phone"></i> +91 23456855</li>
+                        <li><i class="fas fa-envelope"></i> agrimarketing@gmail.com</li>
+                        <li><i class="fas fa-clock"></i> Mon-Sun: 9:00 AM - 11:00 PM</li>
+                    </ul>
+                </div>
+            </div>
+            <div class="copyright">
+                <p>&copy; 2024 E-Mandi - Online Marketplace. All rights reserved.</p>
+            </div>
+        </div>
+    </footer>
+
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/js/bootstrap.bundle.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <script>
+        document.addEventListener('DOMContentLoaded', function () {
+            // Data passed from Flask backend
+            const chartLabels = JSON.parse('{{ chart_labels|default([])|tojson }}');
+            const chartValues = JSON.parse('{{ chart_values|default([])|tojson }}');
+            const productsByCategory = JSON.parse('{{ products_by_category|default({})|tojson }}');
+
+            // Sales Chart for Analytics Page
+            const salesChartEl = document.getElementById('analyticsSalesChart');
+            if (salesChartEl) {
+                const salesCtx = salesChartEl.getContext('2d');
+                new Chart(salesCtx, {
+                    type: 'line',
+                    data: {
+                        labels: chartLabels,
+                        datasets: [{
+                            label: 'Sales (₹)',
+                            data: chartValues,
+                            borderColor: '#28a745',
+                            backgroundColor: 'rgba(40, 167, 69, 0.1)',
+                            borderWidth: 2,
+                            fill: true,
+                            tension: 0.4
+                        }]
+                    },
+                    options: {
+                        responsive: true,
+                        maintainAspectRatio: false,
+                        plugins: {
+                            legend: {
+                                display: false
+                            }
+                        },
+                        scales: {
+                            y: {
+                                beginAtZero: true,
+                                ticks: {
+                                    callback: function (value) {
+                                        return '₹' + value.toLocaleString();
+                                    }
+                                }
+                            },
+                            x: {
+                                grid: {
+                                    display: false
+                                }
+                            }
+                        }
+                    }
+                });
+            }
+
+            // Category Chart for Analytics Page
+            const categoryChartEl = document.getElementById('analyticsCategoryChart');
+            if (categoryChartEl) {
+                const categoryCtx = categoryChartEl.getContext('2d');
+                new Chart(categoryCtx, {
+                    type: 'doughnut',
+                    data: {
+                        labels: productsByCategory.labels,
+                        datasets: [{
+                            data: productsByCategory.data,
+                            backgroundColor: ['#005f73', '#ee9b00', '#94d2bd', '#9d6b53', '#28a745'],
+                            borderWidth: 0
+                        }]
+                    },
+                    options: {
+                        responsive: true,
+                        maintainAspectRatio: false,
+                        cutout: '70%',
+                        plugins: {
+                            legend: {
+                                position: 'bottom'
+                            }
+                        }
+                    }
+                });
+            }
+        });
+    </script>
+</body>
+
+</html>

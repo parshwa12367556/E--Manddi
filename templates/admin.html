@@ -1,0 +1,1645 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Admin Dashboard - Cropify</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <!-- Bootstrap Icons -->
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.10.0/font/bootstrap-icons.css">
+    <!-- Date Range Picker -->
+    <link rel="stylesheet" type="text/css" href="https://cdn.jsdelivr.net/npm/daterangepicker/daterangepicker.css" />
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+    <style>
+        /* Local color variables */
+        :root {
+            --primary-dark: #005f73;
+            --primary-orange: #ee9b00;
+            --secondary-green: #94d2bd;
+            --accent-brown: #9d6b53;
+            --light-bg: #f8f9fa;
+            --dark-text: #333333;
+            --accent: #28a745;
+            --border: #dee2e6;
+            --warning: #ffc107;
+            --danger: #dc3545;
+            --info: #17a2b8;
+        }
+
+        body {
+            background-color: #f5f7fb;
+            color: var(--dark-text);
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+        }
+
+        .navbar-brand {
+            font-weight: 700;
+            font-size: 1.25rem;
+            color: #ffffff !important;
+        }
+
+        .navbar-dark.bg-dark {
+            background: linear-gradient(135deg, var(--primary-dark) 0%, #0a9396 100%) !important;
+            box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+        }
+
+        .sidebar {
+            background: white;
+            min-height: calc(100vh - 56px);
+            box-shadow: 2px 0 10px rgba(0, 0, 0, 0.05);
+            position: sticky;
+            top: 56px;
+        }
+
+        .sidebar .nav-link {
+            color: var(--dark-text);
+            padding: 0.75rem 1rem;
+            border-radius: 8px;
+            margin: 2px 0;
+            transition: all 0.2s;
+        }
+
+        .sidebar .nav-link:hover,
+        .sidebar .nav-link.active {
+            background-color: rgba(0, 95, 115, 0.1);
+            color: var(--primary-dark);
+            font-weight: 600;
+        }
+
+        .sidebar .nav-link i {
+            width: 24px;
+            text-align: center;
+            margin-right: 10px;
+            color: var(--primary-dark);
+        }
+
+        .stat-card {
+            border-radius: 12px;
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08);
+            transition: transform 0.18s ease, box-shadow 0.18s ease;
+            border: none;
+            overflow: hidden;
+        }
+
+        .stat-card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 8px 25px rgba(0, 0, 0, 0.12);
+        }
+
+        .stat-card .card-body {
+            padding: 1.5rem;
+        }
+
+        .stat-card .card-title {
+            font-size: 0.85rem;
+            font-weight: 600;
+            color: #6c757d;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            margin-bottom: 0.5rem;
+        }
+
+        .stat-card .card-text {
+            font-size: 2rem;
+            font-weight: 700;
+            color: var(--dark-text);
+            margin-bottom: 0.5rem;
+        }
+
+        .stat-card .card-subtext {
+            font-size: 0.85rem;
+            color: #6c757d;
+        }
+
+        .stat-card .icon {
+            font-size: 2.5rem;
+            opacity: 0.2;
+            position: absolute;
+            right: 20px;
+            bottom: 20px;
+        }
+
+        /* Stat card color variations */
+        .stat-card.sales {
+            border-top: 4px solid var(--accent);
+        }
+
+        .stat-card.orders {
+            border-top: 4px solid var(--primary-orange);
+        }
+
+        .stat-card.users {
+            border-top: 4px solid var(--info);
+        }
+
+        .stat-card.products {
+            border-top: 4px solid var(--accent-brown);
+        }
+
+        .stat-card.pending {
+            border-top: 4px solid var(--warning);
+        }
+
+        .stat-card.low-stock {
+            border-top: 4px solid var(--danger);
+        }
+
+        .card .card-header {
+            background: linear-gradient(90deg, var(--primary-dark), #0a9396);
+            color: white;
+            border-bottom: 0;
+            font-weight: 600;
+            padding: 1rem 1.25rem;
+        }
+
+        .card {
+            border: none;
+            border-radius: 12px;
+            box-shadow: 0 2px 10px rgba(0, 0, 0, 0.05);
+        }
+
+        .table th {
+            font-weight: 600;
+            color: var(--primary-dark);
+            border-top: none;
+        }
+
+        .table td {
+            vertical-align: middle;
+        }
+
+        .badge {
+            padding: 0.35em 0.65em;
+            font-weight: 500;
+        }
+
+        .badge.status-pending {
+            background-color: var(--warning);
+            color: #000;
+        }
+
+        .badge.status-confirmed {
+            background-color: var(--info);
+            color: white;
+        }
+
+        .badge.status-shipped {
+            background-color: #0d6efd;
+            color: white;
+        }
+
+        .badge.status-processing {
+            background-color: var(--info);
+        }
+
+        .badge.status-delivered {
+            background-color: var(--accent);
+        }
+
+        .badge.status-cancelled {
+            background-color: var(--danger);
+        }
+
+        .action-buttons .btn {
+            padding: 0.25rem 0.5rem;
+            font-size: 0.875rem;
+        }
+
+        .date-range-picker {
+            background: white;
+            border: 1px solid var(--border);
+            border-radius: 6px;
+            padding: 0.5rem;
+            cursor: pointer;
+            display: inline-flex;
+            align-items: center;
+        }
+
+        .date-range-picker i {
+            margin-right: 8px;
+            color: var(--primary-dark);
+        }
+
+        .chart-container {
+            position: relative;
+            height: 250px;
+        }
+
+        .quick-actions .btn {
+            border-radius: 8px;
+            padding: 0.75rem;
+            font-weight: 500;
+        }
+
+        .notification-badge {
+            position: absolute;
+            top: -5px;
+            right: -5px;
+            background: var(--danger);
+            color: white;
+            border-radius: 50%;
+            width: 18px;
+            height: 18px;
+            font-size: 0.7rem;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .dropdown-menu {
+            border: none;
+            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.1);
+            border-radius: 8px;
+        }
+
+        .dropdown-item {
+            padding: 0.5rem 1rem;
+        }
+
+        .dropdown-item:hover {
+            background-color: rgba(0, 95, 115, 0.1);
+        }
+
+        /* Responsive */
+        @media (max-width: 768px) {
+            .stat-card .card-text {
+                font-size: 1.5rem;
+            }
+
+            .sidebar {
+                min-height: auto;
+                margin-bottom: 1rem;
+            }
+        }
+
+        /* Footer */
+        footer {
+            background-color: #001219;
+            color: white;
+            padding: 70px 0 20px;
+        }
+
+        .footer-content {
+            display: grid;
+            grid-template-columns: repeat(4, 1fr);
+            gap: 40px;
+            margin-bottom: 40px;
+        }
+
+        .footer-column h3 {
+            font-size: 1.3rem;
+            font-weight: 600;
+            margin-bottom: 25px;
+            position: relative;
+            padding-bottom: 10px;
+        }
+
+        .footer-column h3::after {
+            content: '';
+            position: absolute;
+            width: 40px;
+            height: 3px;
+            background-color: var(--primary-orange);
+            bottom: 0;
+            left: 0;
+        }
+
+        .footer-column p {
+            color: #bbb;
+            line-height: 1.7;
+            margin-bottom: 20px;
+        }
+
+        .footer-links {
+            list-style: none;
+            padding: 0;
+            margin: 0;
+        }
+
+        .footer-links li {
+            margin-bottom: 12px;
+        }
+
+        .footer-links a {
+            color: #bbb;
+            text-decoration: none;
+            transition: all 0.3s ease;
+            display: inline-block;
+        }
+
+        .footer-links a:hover {
+            color: var(--primary-orange);
+            transform: translateX(5px);
+        }
+
+        .contact-info {
+            list-style: none;
+            padding: 0;
+            margin: 0;
+        }
+
+        .contact-info li {
+            display: flex;
+            align-items: flex-start;
+            margin-bottom: 15px;
+            color: #bbb;
+            line-height: 1.6;
+        }
+
+        .contact-info i {
+            margin-right: 12px;
+            color: var(--primary-orange);
+            width: 20px;
+            text-align: center;
+            flex-shrink: 0;
+        }
+
+        .social-links {
+            display: flex;
+            margin-top: 20px;
+        }
+
+        .social-links a {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            width: 40px;
+            height: 40px;
+            background-color: rgba(255, 255, 255, 0.1);
+            border-radius: 50%;
+            margin-right: 10px;
+            transition: all 0.3s ease;
+            text-decoration: none;
+            color: white;
+        }
+
+        .social-links a:hover {
+            background-color: var(--primary-orange);
+            transform: translateY(-5px);
+        }
+
+        .copyright {
+            text-align: center;
+            padding-top: 25px;
+            border-top: 1px solid rgba(255, 255, 255, 0.1);
+            color: #bbb;
+            font-size: 0.9rem;
+        }
+
+        /* Responsive Design */
+        @media (max-width: 1200px) {
+            .hero-title {
+                font-size: 2.8rem;
+            }
+        }
+
+        @media (max-width: 992px) {
+            .footer-content {
+                grid-template-columns: repeat(2, 1fr);
+            }
+
+            .hero-title {
+                font-size: 2.5rem;
+            }
+
+            .feature-card {
+                margin-bottom: 30px;
+            }
+        }
+
+        @media (max-width: 768px) {
+            .hero-section {
+                padding: 80px 0 60px;
+            }
+
+            .hero-title {
+                font-size: 2rem;
+            }
+
+            .hero-subtitle {
+                font-size: 1.1rem;
+            }
+
+            .section-title {
+                font-size: 2rem;
+            }
+
+            .stat-number {
+                font-size: 2.5rem;
+            }
+        }
+
+        @media (max-width: 576px) {
+            .footer-content {
+                grid-template-columns: 1fr;
+            }
+
+            .social-links {
+                justify-content: flex-start;
+            }
+
+            .btn-success,
+            .btn-outline-light {
+                width: 100%;
+                margin-bottom: 10px;
+            }
+
+            .hero-title {
+                font-size: 1.8rem;
+            }
+        }
+
+        /* Animation */
+        @keyframes fadeInUp {
+            from {
+                opacity: 0;
+                transform: translateY(30px);
+            }
+
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        .fade-in {
+            animation: fadeInUp 0.8s ease-out;
+        }
+    </style>
+</head>
+
+<body>
+    <!-- Top Navigation -->
+    <nav class="navbar navbar-expand-lg navbar-dark bg-dark">
+        <div class="container-fluid">
+            <button class="navbar-toggler me-2" type="button" data-bs-toggle="collapse" data-bs-target="#sidebar">
+                <span class="navbar-toggler-icon"></span>
+            </button>
+            <a class="navbar-brand" href="{{ url_for('admin') }}">
+                <i class="fas fa-seedling me-2"></i>Admin Dashboard
+            </a>
+
+            <div class="d-flex align-items-center">
+                <!-- Notifications Dropdown -->
+                <div class="dropdown me-3 position-relative">
+                    <button class="btn btn-outline-light btn-sm dropdown-toggle position-relative" type="button"
+                        data-bs-toggle="dropdown">
+                        <i class="fas fa-bell"></i>
+                        {% if pending_orders_count > 0 or low_stock_count > 0 %}
+                        <span class="notification-badge">{{ pending_orders_count + low_stock_count }}</span>
+                        {% endif %}
+                    </button>
+                    <div class="dropdown-menu dropdown-menu-end">
+                        <h6 class="dropdown-header">Notifications</h6>
+                        {% if pending_orders_count > 0 %}
+                        <a class="dropdown-item" href="#">
+                            <i class="fas fa-clock text-warning me-2"></i>
+                            {{ pending_orders_count }} pending orders
+                        </a>
+                        {% endif %}
+                        {% if low_stock_count > 0 %}
+                        <a class="dropdown-item" href="#">
+                            <i class="fas fa-exclamation-triangle text-danger me-2"></i>
+                            {{ low_stock_count }} low stock items
+                        </a>
+                        {% endif %}
+                        {% if pending_orders_count == 0 and low_stock_count == 0 %}
+                        <span class="dropdown-item text-muted">No new notifications</span>
+                        {% endif %}
+                        <div class="dropdown-divider"></div>
+                        <a class="dropdown-item" href="#">View all notifications</a>
+                    </div>
+                </div>
+
+                <!-- User Menu -->
+                <div class="dropdown">
+                    <button class="btn btn-outline-light btn-sm dropdown-toggle" type="button"
+                        data-bs-toggle="dropdown">
+                        <i class="fas fa-user-circle me-1"></i>
+                        {{ session.user_name }}
+                    </button>
+                    <div class="dropdown-menu dropdown-menu-end">
+                        <span class="dropdown-item-text">
+                            <small>Logged in as <strong>{{ session.user_role|default('Admin') }}</strong></small>
+                        </span>
+                        <div class="dropdown-divider"></div>
+                        <a class="dropdown-item" href="{{ url_for('index') }}">
+                            <i class="fas fa-external-link-alt me-2"></i>View Site
+                        </a>
+                        <a class="dropdown-item" href="#">
+                            <i class="fas fa-cog me-2"></i>Settings
+                        </a>
+                        <div class="dropdown-divider"></div>
+                        <a class="dropdown-item" href="{{ url_for('logout') }}">
+                            <i class="fas fa-sign-out-alt me-2"></i>Logout
+                        </a>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </nav>
+
+    <div class="container-fluid">
+        <div class="row">
+            <!-- Sidebar -->
+            <div class="col-lg-2 col-md-3 d-none d-md-block sidebar p-0">
+                <div class="p-3">
+                    <h6 class="text-uppercase text-muted mb-3">Main</h6>
+                    <ul class="nav flex-column">
+                        <li class="nav-item">
+                            <a class="nav-link {% if active_page == 'dashboard' or not active_page %}active{% endif %}"
+                                href="{{ url_for('admin') }}">
+                                <i class="fas fa-tachometer-alt"></i>Dashboard
+                            </a>
+                        </li>
+                        <li class="nav-item">
+                            <a class="nav-link {% if active_page == 'orders' %}active{% endif %}"
+                                href="{{ url_for('admin_orders') }}">
+                                <i class="fas fa-shopping-cart"></i>Orders
+                            </a>
+                        </li>
+                        <li class="nav-item">
+                            <a class="nav-link {% if active_page == 'products' %}active{% endif %}"
+                                href="{{ url_for('admin_products') }}">
+                                <i class="fas fa-box"></i>Products
+                            </a>
+                        </li>
+                        <li class="nav-item">
+                            <a class="nav-link {% if active_page == 'users' %}active{% endif %}"
+                                href="{{ url_for('admin_users') }}">
+                                <i class="fas fa-users"></i>Users
+                            </a>
+                        </li>
+                        <li class="nav-item">
+                            <a class="nav-link {% if active_page == 'analytics' %}active{% endif %}"
+                                href="{{ url_for('admin_analytics') }}">
+                                <i class="fas fa-chart-bar"></i>Analytics
+                            </a>
+                        </li>
+                    </ul>
+
+                    <h6 class="text-uppercase text-muted mt-4 mb-3">Management</h6>
+                    <ul class="nav flex-column">
+                        <li class="nav-item">
+                            <a class="nav-link {% if active_page == 'categories' %}active{% endif %}"
+                                href="{{ url_for('admin') }}">
+                                <i class="fas fa-tags"></i>Categories
+                            </a>
+                        </li>
+                        <li class="nav-item">
+                            <a class="nav-link {% if active_page == 'reviews' %}active{% endif %}"
+                                href="{{ url_for('admin') }}">
+                                <i class="fas fa-star"></i>Reviews
+                            </a>
+                        </li>
+                        <li class="nav-item">
+                            <a class="nav-link" href="#">
+                                <i class="fas fa-cog"></i>Settings
+                            </a>
+                        </li>
+                    </ul>
+
+                    <!-- Quick Stats in Sidebar -->
+                    <div class="mt-4 p-3 bg-light rounded">
+                        <small class="text-muted d-block mb-2">Quick Stats</small>
+                        <div class="d-flex justify-content-between mb-1">
+                            <small>Online Users:</small>
+                            <small class="fw-bold">12</small>
+                        </div>
+                        <div class="d-flex justify-content-between mb-1">
+                            <small>Conversion Rate:</small>
+                            <small class="fw-bold">3.2%</small>
+                        </div>
+                        <div class="d-flex justify-content-between">
+                            <small>Avg. Order:</small>
+                            <small class="fw-bold">₹{{ "%.0f"|format(total_sales/total_orders_count if
+                                total_orders_count > 0 else 0) }}</small>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Main Content -->
+            <div id="main-content" class="col-lg-10 col-md-9 ms-sm-auto px-4 py-3">
+                {% block main_content %}
+                <!-- Header with Date Range -->
+                <div class="d-flex justify-content-between align-items-center mb-4">
+                    <div>
+                        <h1 class="h3 mb-1">Dashboard Overview</h1>
+                        <p class="text-muted mb-0">Welcome back, {{ session.user_name }}. Here's what's happening today.
+                        </p>
+                    </div>
+                    <div class="date-range-picker" id="reportrange">
+                        <i class="fas fa-calendar-alt"></i>
+                        <span>Today</span>
+                        <i class="fas fa-caret-down ms-2"></i>
+                    </div>
+                </div>
+
+                <!-- Quick Action Buttons -->
+                <div class="row mb-4 quick-actions">
+                    <div class="col-12">
+                        <div class="d-flex flex-wrap gap-2">
+                            <a class="btn btn-primary" id="admin-addproduct-btn" href="{{ url_for('addproduct') }}">
+                                <i class="fas fa-plus me-2"></i>Add Product
+                            </a>
+                            <button class="btn btn-success" id="admin-create-invoice-btn" type="button">
+                                <i class="fas fa-file-invoice-dollar me-2"></i>Create Invoice
+                            </button>
+                            <button class="btn btn-warning" id="admin-send-promo-btn" type="button">
+                                <i class="fas fa-bullhorn me-2"></i>Send Promotion
+                            </button>
+                            <a class="btn btn-info" id="admin-export-report-btn"
+                                href="{{ url_for('admin_export_report') }}">
+                                <i class="fas fa-download me-2"></i>Export Report
+                            </a>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Stats Cards -->
+                <div class="row">
+                    <div class="col-xl-2 col-md-4 col-sm-6 mb-4">
+                        <div class="card stat-card sales">
+                            <div class="card-body">
+                                <h5 class="card-title">Today's Sales</h5>
+                                <p class="card-text">₹{{ "%.2f"|format(today_sales) }}</p>
+                                <p class="card-subtext">
+                                    {% set change = ((today_sales - yesterday_sales)/yesterday_sales*100 if
+                                    yesterday_sales > 0 else 0) %}
+                                    <i
+                                        class="fas fa-arrow-{{ 'up' if change >= 0 else 'down' }} text-{{ 'success' if change >= 0 else 'danger' }}"></i>
+                                    {{ "%.1f"|format(change) }}% from yesterday
+                                </p>
+                                <i class="fas fa-rupee-sign icon"></i>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col-xl-2 col-md-4 col-sm-6 mb-4">
+                        <div class="card stat-card orders">
+                            <div class="card-body">
+                                <h5 class="card-title">Today's Orders</h5>
+                                <p class="card-text">{{ today_orders_count }}</p>
+                                <p class="card-subtext">
+                                    <i class="fas fa-shopping-cart icon"></i>
+                                    {{ "%.1f"|format(today_orders_count/24) }} per hour
+                                </p>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col-xl-2 col-md-4 col-sm-6 mb-4">
+                        <div class="card stat-card sales">
+                            <div class="card-body">
+                                <h5 class="card-title">Total Sales</h5>
+                                <p class="card-text">₹{{ "%.2f"|format(total_sales) }}</p>
+                                <p class="card-subtext">Lifetime revenue</p>
+                                <i class="fas fa-chart-line icon"></i>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col-xl-2 col-md-4 col-sm-6 mb-4">
+                        <div class="card stat-card orders">
+                            <div class="card-body">
+                                <h5 class="card-title">Total Orders</h5>
+                                <p class="card-text">{{ total_orders_count }}</p>
+                                <p class="card-subtext">
+                                    Avg: ₹{{ "%.0f"|format(total_sales/total_orders_count if total_orders_count > 0 else
+                                    0) }}
+                                </p>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col-xl-2 col-md-4 col-sm-6 mb-4">
+                        <div class="card stat-card users">
+                            <div class="card-body">
+                                <h5 class="card-title">Total Users</h5>
+                                <p class="card-text">{{ total_users_count }}</p>
+                                <p class="card-subtext">
+                                    {% set new_users_today = 5 %}
+                                    +{{ new_users_today }} today
+                                </p>
+                                <i class="fas fa-users icon"></i>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col-xl-2 col-md-4 col-sm-6 mb-4">
+                        <div class="card stat-card products">
+                            <div class="card-body">
+                                <h5 class="card-title">Total Products</h5>
+                                <p class="card-text">{{ total_products_count }}</p>
+                                <p class="card-subtext">
+                                    {{ active_products_count|default(total_products_count) }} active
+                                </p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Second Row Stats -->
+                <div class="row">
+                    <div class="col-xl-2 col-md-4 col-sm-6 mb-4">
+                        <div class="card stat-card sales">
+                            <div class="card-body">
+                                <h5 class="card-title">Week Sales</h5>
+                                <p class="card-text">₹{{ "%.2f"|format(week_sales) }}</p>
+                                <p class="card-subtext">Last 7 days</p>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col-xl-2 col-md-4 col-sm-6 mb-4">
+                        <div class="card stat-card sales">
+                            <div class="card-body">
+                                <h5 class="card-title">Month Sales</h5>
+                                <p class="card-text">₹{{ "%.2f"|format(month_sales) }}</p>
+                                <p class="card-subtext">
+                                    {% set monthly_target = 500000 %}
+                                    {{ "%.0f"|format(month_sales/monthly_target*100 if monthly_target > 0 else 0) }}% of
+                                    target
+                                </p>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col-xl-2 col-md-4 col-sm-6 mb-4">
+                        <div class="card stat-card pending">
+                            <div class="card-body">
+                                <h5 class="card-title">Pending Orders</h5>
+                                <p class="card-text">{{ pending_orders_count }}</p>
+                                <p class="card-subtext">Need attention</p>
+                                <i class="fas fa-clock icon"></i>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col-xl-2 col-md-4 col-sm-6 mb-4">
+                        <div class="card stat-card low-stock">
+                            <div class="card-body">
+                                <h5 class="card-title">Low Stock</h5>
+                                <p class="card-text">{{ low_stock_count }}</p>
+                                <p class="card-subtext">Threshold: {{ low_stock_threshold }}</p>
+                                <i class="fas fa-exclamation-triangle icon"></i>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col-xl-2 col-md-4 col-sm-6 mb-4">
+                        <div class="card stat-card">
+                            <div class="card-body">
+                                <h5 class="card-title">Avg. Rating</h5>
+                                <p class="card-text">4.2</p>
+                                <p class="card-subtext">
+                                    <i class="fas fa-star text-warning"></i>
+                                    <i class="fas fa-star text-warning"></i>
+                                    <i class="fas fa-star text-warning"></i>
+                                    <i class="fas fa-star text-warning"></i>
+                                    <i class="fas fa-star-half-alt text-warning"></i>
+                                </p>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col-xl-2 col-md-4 col-sm-6 mb-4">
+                        <div class="card stat-card">
+                            <div class="card-body">
+                                <h5 class="card-title">Return Rate</h5>
+                                <p class="card-text">2.1%</p>
+                                <p class="card-subtext">
+                                    <i class="fas fa-arrow-down text-success"></i>
+                                    0.3% from last month
+                                </p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Charts and Data Tables -->
+                <div class="row">
+                    <!-- Sales Chart -->
+                    <div class="col-lg-8 mb-4">
+                        <div class="card h-100">
+                            <div class="card-header d-flex justify-content-between align-items-center">
+                                <h5 class="mb-0"><i class="fas fa-chart-line me-2"></i>Sales Overview</h5>
+                                <select class="form-select form-select-sm w-auto" id="chartPeriod">
+                                    <option value="7d">Last 7 days</option>
+                                    <option value="30d" selected>Last 30 days</option>
+                                    <option value="90d">Last 90 days</option>
+                                    <option value="1y">Last year</option>
+                                </select>
+                            </div>
+                            <div class="card-body">
+                                <div class="chart-container">
+                                    <canvas id="salesChart"></canvas>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Top Products -->
+                    <div class="col-lg-4 mb-4">
+                        <div class="card h-100">
+                            <div class="card-header">
+                                <h5 class="mb-0"><i class="fas fa-crown me-2"></i>Top Products</h5>
+                            </div>
+                            <div class="card-body p-0">
+                                <div class="table-responsive">
+                                    <table class="table table-hover mb-0">
+                                        <tbody>
+                                            {% for product in top_products %}
+                                            <tr>
+                                                <td class="align-middle">
+                                                    <img src="{{ product.image or 'https://images.unsplash.com/photo-1449300079323-02e209d9b3a4?ixlib=rb-1.2.1&auto=format&fit=crop&w=500&q=80' }}"
+                                                        alt="{{ product.name }}" width="40" height="40"
+                                                        class="rounded-circle object-fit-cover">
+                                                </td>
+                                                <td class="align-middle">
+                                                    <h6 class="mb-0 fw-bold">{{ product.name }}</h6>
+                                                    <small class="text-muted">{{ "%.0f"|format(product.sales) }} units
+                                                        sold</small>
+                                                </td>
+                                                <td class="align-middle text-end">
+                                                    <span class="badge bg-primary rounded-pill fs-6">₹{{
+                                                        "%.0f"|format(product.revenue) }}</span>
+                                                </td>
+                                            </tr>
+                                            {% endfor %}
+                                        </tbody>
+                                    </table>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Data Tables Row -->
+                <div class="row">
+                    <!-- Recent Orders -->
+                    <div class="col-lg-6 mb-4">
+                        <div class="card h-100">
+                            <div class="card-header d-flex justify-content-between align-items-center">
+                                <h5 class="mb-0"><i class="fas fa-shopping-cart me-2"></i>Recent Orders</h5>
+                                <a href="{{ url_for('admin_orders') }}" class="btn btn-sm btn-outline-primary">View
+                                    All</a>
+                            </div>
+                            <div class="card-body p-0">
+                                <div class="table-responsive">
+                                    <table class="table table-hover mb-0">
+                                        <thead>
+                                            <tr>
+                                                <th>Order ID</th>
+                                                <th>Customer</th>
+                                                <th>Amount</th>
+                                                <th>Status</th>
+                                                <th>Action</th>
+                                            </tr>
+                                        </thead>
+                                        <tbody>
+                                            {% for order, customer_name in recent_orders %}
+                                            <tr>
+                                                <td><strong>#{{ order.id }}</strong></td>
+                                                <td>{{ customer_name }}</td>
+                                                <td>₹{{ "%.2f"|format(order.total_amount) }}</td>
+                                                <td>
+                                                    <span class="badge status-{{ order.status|lower }}">
+                                                        {{ order.status }}
+                                                    </span>
+                                                </td>
+                                                <td class="action-buttons">
+                                                    <button class="btn btn-sm btn-outline-primary view-order-btn"
+                                                        data-order-id="{{ order.id }}">
+                                                        <i class="fas fa-eye"></i>
+                                                    </button>
+                                                    <button class="btn btn-sm btn-outline-secondary update-status-btn"
+                                                        data-order-id="{{ order.id }}"
+                                                        data-current-status="{{ order.status }}" title="Update Status">
+                                                        <i class="fas fa-edit"></i>
+                                                    </button>
+                                                </td>
+                                            </tr>
+                                            {% else %}
+                                            <tr>
+                                                <td colspan="5" class="text-center py-3">
+                                                    <i class="fas fa-shopping-cart fa-2x text-muted mb-2"></i>
+                                                    <p class="text-muted mb-0">No recent orders</p>
+                                                </td>
+                                            </tr>
+                                            {% endfor %}
+                                        </tbody>
+                                    </table>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Recent Users -->
+                    <div class="col-lg-6 mb-4">
+                        <div class="card h-100">
+                            <div class="card-header d-flex justify-content-between align-items-center">
+                                <h5 class="mb-0"><i class="fas fa-users me-2"></i>Recent Users</h5>
+                                <a href="{{ url_for('admin_users') }}" class="btn btn-sm btn-outline-primary">View
+                                    All</a>
+                            </div>
+                            <div class="card-body p-0">
+                                <div class="table-responsive">
+                                    <table class="table table-hover mb-0">
+                                        <thead>
+                                            <tr>
+                                                <th>Name</th>
+                                                <th>Email</th>
+                                                <th>Role</th>
+                                                <th>Joined</th>
+                                                <th>Actions</th>
+                                            </tr>
+                                        </thead>
+                                        <tbody>
+                                            {% for user in users %}
+                                            <tr id="user-row-{{ user.id }}">
+                                                <td>
+                                                    <div class="d-flex align-items-center">
+                                                        <div
+                                                            class="avatar-sm bg-light rounded-circle d-flex align-items-center justify-content-center me-2">
+                                                            <i class="fas fa-user text-muted"></i>
+                                                        </div>
+                                                        {{ user.name }}
+                                                    </div>
+                                                </td>
+                                                <td>{{ user.email }}</td>
+                                                <td>
+                                                    <span
+                                                        class="badge bg-{{ 'primary' if user.role == 'admin' else 'secondary' }}">
+                                                        {{ user.role|capitalize }}
+                                                    </span>
+                                                </td>
+                                                <td>{{ user.created_at.strftime('%Y-%m-%d') }}</td>
+                                                <td class="action-buttons">
+                                                    <button class="btn btn-sm btn-outline-danger remove-user-btn"
+                                                        data-user-id="{{ user.id }}" data-user-name="{{ user.name|e }}">
+                                                        <i class="fas fa-trash"></i>
+                                                    </button>
+                                                    <button class="btn btn-sm btn-outline-secondary ms-1 edit-user-btn"
+                                                        data-user-id="{{ user.id }}">
+                                                        <i class="fas fa-edit"></i>
+                                                    </button>
+                                                </td>
+                                            </tr>
+                                            {% else %}
+                                            <tr>
+                                                <td colspan="5" class="text-center py-3">
+                                                    <i class="fas fa-users fa-2x text-muted mb-2"></i>
+                                                    <p class="text-muted mb-0">No recent users</p>
+                                                </td>
+                                            </tr>
+                                            {% endfor %}
+                                        </tbody>
+                                    </table>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Additional Sections -->
+                <div class="row">
+                    <!-- Category Distribution -->
+                    <div class="col-lg-6 mb-4">
+                        <div class="card h-100">
+                            <div class="card-header">
+                                <h5 class="mb-0"><i class="fas fa-chart-pie me-2"></i>Category Distribution</h5>
+                            </div>
+                            <div class="card-body">
+                                <div class="chart-container">
+                                    <canvas id="categoryChart"></canvas>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Recent Feedback -->
+                    <div class="col-lg-6 mb-4">
+                        <div class="card h-100">
+                            <div class="card-header d-flex justify-content-between align-items-center">
+                                <h5 class="mb-0"><i class="fas fa-star me-2"></i>Recent Feedback</h5>
+                                <span class="badge bg-primary">Avg: 4.2/5</span>
+                            </div>
+                            <div class="card-body">
+                                <div class="list-group list-group-flush">
+                                    {% for feedback_item, user_name in recent_feedback %}
+                                    <div class="list-group-item border-0 px-0 py-2">
+                                        <div class="d-flex justify-content-between mb-1">
+                                            <h6 class="mb-0">{{ user_name }}</h6>
+                                            <div>
+                                                {% for i in range(feedback_item.rating) %}
+                                                <i class="fas fa-star text-warning"></i>
+                                                {% endfor %}
+                                            </div>
+                                        </div>
+                                        <p class="mb-1 text-muted">{{ feedback_item.message|truncate(100) }}</p>
+                                        <small class="text-muted">{{ feedback_item.created_at.strftime('%b %d, %Y')
+                                            }}</small>
+                                    </div>
+                                    {% else %}
+                                    <div class="text-center py-3">
+                                        <i class="fas fa-star fa-2x text-muted mb-2"></i>
+                                        <p class="text-muted mb-0">No recent feedback</p>
+                                    </div>
+                                    {% endfor %}
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                {% endblock %}
+
+                <!-- Modals -->
+                <!-- Edit Product Modal -->
+                <div class="modal fade" id="editProductModal" tabindex="-1" aria-labelledby="editProductModalLabel"
+                    aria-hidden="true">
+                    <div class="modal-dialog">
+                        <div class="modal-content">
+                            <div class="modal-header">
+                                <h5 class="modal-title" id="editProductModalLabel">Edit Product</h5>
+                                <button type="button" class="btn-close" data-bs-dismiss="modal"
+                                    aria-label="Close"></button>
+                            </div>
+                            <div class="modal-body">
+                                <form id="editProductForm">
+                                    <input type="hidden" id="editProductId" name="id">
+                                    <div class="mb-3">
+                                        <label for="editProductName" class="form-label">Product Name</label>
+                                        <input type="text" class="form-control" id="editProductName" name="name"
+                                            required>
+                                    </div>
+                                    <div class="mb-3">
+                                        <label for="editProductCategory" class="form-label">Category</label>
+                                        <select class="form-select" id="editProductCategory" name="category" required>
+                                            <option value="fruits">Fruits</option>
+                                            <option value="vegetables">Vegetables</option>
+                                            <option value="fertilizers">Fertilizers</option>
+                                            <option value="pesticides">Pesticides</option>
+                                            <option value="grains">Grains</option>
+                                            <option value="dairy">Dairy</option>
+                                        </select>
+                                    </div>
+                                    <div class="mb-3">
+                                        <label for="editProductPrice" class="form-label">Price</label>
+                                        <input type="number" step="0.01" class="form-control" id="editProductPrice"
+                                            name="price" required>
+                                    </div>
+                                    <div class="mb-3">
+                                        <label for="editProductQuantity" class="form-label">Quantity</label>
+                                        <input type="number" class="form-control" id="editProductQuantity"
+                                            name="quantity" required>
+                                    </div>
+                                </form>
+                            </div>
+                            <div class="modal-footer">
+                                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+                                <button type="button" class="btn btn-primary" id="saveProductChangesBtn">Save
+                                    changes</button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- View Order Modal -->
+                <div class="modal fade" id="viewOrderModal" tabindex="-1" aria-labelledby="viewOrderModalLabel"
+                    aria-hidden="true">
+                    <div class="modal-dialog modal-dialog-centered">
+                        <div class="modal-content">
+                            <div class="modal-header">
+                                <h5 class="modal-title" id="viewOrderModalLabel">Order Details</h5>
+                                <button type="button" class="btn-close" data-bs-dismiss="modal"
+                                    aria-label="Close"></button>
+                            </div>
+                            <div class="modal-body" id="viewOrderModalBody">
+                                <!-- Order details will be loaded here via JS -->
+                                <p class="text-center"><i class="fas fa-spinner fa-spin"></i> Loading...</p>
+                            </div>
+                            <div class="modal-footer">
+                                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Update Order Status Modal -->
+                <div class="modal fade" id="updateStatusModal" tabindex="-1" aria-labelledby="updateStatusModalLabel"
+                    aria-hidden="true">
+                    <div class="modal-dialog modal-sm modal-dialog-centered">
+                        <div class="modal-content">
+                            <div class="modal-header">
+                                <h5 class="modal-title" id="updateStatusModalLabel">Update Order Status</h5>
+                                <button type="button" class="btn-close" data-bs-dismiss="modal"
+                                    aria-label="Close"></button>
+                            </div>
+                            <div class="modal-body">
+                                <input type="hidden" id="updateStatusOrderId">
+                                <label for="orderStatusSelect" class="form-label">New Status</label>
+                                <select class="form-select" id="orderStatusSelect">
+                                    <option value="Pending">Pending</option>
+                                    <option value="Confirmed">Confirmed</option>
+                                    <option value="Shipped">Shipped</option>
+                                    <option value="Delivered">Delivered</option>
+                                    <option value="Cancelled">Cancelled</option>
+                                </select>
+                            </div>
+                            <div class="modal-footer">
+                                <button type="button" class="btn btn-primary" id="saveOrderStatusBtn">Update</button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Footer -->
+                <footer>
+                    <div class="container">
+                        <div class="footer-content">
+                            <div class="footer-column">
+                                <h3>E-Mandi - Online Marketplace</h3>
+                                <p>Your one-stop destination for fresh farm products directly from farmers to your
+                                    doorstep.
+                                </p>
+                                <div class="social-links">
+                                    <a href="https://www.facebook.com/mr_parshwa_patil/" target="_blank"
+                                        rel="noopener noreferrer"><i class="fab fa-facebook-f"></i></a>
+                                    <a href="https://twitter.com/mr_parshwa_patil/" target="_blank"
+                                        rel="noopener noreferrer"><i class="fab fa-twitter"></i></a>
+                                    <a href="https://www.instagram.com/mr_parshwa_patil/" target="_blank"
+                                        rel="noopener noreferrer"><i class="fab fa-instagram"></i></a>
+                                    <a href="#"><i class="fab fa-pinterest"></i></a>
+                                </div>
+                            </div>
+                            <div class="footer-column">
+                                <h3>Quick Links</h3>
+                                <ul class="footer-links">
+                                    <li><a href="{{ url_for('index') }}">Home</a></li>
+                                    <li><a href="{{ url_for('product') }}">Products</a></li>
+                                    <li><a href="{{ url_for('feedback') }}">Feedback</a></li>
+                                    <li><a href="{{ url_for('login') }}">Login</a></li>
+                                    <li><a href="{{ url_for('register') }}">Register</a></li>
+                                </ul>
+                            </div>
+                            <div class="footer-column">
+                                <h3>Customer Service</h3>
+                                <ul class="footer-links">
+                                    <li><a href="{{ url_for('shipping_info') }}">Shipping Info</a></li>
+                                    <li><a href="{{ url_for('return_policy') }}">Return Policy</a></li>
+                                    <li><a href="{{ url_for('faqs') }}">FAQs</a></li>
+                                    <li><a href="{{ url_for('privacy_policy') }}">Privacy Policy</a></li>
+                                    <li><a href="{{ url_for('terms_and_conditions') }}">Terms & Conditions</a></li>
+                                </ul>
+                            </div>
+                            <div class="footer-column">
+                                <h3>Contact Info</h3>
+                                <ul class="contact-info">
+                                    <li><i class="fas fa-map-marker-alt"></i> XYZ colony, New York</li>
+                                    <li><i class="fas fa-phone"></i> +91 23456855</li>
+                                    <li><i class="fas fa-envelope"></i> agrimarketing@gmail.com</li>
+                                    <li><i class="fas fa-clock"></i> Mon-Sun: 9:00 AM - 11:00 PM</li>
+                                </ul>
+                            </div>
+                        </div>
+                        <div class="copyright">
+                            <p>&copy; 2024 E-Mandi - Online Marketplace. All rights reserved.</p>
+                        </div>
+                    </div>
+                </footer>
+
+                <!-- Bootstrap Toast for Notifications -->
+                <div class="position-fixed bottom-0 end-0 p-3" style="z-index: 11">
+                    <div id="liveToast" class="toast" role="alert" aria-live="assertive" aria-atomic="true">
+                        <div class="toast-header">
+                            <strong class="me-auto">Notification</strong>
+                            <small>Just now</small>
+                            <button type="button" class="btn-close" data-bs-dismiss="toast" aria-label="Close"></button>
+                        </div>
+                        <div class="toast-body" id="toastMessage">
+                            Hello, world! This is a toast message.
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Scripts -->
+                <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/js/bootstrap.bundle.min.js"></script>
+                <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+                <script src="https://cdn.jsdelivr.net/npm/moment@2.29.1/min/moment.min.js"></script>
+                <script src="https://cdn.jsdelivr.net/npm/daterangepicker/daterangepicker.min.js"></script>
+
+                {% block page_scripts %}
+                <!-- Chart data injected as JSON to avoid Jinja inside JS (avoids editor lint errors) -->
+                <script id="adminChartData" type="application/json">
+    {
+        "chart_labels": {{ chart_labels|default([])|tojson }},
+        "chart_values": {{ chart_values|default([])|tojson }},
+        "products_by_category": {{ products_by_category|default({})|tojson }},
+        "urls": {
+        }
+    }
+    </script>
+
+                <script>
+                    // Initialize Toast
+                    var editProductModal, viewOrderModal, updateStatusModal;
+                    document.addEventListener('DOMContentLoaded', function () {
+                        editProductModal = new bootstrap.Modal(document.getElementById('editProductModal'));
+                        viewOrderModal = new bootstrap.Modal(document.getElementById('viewOrderModal'));
+                        updateStatusModal = new bootstrap.Modal(document.getElementById('updateStatusModal'));
+                    });
+
+                    const toastEl = document.getElementById('liveToast');
+                    const toast = new bootstrap.Toast(toastEl, { delay: 3000 });
+
+                    function showToast(message, type = 'info') {
+                        const toastMessage = document.getElementById('toastMessage');
+                        toastMessage.textContent = message;
+                        toast.show();
+                    }
+
+                    // Date Range Picker
+                    // Initialize date range picker if available (guarded to avoid JS errors when libraries are missing)
+                    (function () {
+                        try {
+                            if (window.jQuery && typeof $.fn.daterangepicker === 'function' && window.moment) {
+                                $('#reportrange').daterangepicker({
+                                    startDate: moment(),
+                                    endDate: moment(),
+                                    ranges: {
+                                        'Today': [moment(), moment()],
+                                        'Yesterday': [moment().subtract(1, 'days'), moment().subtract(1, 'days')],
+                                        'Last 7 Days': [moment().subtract(6, 'days'), moment()],
+                                        'Last 30 Days': [moment().subtract(29, 'days'), moment()],
+                                        'This Month': [moment().startOf('month'), moment().endOf('month')],
+                                        'Last Month': [moment().subtract(1, 'month').startOf('month'), moment().subtract(1, 'month').endOf('month')]
+                                    }
+                                }, function (start, end) {
+                                    $('#reportrange span').html(start.format('MMMM D, YYYY') + ' - ' + end.format('MMMM D, YYYY'));
+                                    showToast('Loading data for selected period...');
+                                });
+                            }
+                        } catch (e) {
+                            console.warn('Date range picker not initialized:', e);
+                        }
+                    })();
+
+                    // Chart Initialization
+                    document.addEventListener('DOMContentLoaded', function () {
+                        // Parse injected JSON data safely
+                        let adminChartData = {};
+                        try {
+                            const el = document.getElementById('adminChartData');
+                            adminChartData = el ? JSON.parse(el.textContent || '{}') : {};
+                        } catch (err) {
+                            console.error('Failed to parse admin chart data JSON:', err);
+                            adminChartData = {};
+                        }
+
+                        // Sales Chart
+                        (function () {
+                            const salesEl = document.getElementById('salesChart');
+                            if (!salesEl || !salesEl.getContext) return;
+                            try {
+                                const salesCtx = salesEl.getContext('2d');
+                                const labels = adminChartData.chart_labels || [];
+                                const values = adminChartData.chart_values || [];
+                                new Chart(salesCtx, {
+                                    type: 'line',
+                                    data: {
+                                        labels: labels,
+                                        datasets: [{
+                                            label: 'Sales (₹)',
+                                            data: values,
+                                            borderColor: '#28a745',
+                                            backgroundColor: 'rgba(40, 167, 69, 0.1)',
+                                            borderWidth: 2,
+                                            fill: true,
+                                            tension: 0.4
+                                        }]
+                                    },
+                                    options: {
+                                        responsive: true,
+                                        maintainAspectRatio: false,
+                                        plugins: { legend: { display: false } },
+                                        scales: {
+                                            y: {
+                                                beginAtZero: true,
+                                                grid: { drawBorder: false },
+                                                ticks: { callback: function (v) { return '₹' + v.toLocaleString(); } }
+                                            },
+                                            x: { grid: { display: false } }
+                                        }
+                                    }
+                                });
+                            } catch (err) {
+                                console.error('Error initializing sales chart:', err);
+                            }
+                        })();
+
+                        // Category Chart
+                        (function () {
+                            const categoryEl = document.getElementById('categoryChart');
+                            if (!categoryEl || !categoryEl.getContext) return;
+                            try {
+                                const categoryCtx = categoryEl.getContext('2d');
+                                const cat = adminChartData.products_by_category || {};
+                                const labels = cat.labels || [];
+                                const data = cat.data || [];
+                                new Chart(categoryCtx, {
+                                    type: 'doughnut',
+                                    data: {
+                                        labels: labels,
+                                        datasets: [{
+                                            data: data,
+                                            backgroundColor: ['#005f73', '#ee9b00', '#94d2bd', '#9d6b53', '#28a745'],
+                                            borderWidth: 0
+                                        }]
+                                    },
+                                    options: {
+                                        responsive: true,
+                                        maintainAspectRatio: false,
+                                        cutout: '70%',
+                                        plugins: { legend: { position: 'bottom' } }
+                                    }
+                                });
+                            } catch (err) {
+                                console.error('Error initializing category chart:', err);
+                            }
+                        })();
+
+                        // Chart Period Selector (guarded)
+                        var chartPeriodEl = document.getElementById('chartPeriod');
+                        if (chartPeriodEl) {
+                            chartPeriodEl.addEventListener('change', function (e) {
+                                showToast('Loading ' + e.target.value + ' data...');
+                                // Here you would fetch new data based on period
+                            });
+                        }
+
+                        // Attach action buttons (avoid inline onclick Jinja to keep editor lint clean)
+                        document.querySelectorAll('.view-order-btn').forEach(function (btn) {
+                            btn.addEventListener('click', function () {
+                                var id = this.getAttribute('data-order-id');
+                                viewOrder(id);
+                            });
+                        });
+
+                    });
+
+                    // User Management Functions
+                    function confirmRemoveUser(userId, userName) {
+                        if (confirm(`Are you sure you want to remove user "${userName}"?`)) {
+                            removeUser(userId);
+                        }
+                    }
+
+                    function removeUser(userId) {
+                        fetch(`/admin/remove_user/${userId}`, {
+                            method: 'POST',
+                            headers: {
+                                'Content-Type': 'application/json',
+                            }
+                        })
+                            .then(response => response.json())
+                            .then(data => {
+                                if (data.success) {
+                                    document.getElementById(`user-row-${userId}`).remove();
+                                    showToast('User removed successfully');
+                                } else {
+                                    showToast('Error: ' + data.message, 'error');
+                                }
+                            })
+                            .catch(error => {
+                                showToast('Error removing user: ' + error.message, 'error');
+                            });
+                    }
+
+                    // Event Delegation for all action buttons
+                    const mainContent = document.getElementById('main-content');
+                    mainContent.addEventListener('click', function (event) {
+                        const target = event.target.closest('button');
+                        if (!target) return;
+
+                        // Handle Product Deletion
+                        if (target.classList.contains('delete-product-btn')) {
+                            const productId = target.getAttribute('data-product-id');
+                            const productName = target.getAttribute('data-product-name');
+                            if (confirm(`Are you sure you want to delete the product "${productName}"?`)) {
+                                deleteProduct(productId);
+                            }
+                        }
+
+                        // Handle User Deletion
+                        if (target.classList.contains('remove-user-btn')) {
+                            const userId = target.getAttribute('data-user-id');
+                            const userName = target.getAttribute('data-user-name');
+                            if (confirm(`Are you sure you want to remove user "${userName}"?`)) {
+                                removeUser(userId);
+                            }
+                        }
+
+                        // Handle Product Edit
+                        if (target.classList.contains('edit-product-btn')) {
+                            const productId = target.getAttribute('data-product-id');
+                            openEditProductModal(productId);
+                        }
+
+                        // Handle Order View
+                        if (target.classList.contains('view-order-btn')) {
+                            const orderId = target.getAttribute('data-order-id');
+                            openViewOrderModal(orderId);
+                        }
+
+                        // Handle Order Status Update
+                        if (target.classList.contains('update-status-btn')) {
+                            const orderId = target.getAttribute('data-order-id');
+                            const currentStatus = target.getAttribute('data-current-status');
+                            openUpdateStatusModal(orderId, currentStatus);
+                        }
+
+                        // Handle User Edit
+                        if (target.classList.contains('edit-user-btn')) {
+                            const userId = target.getAttribute('data-user-id');
+                            alert('Edit functionality for user ID ' + userId + ' is not yet implemented.');
+                        }
+
+                        // Handle Save Product Changes
+                        if (target.id === 'saveProductChangesBtn') {
+                            saveProductChanges();
+                        }
+
+                        // Handle Save Order Status
+                        if (target.id === 'saveOrderStatusBtn') {
+                            saveOrderStatus();
+                        }
+
+                        // Handle Quick Actions
+                        if (target.id === 'admin-create-invoice-btn') {
+                            showToast('Generating invoice for latest order...');
+                            fetch('{{ url_for("admin_create_invoice") }}')
+                                .then(r => {
+                                    if (!r.ok) throw new Error('Invoice generation failed');
+                                    return r.blob();
+                                })
+                                .then(blob => {
+                                    const url = window.URL.createObjectURL(blob);
+                                    const a = document.createElement('a'); a.href = url; a.download = 'invoice.txt';
+                                    document.body.appendChild(a); a.click(); a.remove();
+                                    window.URL.revokeObjectURL(url);
+                                    showToast('Invoice downloaded');
+                                })
+                                .catch(err => showToast('Error: ' + err.message, 'error'));
+                        }
+
+                        if (target.id === 'admin-send-promo-btn') {
+                            const msg = prompt('Enter promotion message to send to all users:');
+                            if (!msg) return;
+                            showToast('Sending promotion...');
+                            fetch('{{ url_for("admin_send_promotion") }}', {
+                                method: 'POST',
+                                headers: { 'Content-Type': 'application/json' },
+                                body: JSON.stringify({ message: msg })
+                            })
+                                .then(r => r.json())
+                                .then(data => {
+                                    if (data.success) showToast('Promotion sent to users');
+                                    else showToast('Error: ' + (data.error || data.message), 'error');
+                                }).catch(err => showToast('Error: ' + err.message, 'error'));
+                        }
+                    });
+
+                    // Product Management Function
+                    function deleteProduct(productId) {
+                        fetch(`/admin/delete_product/${productId}`, {
+                            method: 'POST',
+                            headers: { 'Content-Type': 'application/json' }
+                        })
+                            .then(response => response.json())
+                            .then(data => {
+                                if (data.success) {
+                                    document.getElementById(`product-row-${productId}`).remove();
+                                    showToast(data.message, 'success');
+                                } else {
+                                    showToast('Error: ' + (data.error || 'Could not delete product.'), 'error');
+                                }
+                            })
+                            .catch(error => {
+                                showToast('A network error occurred: ' + error.message, 'error');
+                            });
+                    }
+
+                    function openEditProductModal(productId) {
+                        fetch(`/admin/edit_product/${productId}`)
+                            .then(response => response.json())
+                            .then(data => {
+                                if (data.error) {
+                                    showToast('Error: ' + data.error, 'error');
+                                    return;
+                                }
+                                document.getElementById('editProductId').value = data.id;
+                                document.getElementById('editProductName').value = data.name;
+                                document.getElementById('editProductCategory').value = data.category;
+                                document.getElementById('editProductPrice').value = data.price;
+                                document.getElementById('editProductQuantity').value = data.quantity;
+                                editProductModal.show();
+                            });
+                    }
+
+                    function saveProductChanges() {
+                        const productId = document.getElementById('editProductId').value;
+                        const form = document.getElementById('editProductForm');
+                        const data = {
+                            name: form.name.value,
+                            category: form.category.value,
+                            price: form.price.value,
+                            quantity: form.quantity.value
+                        };
+
+                        fetch(`/admin/edit_product/${productId}`, {
+                            method: 'POST',
+                            headers: { 'Content-Type': 'application/json' },
+                            body: JSON.stringify(data)
+                        })
+                            .then(response => response.json())
+                            .then(result => {
+                                if (result.success) {
+                                    showToast(result.message, 'success');
+                                    editProductModal.hide();
+                                    // Optionally, refresh the page or update the table row dynamically
+                                    location.reload();
+                                } else {
+                                    showToast('Error: ' + (result.error || 'Update failed'), 'error');
+                                }
+                            });
+                    }
+
+                    function openViewOrderModal(orderId) {
+                        const modalBody = document.getElementById('viewOrderModalBody');
+                        modalBody.innerHTML = '<p class="text-center"><i class="fas fa-spinner fa-spin"></i> Loading...</p>';
+                        viewOrderModal.show();
+                        fetch(`/admin/order/${orderId}`)
+                            .then(response => response.json())
+                            .then(data => {
+                                if (data.error) {
+                                    modalBody.innerHTML = `<p class="text-danger">${data.error}</p>`;
+                                    return;
+                                }
+                                modalBody.innerHTML = `
+                                    <p><strong>Order ID:</strong> #${data.id}</p>
+                                    <p><strong>Customer:</strong> ${data.buyer.name} (${data.buyer.email})</p>
+                                    <p><strong>Amount:</strong> ₹${data.total_amount.toFixed(2)}</p>
+                                    <p><strong>Status:</strong> <span class="badge status-${data.status.toLowerCase()}">${data.status}</span></p>
+                                    <p><strong>Payment Mode:</strong> ${data.payment_mode}</p>
+                                    <p><strong>Date:</strong> ${new Date(data.created_at).toLocaleString()}</p>
+                                `;
+                            });
+                    }
+
+                    function openUpdateStatusModal(orderId, currentStatus) {
+                        document.getElementById('updateStatusOrderId').value = orderId;
+                        document.getElementById('orderStatusSelect').value = currentStatus;
+                        updateStatusModal.show();
+                    }
+
+                    function saveOrderStatus() {
+                        const orderId = document.getElementById('updateStatusOrderId').value;
+                        const newStatus = document.getElementById('orderStatusSelect').value;
+                        fetch(`/admin/update_order_status/${orderId}`, {
+                            method: 'POST',
+                            headers: { 'Content-Type': 'application/json' },
+                            body: JSON.stringify({ status: newStatus })
+                        })
+                            .then(response => response.json())
+                            .then(data => {
+                                if (data.success) {
+                                    showToast(data.message, 'success');
+                                    updateStatusModal.hide();
+                                    location.reload(); // Easiest way to reflect change
+                                } else {
+                                    showToast('Error: ' + data.error, 'error');
+                                }
+                            });
+                    }
+
+                    // Auto-refresh data every 60 seconds
+                    setInterval(() => {
+                        // You can implement auto-refresh logic here
+                        // For now, just update the time in footer
+                        document.querySelector('footer .text-muted').innerHTML =
+                            `&copy; ${new Date().getFullYear()} Cropify Admin Dashboard. ` +
+                            `Last updated: ${new Date().toLocaleTimeString()}`;
+                    }, 60000);
+
+                    // Keyboard shortcuts
+                    document.addEventListener('keydown', function (e) {
+                        // Ctrl + E: Export report
+                        if (e.ctrlKey && e.key === 'e') {
+                            e.preventDefault();
+                            showToast('Exporting report...');
+                        }
+                        // Ctrl + N: New product
+                        if (e.ctrlKey && e.key === 'n') {
+                            e.preventDefault();
+                            showToast('Creating new product...');
+                        }
+                    });
+                </script>
+                {% endblock %}
+</body>
+
+</html>

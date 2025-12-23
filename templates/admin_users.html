@@ -1,0 +1,720 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Admin - Users</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <style>
+        :root {
+            --primary-dark: #005f73;
+            --primary-orange: #ee9b00;
+            --light-bg: #f5f7fb;
+            --dark-text: #333333;
+            --primary-dark: #1e5631;
+            --primary-orange: #f0932b;
+            --light-bg: #f4f7f6;
+            --dark-text: #2d3436;
+            --danger: #dc3545;
+            --primary-color: #4361ee;
+            --secondary-color: #3f37c9;
+            --danger-color: #f72585;
+            --border-color: #dee2e6;
+            --shadow-color: rgba(0, 0, 0, 0.08);
+        }
+
+        body {
+            background-color: var(--light-bg);
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+        }
+
+        .navbar-dark.bg-dark {
+            background: linear-gradient(135deg, var(--primary-dark) 0%, #0a9396 100%) !important;
+            background: linear-gradient(135deg, #1e5631 0%, #2d6a4f 100%) !important;
+        }
+
+        .sidebar {
+            background: white;
+            min-height: 100vh;
+            box-shadow: 2px 0 10px rgba(0, 0, 0, 0.05);
+        }
+
+        .sidebar .nav-link {
+            color: var(--dark-text);
+        }
+
+        .sidebar .nav-link.active,
+        .sidebar .nav-link:hover {
+            background-color: rgba(0, 95, 115, 0.1);
+            background-color: rgba(30, 86, 49, 0.1);
+            color: var(--primary-dark);
+        }
+
+        .notification-badge {
+            position: absolute;
+            top: -5px;
+            right: -5px;
+            background: var(--danger);
+            color: white;
+            border-radius: 50%;
+            width: 18px;
+            height: 18px;
+            font-size: 0.7rem;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .header-area {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 30px;
+            background: white;
+            padding: 20px;
+            border-radius: 12px;
+            box-shadow: 0 4px 12px var(--shadow-color);
+            box-shadow: 0 10px 30px rgba(0,0,0,0.05);
+        }
+
+        .page-subtitle {
+            color: #6c757d;
+            font-size: 0.95rem;
+        }
+
+        .card-custom {
+            border: none;
+            border-radius: 12px;
+            overflow: hidden;
+            box-shadow: 0 6px 15px var(--shadow-color);
+            margin-bottom: 30px;
+        }
+
+        .table-responsive {
+            overflow-x: auto;
+        }
+
+        .table-custom thead th {
+            background-color: #f8fafc;
+            border-bottom: 2px solid var(--border-color);
+            padding: 16px 20px;
+            font-weight: 700;
+            color: #495057;
+            text-transform: uppercase;
+            font-size: 0.85rem;
+        }
+
+        .table-custom tbody td {
+            padding: 18px 20px;
+            vertical-align: middle;
+        }
+
+        .user-avatar {
+            width: 40px;
+            height: 40px;
+            border-radius: 50%;
+            background-color: var(--primary-color);
+            color: white;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: 600;
+            font-size: 1rem;
+        }
+
+        .badge-role {
+            padding: 6px 12px;
+            border-radius: 6px;
+            font-size: 0.75rem;
+            font-weight: 600;
+            text-transform: capitalize;
+        }
+
+        .badge-admin {
+            background-color: rgba(247, 37, 133, 0.15);
+            color: #c2185b;
+        }
+
+        .badge-farmer {
+            background-color: rgba(248, 150, 30, 0.15);
+            color: #e67e00;
+        }
+
+        .badge-buyer {
+            background-color: rgba(108, 117, 125, 0.15);
+            color: #495057;
+        }
+
+        .action-buttons .btn {
+            width: 36px;
+            height: 36px;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            border-radius: 8px;
+        }
+
+        .pagination-custom .page-item.active .page-link {
+            background-color: var(--primary-color);
+            border-color: var(--primary-color);
+        }
+
+        .pagination-custom .page-link {
+            color: var(--primary-color);
+            border-radius: 8px;
+            margin: 0 4px;
+            border: 1px solid #e2e8f0;
+        }
+
+        .card-footer-custom {
+            background-color: #f8fafc;
+            border-top: 1px solid #f1f3f9;
+            padding: 20px;
+        }
+
+        footer {
+            background-color: #001219;
+            color: white;
+            padding: 70px 0 20px;
+        }
+
+        .footer-content {
+            display: grid;
+            grid-template-columns: repeat(4, 1fr);
+            gap: 40px;
+            margin-bottom: 40px;
+        }
+
+        .footer-column h3 {
+            font-size: 1.3rem;
+            font-weight: 600;
+            margin-bottom: 25px;
+            position: relative;
+            padding-bottom: 10px;
+        }
+
+        .footer-column h3::after {
+            content: '';
+            position: absolute;
+            width: 40px;
+            height: 3px;
+            background-color: var(--primary-orange);
+            bottom: 0;
+            left: 0;
+        }
+
+        .footer-column p {
+            color: #bbb;
+            line-height: 1.7;
+            margin-bottom: 20px;
+        }
+
+        .footer-links {
+            list-style: none;
+            padding: 0;
+            margin: 0;
+        }
+
+        .footer-links li {
+            margin-bottom: 12px;
+        }
+
+        .footer-links a {
+            color: #bbb;
+            text-decoration: none;
+            transition: all 0.3s ease;
+            display: inline-block;
+        }
+
+        .footer-links a:hover {
+            color: var(--primary-orange);
+            transform: translateX(5px);
+        }
+
+        .contact-info {
+            list-style: none;
+            padding: 0;
+            margin: 0;
+        }
+
+        .contact-info li {
+            display: flex;
+            align-items: flex-start;
+            margin-bottom: 15px;
+            color: #bbb;
+            line-height: 1.6;
+        }
+
+        .contact-info i {
+            margin-right: 12px;
+            color: var(--primary-orange);
+            width: 20px;
+            text-align: center;
+            flex-shrink: 0;
+        }
+
+        .social-links {
+            display: flex;
+            margin-top: 20px;
+        }
+
+        .social-links a {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            width: 40px;
+            height: 40px;
+            background-color: rgba(255, 255, 255, 0.1);
+            border-radius: 50%;
+            margin-right: 10px;
+            transition: all 0.3s ease;
+            text-decoration: none;
+            color: white;
+        }
+
+        .social-links a:hover {
+            background-color: var(--primary-orange);
+            transform: translateY(-5px);
+        }
+
+        .copyright {
+            text-align: center;
+            padding-top: 25px;
+            border-top: 1px solid rgba(255, 255, 255, 0.1);
+            color: #bbb;
+            font-size: 0.9rem;
+        }
+
+        @media (max-width: 1200px) {
+            .hero-title {
+                font-size: 2.8rem;
+            }
+        }
+
+        @media (max-width: 992px) {
+            .footer-content {
+                grid-template-columns: repeat(2, 1fr);
+            }
+        }
+
+        @media (max-width: 576px) {
+            .footer-content {
+                grid-template-columns: 1fr;
+            }
+        }
+
+        @keyframes fadeInUp {
+            from {
+                opacity: 0;
+                transform: translateY(30px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        .fade-in {
+            animation: fadeInUp 0.8s ease-out;
+        }
+    </style>
+</head>
+
+<body>
+    <!-- Top Navigation -->
+    <nav class="navbar navbar-expand-lg navbar-dark bg-dark">
+        <div class="container-fluid">
+            <a class="navbar-brand" href="{{ url_for('admin') }}"><i class="fas fa-seedling me-2"></i>Admin Dashboard</a>
+            <div class="d-flex align-items-center">
+                <div class="dropdown me-3 position-relative">
+                    <button class="btn btn-outline-light btn-sm dropdown-toggle position-relative" type="button"
+                        data-bs-toggle="dropdown">
+                        <i class="fas fa-bell"></i>
+                        {% if pending_orders_count > 0 or low_stock_count > 0 %}
+                        <span class="notification-badge">{{ pending_orders_count + low_stock_count }}</span>
+                        {% endif %}
+                    </button>
+                    <div class="dropdown-menu dropdown-menu-end">
+                        <h6 class="dropdown-header">Notifications</h6>
+                        {% if pending_orders_count > 0 %}
+                        <a class="dropdown-item" href="#"><i class="fas fa-clock text-warning me-2"></i>{{ pending_orders_count }} pending orders</a>
+                        {% endif %}
+                        {% if low_stock_count > 0 %}
+                        <a class="dropdown-item" href="#"><i class="fas fa-exclamation-triangle text-danger me-2"></i>{{ low_stock_count }} low stock items</a>
+                        {% endif %}
+                        {% if pending_orders_count == 0 and low_stock_count == 0 %}
+                        <span class="dropdown-item text-muted">No new notifications</span>
+                        {% endif %}
+                    </div>
+                </div>
+                <div class="dropdown">
+                    <button class="btn btn-outline-light btn-sm dropdown-toggle" type="button" data-bs-toggle="dropdown">
+                        <i class="fas fa-user-circle me-1"></i> {{ session.user_name }}
+                    </button>
+                    <div class="dropdown-menu dropdown-menu-end">
+                        <a class="dropdown-item" href="{{ url_for('logout') }}"><i class="fas fa-sign-out-alt me-2"></i>Logout</a>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </nav>
+
+    <div class="container-fluid">
+        <div class="row">
+            <!-- Sidebar -->
+            <nav class="col-lg-2 col-md-3 d-none d-md-block sidebar p-3">
+                <ul class="nav flex-column">
+                    <li class="nav-item">
+                        <a class="nav-link {% if active_page == 'dashboard' %}active{% endif %}" href="{{ url_for('admin') }}">
+                            <i class="fas fa-tachometer-alt"></i> Dashboard
+                        </a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link {% if active_page == 'orders' %}active{% endif %}" href="{{ url_for('admin_orders') }}">
+                            <i class="fas fa-shopping-cart"></i> Orders
+                        </a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link {% if active_page == 'products' %}active{% endif %}" href="{{ url_for('admin_products') }}">
+                            <i class="fas fa-box"></i> Products
+                        </a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link {% if active_page == 'users' %}active{% endif %}" href="{{ url_for('admin_users') }}">
+                            <i class="fas fa-users"></i> Users
+                        </a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link {% if active_page == 'analytics' %}active{% endif %}" href="{{ url_for('admin_analytics') }}">
+                            <i class="fas fa-chart-bar"></i> Analytics
+                        </a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link {% if active_page == 'categories' %}active{% endif %}" href="{{ url_for('admin_categories') }}">
+                            <i class="fas fa-tags"></i> Categories
+                        </a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link {% if active_page == 'reviews' %}active{% endif %}" href="{{ url_for('admin_reviews') }}">
+                            <i class="fas fa-star"></i> Reviews
+                        </a>
+                    </li>
+                </ul>
+            </nav>
+
+            <!-- Main Content -->
+            <main class="col-lg-10 col-md-9 ms-sm-auto px-4 py-3">
+                <!-- Header Section -->
+                <div class="header-area">
+                    <div>
+                        <h1 class="page-title">User Management</h1>
+                        <p class="page-subtitle">View and manage all registered users.</p>
+                    </div>
+                    <div class="d-flex">
+                        <form action="{{ url_for('admin_users') }}" method="GET" class="d-flex">
+                            <input class="form-control me-2" type="search" name="q" placeholder="Search users..." value="{{ search_query }}">
+                            <button class="btn btn-outline-primary" type="submit">Search</button>
+                        </form>
+                    </div>
+                </div>
+
+                <!-- Users Table Card -->
+                <div class="card card-custom">
+                    <div class="card-body p-0">
+                        <div class="table-responsive">
+                            <table class="table table-custom table-hover">
+                                <thead>
+                                    <tr>
+                                        <th>User</th>
+                                        <th>Email / Phone</th>
+                                        <th>Role</th>
+                                        <th>Joined On</th>
+                                        <th>Actions</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    {% for user in users_pagination.items %}
+                                    <tr id="user-row-{{ user.id }}">
+                                        <td>
+                                            <div class="d-flex align-items-center">
+                                                <div class="user-avatar me-3">{{ user.name[0]|upper }}</div>
+                                                <div>
+                                                    <strong>{{ user.name }}</strong>
+                                                    <div class="text-muted small">ID: #{{ user.id }}</div>
+                                                </div>
+                                            </div>
+                                        </td>
+                                        <td>
+                                            <div>{{ user.email }}</div>
+                                            <div class="text-muted small">{{ user.phone or 'No phone number' }}</div>
+                                        </td>
+                                        <td>
+                                            <span class="badge-role badge-{{ user.role }}">{{ user.role }}</span>
+                                        </td>
+                                        <td>{{ user.created_at.strftime('%b %d, %Y') }}</td>
+                                        <td class="action-buttons">
+                                            <button class="btn btn-sm btn-outline-primary edit-user-btn me-1"
+                                                data-user-id="{{ user.id }}" title="Edit User">
+                                                <i class="fas fa-edit"></i>
+                                            </button>
+                                            {% if user.role != 'admin' %}
+                                            <button class="btn btn-sm btn-outline-danger remove-user-btn"
+                                                data-user-id="{{ user.id }}" 
+                                                data-user-name="{{ user.name }}"
+                                                title="Remove User">
+                                                <i class="fas fa-trash"></i>
+                                            </button>
+                                            {% else %}
+                                            <button class="btn btn-sm btn-outline-secondary" disabled
+                                                title="Cannot remove admin">
+                                                <i class="fas fa-trash"></i>
+                                            </button>
+                                            {% endif %}
+                                        </td>
+                                    </tr>
+                                    {% else %}
+                                    <tr>
+                                        <td colspan="5" class="text-center py-4">
+                                            <i class="fas fa-users fa-2x text-muted mb-3"></i>
+                                            <p class="text-muted">No users found.</p>
+                                        </td>
+                                    </tr>
+                                    {% endfor %}
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+
+                    {% if users_pagination.pages > 1 %}
+                    <div class="card-footer-custom">
+                        <nav aria-label="Page navigation">
+                            <ul class="pagination justify-content-center pagination-custom mb-0">
+                                <li class="page-item {% if not users_pagination.has_prev %}disabled{% endif %}">
+                                    <a class="page-link"
+                                        href="{{ url_for('admin_users', page=users_pagination.prev_num) if users_pagination.has_prev else '#' }}">
+                                        Previous
+                                    </a>
+                                </li>
+                                {% for page_num in users_pagination.iter_pages() %}
+                                    {% if page_num %}
+                                    <li class="page-item {% if page_num == users_pagination.page %}active{% endif %}">
+                                        <a class="page-link" href="{{ url_for('admin_users', page=page_num) }}">
+                                            {{ page_num }}
+                                        </a>
+                                    </li>
+                                    {% else %}
+                                    <li class="page-item disabled">
+                                        <span class="page-link">...</span>
+                                    </li>
+                                    {% endif %}
+                                {% endfor %}
+                                <li class="page-item {% if not users_pagination.has_next %}disabled{% endif %}">
+                                    <a class="page-link"
+                                        href="{{ url_for('admin_users', page=users_pagination.next_num) if users_pagination.has_next else '#' }}">
+                                        Next
+                                    </a>
+                                </li>
+                            </ul>
+                        </nav>
+                    </div>
+                    {% endif %}
+                </div>
+            </main>
+        </div>
+    </div>
+
+    <!-- Edit User Modal -->
+    <div class="modal fade" id="editUserModal" tabindex="-1" aria-labelledby="editUserModalLabel" aria-hidden="true">
+        <div class="modal-dialog">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title" id="editUserModalLabel">Edit User</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <div class="modal-body">
+                    <form id="editUserForm">
+                        <input type="hidden" id="editUserId">
+                        <div class="mb-3">
+                            <label for="editUserName" class="form-label">Name</label>
+                            <input type="text" class="form-control" id="editUserName" required>
+                        </div>
+                        <div class="mb-3">
+                            <label for="editUserEmail" class="form-label">Email</label>
+                            <input type="email" class="form-control" id="editUserEmail" required>
+                        </div>
+                        <div class="mb-3">
+                            <label for="editUserRole" class="form-label">Role</label>
+                            <select class="form-select" id="editUserRole" required>
+                                <option value="buyer">Buyer</option>
+                                <option value="seller">Seller</option>
+                                <option value="farmer">Farmer</option>
+                                <option value="admin">Admin</option>
+                            </select>
+                        </div>
+                    </form>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+                    <button type="button" class="btn btn-primary" id="saveUserChangesBtn">Save Changes</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Delete User Modal -->
+    <div class="modal fade" id="removeUserModal" tabindex="-1" aria-labelledby="removeUserModalLabel" aria-hidden="true">
+        <div class="modal-dialog">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title" id="removeUserModalLabel">Confirm User Removal</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <div class="modal-body">
+                    Are you sure you want to remove the user "<strong id="removeUserName"></strong>"? This will delete
+                    all their associated data (products, orders, etc.) and cannot be undone.
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                    <button type="button" class="btn btn-danger" id="confirmRemoveUserBtn">Remove User</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <footer>
+        <div class="container">
+            <div class="footer-content">
+                <div class="footer-column">
+                    <h3>E-Mandi - Online Marketplace</h3>
+                    <p>Your one-stop destination for fresh farm products directly from farmers to your doorstep.</p>
+                    <div class="social-links">
+                        <a href="https://www.facebook.com/mr_parshwa_patil/"><i class="fab fa-facebook-f"></i></a>
+                        <a href="https://www.twitter.com/mr_parshwa_patil/"><i class="fab fa-twitter"></i></a>
+                        <a href="https://www.instagram.com/mr_parshwa_patil/"><i class="fab fa-instagram"></i></a>
+                        <a href="#"><i class="fab fa-pinterest"></i></a>
+                    </div>
+                </div>
+                <div class="footer-column">
+                    <h3>Quick Links</h3>
+                    <ul class="footer-links">
+                        <li><a href="{{ url_for('index') }}">Home</a></li>
+                        <li><a href="{{ url_for('product') }}">Products</a></li>
+                        <li><a href="{{ url_for('feedback') }}">Feedback</a></li>
+                        <li><a href="{{ url_for('login') }}">Login</a></li>
+                        <li><a href="{{ url_for('register') }}">Register</a></li>
+                    </ul>
+                </div>
+                <div class="footer-column">
+                    <h3>Customer Service</h3>
+                    <ul class="footer-links">
+                        <li><a href="{{ url_for('shipping_info') }}">Shipping Info</a></li>
+                        <li><a href="{{ url_for('return_policy') }}">Return Policy</a></li>
+                        <li><a href="{{ url_for('faqs') }}">FAQs</a></li>
+                        <li><a href="{{ url_for('privacy_policy') }}">Privacy Policy</a></li>
+                        <li><a href="{{ url_for('terms_and_conditions') }}">Terms & Conditions</a></li>
+                    </ul>
+                </div>
+                <div class="footer-column">
+                    <h3>Contact Info</h3>
+                    <ul class="contact-info">
+                        <li><i class="fas fa-map-marker-alt"></i> XYZ colony, New York</li>
+                        <li><i class="fas fa-phone"></i> +91 23456855</li>
+                        <li><i class="fas fa-envelope"></i> agrimarketing@gmail.com</li>
+                        <li><i class="fas fa-clock"></i> Mon-Sun: 9:00 AM - 11:00 PM</li>
+                    </ul>
+                </div>
+            </div>
+            <div class="copyright">
+                <p>&copy; 2024 E-Mandi - Online Marketplace. All rights reserved.</p>
+            </div>
+        </div>
+    </footer>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/js/bootstrap.bundle.min.js"></script>
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            const removeUserModal = new bootstrap.Modal(document.getElementById('removeUserModal'));
+            const editUserModal = new bootstrap.Modal(document.getElementById('editUserModal'));
+            let userIdToRemove = null;
+
+            // Handle remove user button clicks
+            document.querySelector('tbody').addEventListener('click', function(event) {
+                const removeBtn = event.target.closest('.remove-user-btn');
+                if (removeBtn) {
+                    userIdToRemove = removeBtn.dataset.userId;
+                    const userName = removeBtn.dataset.userName;
+                    document.getElementById('removeUserName').textContent = userName;
+                    removeUserModal.show();
+                }
+
+                const editBtn = event.target.closest('.edit-user-btn');
+                if (editBtn) {
+                    const userId = editBtn.dataset.userId;
+                    fetch(`/admin/edit_user/${userId}`)
+                        .then(res => res.json())
+                        .then(data => {
+                            document.getElementById('editUserId').value = data.id;
+                            document.getElementById('editUserName').value = data.name;
+                            document.getElementById('editUserEmail').value = data.email;
+                            document.getElementById('editUserRole').value = data.role;
+                            editUserModal.show();
+                        });
+                }
+            });
+
+            // Handle confirm remove user
+            document.getElementById('confirmRemoveUserBtn').addEventListener('click', function() {
+                if (!userIdToRemove) return;
+                
+                fetch(`/admin/remove_user/${userIdToRemove}`, { 
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    }
+                })
+                .then(response => response.json())
+                .then(data => {
+                    removeUserModal.hide();
+                    if (data.success) {
+                        alert(data.message);
+                        document.getElementById(`user-row-${userIdToRemove}`).remove();
+                    } else {
+                        alert('Error: ' + (data.error || 'Could not remove user.'));
+                    }
+                    userIdToRemove = null;
+                })
+                .catch(error => {
+                    console.error('Error:', error);
+                    alert('An unexpected error occurred.');
+                    removeUserModal.hide();
+                    userIdToRemove = null;
+                });
+            });
+
+            // Handle save user changes
+            document.getElementById('saveUserChangesBtn').addEventListener('click', function() {
+                const userId = document.getElementById('editUserId').value;
+                const data = {
+                    name: document.getElementById('editUserName').value,
+                    email: document.getElementById('editUserEmail').value,
+                    role: document.getElementById('editUserRole').value
+                };
+
+                fetch(`/admin/edit_user/${userId}`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(data)
+                })
+                .then(res => res.json())
+                .then(result => {
+                    if (result.success) { location.reload(); }
+                    else { alert('Error: ' + result.error); }
+                });
+            });
+        });
+    </script>
+</body>
+
+</html>

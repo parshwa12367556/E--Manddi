@@ -1,0 +1,825 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Cropify - Add Product</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <style>
+        :root {
+            --primary-dark: #005f73;
+            --primary-orange: #ee9b00;
+            --secondary-green: #94d2bd;
+            --light-bg: #f8f9fa;
+            --dark-text: #333333;
+        }
+
+        body {
+            background-color: var(--light-bg);
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            color: var(--dark-text);
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+        }
+
+        .navbar {
+            box-shadow: 0 2px 15px rgba(0, 0, 0, 0.1);
+        }
+
+        .navbar-brand {
+            font-weight: 800;
+            font-size: 1.5rem;
+            color: white !important;
+        }
+
+        .bg-success {
+            background-color: var(--primary-dark) !important;
+        }
+
+        .btn-success {
+            background-color: var(--primary-orange);
+            border-color: var(--primary-orange);
+            font-weight: 600;
+            transition: all 0.3s ease;
+        }
+
+        .btn-success:hover {
+            background-color: #ca8200;
+            border-color: #ca8200;
+            transform: translateY(-2px);
+            box-shadow: 0 5px 15px rgba(238, 155, 0, 0.3);
+        }
+
+        .card {
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.08);
+            border: none;
+            border-radius: 15px;
+            overflow: hidden;
+        }
+
+        .card-header {
+            background: linear-gradient(135deg, var(--primary-dark), #0a9396);
+            color: white;
+            border: none;
+            padding: 25px 30px;
+        }
+
+        .card-header h3 {
+            margin: 0;
+            font-weight: 700;
+        }
+
+        .card-body {
+            padding: 30px;
+        }
+
+        .form-label {
+            font-weight: 600;
+            color: var(--primary-dark);
+            margin-bottom: 8px;
+        }
+
+        .form-control,
+        .form-select {
+            border: 2px solid #e0e0e0;
+            border-radius: 8px;
+            padding: 12px 15px;
+            transition: all 0.3s ease;
+        }
+
+        .form-control:focus,
+        .form-select:focus {
+            border-color: var(--primary-orange);
+            box-shadow: 0 0 0 0.25rem rgba(238, 155, 0, 0.25);
+        }
+
+        .category-options {
+            border: 2px solid #e0e0e0;
+            border-radius: 8px;
+            padding: 20px;
+            background-color: #fff;
+        }
+
+        .category-option {
+            padding: 15px;
+            border: 2px solid #e0e0e0;
+            border-radius: 8px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            margin-bottom: 10px;
+        }
+
+        .category-option:hover {
+            border-color: var(--primary-orange);
+            background-color: rgba(238, 155, 0, 0.05);
+        }
+
+        .category-option.active {
+            border-color: var(--primary-orange);
+            background-color: rgba(238, 155, 0, 0.1);
+        }
+
+        .category-icon {
+            font-size: 1.5rem;
+            margin-right: 10px;
+            color: var(--primary-dark);
+        }
+
+        .form-check-input:checked {
+            background-color: var(--primary-orange);
+            border-color: var(--primary-orange);
+        }
+
+        .form-check-input:focus {
+            box-shadow: 0 0 0 0.25rem rgba(238, 155, 0, 0.25);
+        }
+
+        .price-input-container,
+        .quantity-input-container {
+            position: relative;
+        }
+
+        .price-input-container::before {
+            content: '₹';
+            position: absolute;
+            left: 15px;
+            top: 50%;
+            transform: translateY(-50%);
+            color: #666;
+            font-weight: 600;
+        }
+
+        .price-input-container input {
+            padding-left: 35px;
+        }
+
+        .quantity-input-container::after {
+            content: 'kg';
+            position: absolute;
+            right: 15px;
+            top: 50%;
+            transform: translateY(-50%);
+            color: #666;
+            font-weight: 600;
+        }
+
+        .quantity-input-container input {
+            padding-right: 45px;
+        }
+
+        /* Preview Styles */
+        .preview-card {
+            border: 2px dashed #ccc;
+            background-color: #fafafa;
+            min-height: 200px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            border-radius: 10px;
+            transition: all 0.3s ease;
+        }
+
+        .preview-card:hover {
+            border-color: var(--primary-orange);
+            background-color: rgba(238, 155, 0, 0.05);
+        }
+
+        .preview-image {
+            max-width: 100%;
+            max-height: 200px;
+            border-radius: 8px;
+            display: none;
+        }
+
+        .preview-placeholder {
+            text-align: center;
+            color: #666;
+        }
+
+        .preview-placeholder i {
+            font-size: 3rem;
+            margin-bottom: 10px;
+            color: #ccc;
+        }
+
+        .main-content {
+            flex: 1;
+            padding-bottom: 20px;
+        }
+
+        /* Footer Styles */
+        footer {
+            background-color: #001219;
+            color: white;
+            padding: 60px 0 20px;
+            margin-top: auto;
+        }
+
+        .footer-content {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+            gap: 40px;
+            margin-bottom: 40px;
+        }
+
+        .footer-column h3 {
+            font-size: 1.3rem;
+            font-weight: 600;
+            margin-bottom: 25px;
+            position: relative;
+            padding-bottom: 10px;
+        }
+
+        .footer-column h3::after {
+            content: '';
+            position: absolute;
+            width: 40px;
+            height: 3px;
+            background-color: var(--primary-orange);
+            bottom: 0;
+            left: 0;
+        }
+
+        .footer-column p {
+            color: #bbb;
+            line-height: 1.7;
+            margin-bottom: 20px;
+        }
+
+        .footer-links {
+            list-style: none;
+            padding: 0;
+            margin: 0;
+        }
+
+        .footer-links li {
+            margin-bottom: 12px;
+        }
+
+        .footer-links a {
+            color: #bbb;
+            text-decoration: none;
+            transition: all 0.3s ease;
+        }
+
+        .footer-links a:hover {
+            color: var(--primary-orange);
+            transform: translateX(5px);
+            display: inline-block;
+        }
+
+        .contact-info {
+            list-style: none;
+            padding: 0;
+            margin: 0;
+        }
+
+        .contact-info li {
+            display: flex;
+            align-items: flex-start;
+            margin-bottom: 15px;
+            color: #bbb;
+            line-height: 1.6;
+        }
+
+        .contact-info i {
+            margin-right: 12px;
+            color: var(--primary-orange);
+            width: 20px;
+            flex-shrink: 0;
+        }
+
+        .copyright {
+            text-align: center;
+            padding-top: 25px;
+            border-top: 1px solid rgba(255, 255, 255, 0.1);
+            color: #bbb;
+            font-size: 0.9rem;
+        }
+
+        /* Responsive Design */
+        @media (max-width: 768px) {
+            .card-body {
+                padding: 20px;
+            }
+
+            .card-header {
+                padding: 20px;
+            }
+
+            .category-options {
+                padding: 15px;
+            }
+        }
+
+        @media (max-width: 576px) {
+            .container {
+                padding-left: 15px;
+                padding-right: 15px;
+            }
+
+            .row {
+                margin-left: -10px;
+                margin-right: -10px;
+            }
+
+            .col-md-8 {
+                padding-left: 10px;
+                padding-right: 10px;
+            }
+        }
+
+        /* Validation styles */
+        .is-invalid {
+            border-color: #dc3545;
+        }
+
+        .invalid-feedback {
+            display: none;
+            color: #dc3545;
+            font-size: 0.875rem;
+            margin-top: 5px;
+        }
+
+        .is-invalid~.invalid-feedback {
+            display: block;
+        }
+
+        /* Success message */
+        .alert-success {
+            background-color: rgba(40, 167, 69, 0.1);
+            border-color: rgba(40, 167, 69, 0.2);
+            color: #155724;
+        }
+    </style>
+</head>
+
+<body>
+    <nav class="navbar navbar-expand-lg navbar-dark bg-success">
+        <div class="container">
+            <a class="navbar-brand" href="{{ url_for('index') }}">E-Mandi</a>
+            <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav">
+                <span class="navbar-toggler-icon"></span>
+            </button>
+            <div class="collapse navbar-collapse" id="navbarNav">
+                <div class="navbar-nav me-auto">
+                    <a class="nav-link" href="{{ url_for('index') }}">Home</a>
+                    <a class="nav-link" href="{{ url_for('product') }}">Products</a>
+                    <a class="nav-link" href="{{ url_for('feedback') }}">Feedback</a>
+                    <a class="nav-link" href="{{ url_for('cart') }}">
+                        <i class="fas fa-shopping-cart"></i> Cart
+                        <span id="cart-count" class="badge bg-light text-dark ms-1">{{ cart_count or 0 }}</span>
+                    </a>
+                </div>
+                <div class="navbar-nav">
+                    {% if 'user_id' in session %}
+                    {% if session.user_role == 'admin' %}
+                    <a class="nav-link" href="{{ url_for('admin') }}">
+                        <i class="fas fa-cog"></i> Admin
+                    </a>
+                    {% endif %}
+                    <span class="navbar-text me-3">
+                        <i class="fas fa-user me-1"></i> {{ session.user_name }}
+                    </span>
+                    <a class="nav-link" href="{{ url_for('logout') }}">
+                        <i class="fas fa-sign-out-alt"></i> Logout
+                    </a>
+                    {% else %}
+                    <a class="nav-link" href="{{ url_for('login') }}">
+                        <i class="fas fa-sign-in-alt"></i> Login
+                    </a>
+                    <a class="nav-link" href="{{ url_for('register') }}">
+                        <i class="fas fa-user-plus"></i> Register
+                    </a>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+    </nav>
+
+    <div class="main-content">
+        <div class="container mt-4 mb-5">
+            <div class="row justify-content-center">
+                <div class="col-lg-8 col-md-10">
+                    {% with messages = get_flashed_messages(with_categories=true) %}
+                    {% if messages %}
+                    {% for category, message in messages %}
+                    <div class="alert alert-{{ category }} alert-dismissible fade show" role="alert">
+                        {{ message }}
+                        <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+                    </div>
+                    {% endfor %}
+                    {% endif %}
+                    {% endwith %}
+
+                    <div class="card">
+                        <div class="card-header text-center">
+                            <h3><i class="fas fa-plus-circle me-2"></i> Add a New Product</h3>
+                            <p class="mb-0 mt-2 opacity-75">Fill in the details below to list your product</p>
+                        </div>
+                        <div class="card-body">
+                            <form action="{{ url_for('addproduct') }}" method="POST" id="productForm">
+                                <div class="mb-4">
+                                    <label for="name" class="form-label">Product Name *</label>
+                                    <input type="text" class="form-control" id="name" name="name"
+                                        placeholder="Enter product name (e.g., Organic Tomatoes)" required>
+                                    <div class="invalid-feedback">Please enter a product name.</div>
+                                </div>
+
+                                <div class="mb-4">
+                                    <label class="form-label">Category *</label>
+                                    <div class="category-options">
+                                        <div class="row">
+                                            <div class="col-6 mb-3">
+                                                <div class="category-option text-center" data-category="fruits">
+                                                    <i class="fas fa-apple-alt category-icon"></i>
+                                                    <div class="mt-2">Fruits</div>
+                                                    <input class="form-check-input d-none" type="radio" name="category"
+                                                        id="categoryFruits" value="fruits" required>
+                                                </div>
+                                            </div>
+                                            <div class="col-6 mb-3">
+                                                <div class="category-option text-center" data-category="vegetables">
+                                                    <i class="fas fa-carrot category-icon"></i>
+                                                    <div class="mt-2">Vegetables</div>
+                                                    <input class="form-check-input d-none" type="radio" name="category"
+                                                        id="categoryVegetables" value="vegetables">
+                                                </div>
+                                            </div>
+                                            <div class="col-6 mb-3">
+                                                <div class="category-option text-center" data-category="fertilizers">
+                                                    <i class="fas fa-seedling category-icon"></i>
+                                                    <div class="mt-2">Fertilizers</div>
+                                                    <input class="form-check-input d-none" type="radio" name="category"
+                                                        id="categoryFertilizers" value="fertilizers">
+                                                </div>
+                                            </div>
+                                            <div class="col-6 mb-3">
+                                                <div class="category-option text-center" data-category="pesticides">
+                                                    <i class="fas fa-spray-can category-icon"></i>
+                                                    <div class="mt-2">Pesticides</div>
+                                                    <input class="form-check-input d-none" type="radio" name="category"
+                                                        id="categoryPesticides" value="pesticides">
+                                                </div>
+                                            </div>
+                                            <div class="col-6 mb-3">
+                                                <div class="category-option text-center" data-category="Grains">
+                                                    <i class="fas fa-spray-can category-icon"></i>
+                                                    <div class="mt-2">Grains</div>
+                                                    <input class="form-check-input d-none" type="radio" name="category"
+                                                        id="categoryGrains" value="grains">
+                                                </div>
+                                            </div>
+                                            <div class="col-6 mb-3">
+                                                <div class="category-option text-center" data-category="Dairy">
+                                                    <i class="fas fa-spray-can category-icon"></i>
+                                                    <div class="mt-2">Dairy</div>
+                                                    <input class="form-check-input d-none" type="radio" name="category"
+                                                        id="categoryDairy" value="dairy">
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                    <div class="invalid-feedback">Please select a category.</div>
+                                    <!-- Mobile-friendly select fallback -->
+                                    <div class="mt-2 d-block d-md-none">
+                                        <label for="categorySelect" class="form-label">Or choose a category</label>
+                                        <select id="categorySelect" class="form-select">
+                                            <option value="">Select a category</option>
+                                            <option value="fruits">Fruits</option>
+                                            <option value="vegetables">Vegetables</option>
+                                            <option value="fertilizers">Fertilizers</option>
+                                            <option value="pesticides">Pesticides</option>
+                                            <option value="grains">Grains</option>
+                                            <option value="dairy">Dairy</option>
+                                        </select>
+                                    </div>
+                                </div>
+
+                                <div class="row mb-4">
+                                    <div class="col-md-6 mb-3">
+                                        <label for="price" class="form-label">Price (per kg) *</label>
+                                        <div class="price-input-container">
+                                            <input type="number" step="0.01" min="0" class="form-control" id="price"
+                                                name="price" placeholder="0.00" required>
+                                        </div>
+                                        <div class="invalid-feedback">Please enter a valid price.</div>
+                                    </div>
+                                    <div class="col-md-6 mb-3">
+                                        <label for="quantity" class="form-label">Quantity Available (kg) *</label>
+                                        <div class="quantity-input-container">
+                                            <input type="number" min="0" step="0.1" class="form-control" id="quantity"
+                                                name="quantity" placeholder="0.0" required>
+                                        </div>
+                                        <div class="invalid-feedback">Please enter a valid quantity.</div>
+                                    </div>
+                                </div>
+
+                                <div class="mb-4">
+                                    <label for="description" class="form-label">Product Description (Optional)</label>
+                                    <textarea class="form-control" id="description" name="description" rows="3"
+                                        placeholder="Describe your product..."></textarea>
+                                </div>
+
+                                <div class="mb-4">
+                                    <label for="image" class="form-label">Image URL (Optional)</label>
+                                    <input type="text" class="form-control" id="image" name="image"
+                                        placeholder="https://example.com/your-product-image.jpg">
+                                    <div class="form-text">Provide a direct link to your product image. Recommended
+                                        size: 800x600px</div>
+
+                                    <!-- Image Preview -->
+                                    <div class="mt-3 preview-card" id="imagePreviewContainer">
+                                        <div class="preview-placeholder" id="imagePlaceholder">
+                                            <i class="fas fa-image"></i>
+                                            <p>Image preview will appear here</p>
+                                        </div>
+                                        <img src="" alt="Preview" class="preview-image" id="imagePreview">
+                                    </div>
+                                </div>
+
+                                <div class="d-grid gap-2 mt-4">
+                                    <button type="submit" class="btn btn-success btn-lg py-3">
+                                        <i class="fas fa-plus-circle me-2"></i> Add Product to Marketplace
+                                    </button>
+                                    <a href="{{ url_for('product') }}" class="btn btn-outline-secondary">
+                                        <i class="fas fa-arrow-left me-2"></i> Back to Products
+                                    </a>
+                                </div>
+                            </form>
+                        </div>
+                    </div>
+
+                    <!-- Tips Card -->
+                    <div class="card mt-4">
+                        <div class="card-body">
+                            <h5 class="card-title"><i class="fas fa-lightbulb me-2 text-warning"></i> Tips for Better
+                                Product Listings</h5>
+                            <ul class="mb-0">
+                                <li>Use clear, high-quality images of your product</li>
+                                <li>Provide detailed descriptions including farming practices</li>
+                                <li>Set competitive prices based on market rates</li>
+                                <li>Update quantity regularly to avoid overselling</li>
+                                <li>Be honest about product quality and condition</li>
+                            </ul>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <footer>
+        <div class="container">
+            <div class="footer-content">
+                <div class="footer-column">
+                    <h3>E-Mandi - Online Marketplace</h3>
+                    <p>Your one-stop destination for fresh farm products directly from farmers to your doorstep.</p>
+                </div>
+                <div class="footer-column">
+                    <h3>Quick Links</h3>
+                    <ul class="footer-links">
+                        <li><a href="{{ url_for('index') }}">Home</a></li>
+                        <li><a href="{{ url_for('product') }}">Products</a></li>
+                        <li><a href="{{ url_for('feedback') }}">Feedback</a></li>
+                        <li><a href="{{ url_for('cart') }}">Cart</a></li>
+                    </ul>
+                </div>
+                <div class="footer-column">
+                    <h3>Customer Service</h3>
+                    <ul class="footer-links">
+                        <li><a href="{{ url_for('shipping_info') }}">Shipping Info</a></li>
+                        <li><a href="{{ url_for('return_policy') }}">Return Policy</a></li>
+                        <li><a href="{{ url_for('faqs') }}">FAQs</a></li>
+                        <li><a href="{{ url_for('privacy_policy') }}">Privacy Policy</a></li>
+                    </ul>
+                </div>
+                <div class="footer-column">
+                    <h3>Contact Info</h3>
+                    <ul class="contact-info">
+                        <li><i class="fas fa-map-marker-alt"></i>XYZ colony, New York</li>
+                        <li><i class="fas fa-phone"></i> +91 23456855</li>
+                        <li><i class="fas fa-envelope"></i> agrimarketing@gmail.com</li>
+                        <li><i class="fas fa-clock"></i> Mon-Sun: 9:00 AM - 11:00 PM</li>
+                    </ul>
+                </div>
+            </div>
+            <div class="copyright">
+                <p>&copy; 2024 E-Mandi - Online Marketplace. All rights reserved.</p>
+            </div>
+        </div>
+    </footer>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/js/bootstrap.bundle.min.js"></script>
+    <script>
+        document.addEventListener('DOMContentLoaded', function () {
+            // Category selection with visual feedback
+            const categoryOptions = document.querySelectorAll('.category-option');
+            categoryOptions.forEach(option => {
+                option.addEventListener('click', function () {
+                    // Remove active class from all options
+                    categoryOptions.forEach(opt => opt.classList.remove('active'));
+
+                    // Add active class to clicked option
+                    this.classList.add('active');
+
+                    // Check the corresponding radio input
+                    const radioInput = this.querySelector('input[type="radio"]');
+                    if (radioInput) {
+                        radioInput.checked = true;
+                        radioInput.dispatchEvent(new Event('change'));
+                        // sync mobile select if present
+                        const catSelect = document.getElementById('categorySelect');
+                        if (catSelect) catSelect.value = radioInput.value;
+                    }
+                });
+            });
+
+            // Image preview functionality
+            const imageInput = document.getElementById('image');
+            const imagePreview = document.getElementById('imagePreview');
+            const imagePlaceholder = document.getElementById('imagePlaceholder');
+            const previewContainer = document.getElementById('imagePreviewContainer');
+
+            imageInput.addEventListener('input', function () {
+                const imageUrl = this.value.trim();
+
+                if (imageUrl) {
+                    // Show loading state
+                    imagePlaceholder.innerHTML = '<i class="fas fa-spinner fa-spin"></i><p>Loading image...</p>';
+                    imagePreview.style.display = 'none';
+
+                    // Try to load the image
+                    const img = new Image();
+                    img.onload = function () {
+                        imagePreview.src = imageUrl;
+                        imagePreview.style.display = 'block';
+                        imagePlaceholder.style.display = 'none';
+                        previewContainer.style.border = '2px solid var(--primary-orange)';
+                    };
+                    img.onerror = function () {
+                        imagePlaceholder.innerHTML = '<i class="fas fa-exclamation-triangle"></i><p>Unable to load image</p>';
+                        imagePreview.style.display = 'none';
+                        previewContainer.style.border = '2px dashed #dc3545';
+                    };
+                    img.src = imageUrl;
+                } else {
+                    // Reset to placeholder
+                    imagePlaceholder.innerHTML = '<i class="fas fa-image"></i><p>Image preview will appear here</p>';
+                    imagePlaceholder.style.display = 'block';
+                    imagePreview.style.display = 'none';
+                    previewContainer.style.border = '2px dashed #ccc';
+                }
+            });
+
+            // Form validation
+            const form = document.getElementById('productForm');
+            const requiredInputs = form.querySelectorAll('[required]');
+
+            form.addEventListener('submit', function (event) {
+                let isValid = true;
+
+                // Reset validation states
+                requiredInputs.forEach(input => {
+                    input.classList.remove('is-invalid');
+                });
+
+                // Check required fields
+                requiredInputs.forEach(input => {
+                    if (!input.value.trim()) {
+                        input.classList.add('is-invalid');
+                        isValid = false;
+                    }
+                });
+
+                // Check category selection (allow mobile select fallback)
+                const selectedCategory = form.querySelector('input[name="category"]:checked');
+                const catSelect = document.getElementById('categorySelect');
+                const selectedFromSelect = catSelect ? catSelect.value : '';
+
+                if (!selectedCategory && !selectedFromSelect) {
+                    const categoryContainer = document.querySelector('.category-options');
+                    categoryContainer.nextElementSibling.style.display = 'block';
+                    isValid = false;
+                } else if (!selectedCategory && selectedFromSelect) {
+                    // if user used the mobile select, ensure a hidden `category` input is set for submission
+                    let hidden = form.querySelector('input[name="category"][type="hidden"]');
+                    if (!hidden) {
+                        hidden = document.createElement('input');
+                        hidden.type = 'hidden';
+                        hidden.name = 'category';
+                        form.appendChild(hidden);
+                    }
+                    hidden.value = selectedFromSelect;
+                    document.querySelector('.category-options').nextElementSibling.style.display = 'none';
+                } else {
+                    document.querySelector('.category-options').nextElementSibling.style.display = 'none';
+                }
+
+                // Check price and quantity values
+                const priceInput = document.getElementById('price');
+                const quantityInput = document.getElementById('quantity');
+
+                if (priceInput.value && parseFloat(priceInput.value) <= 0) {
+                    priceInput.classList.add('is-invalid');
+                    priceInput.nextElementSibling.textContent = 'Price must be greater than 0.';
+                    isValid = false;
+                }
+
+                if (quantityInput.value && parseFloat(quantityInput.value) <= 0) {
+                    quantityInput.classList.add('is-invalid');
+                    quantityInput.nextElementSibling.textContent = 'Quantity must be greater than 0.';
+                    isValid = false;
+                }
+
+                if (!isValid) {
+                    event.preventDefault();
+                    event.stopPropagation();
+
+                    // Scroll to first error
+                    const firstError = form.querySelector('.is-invalid');
+                    if (firstError) {
+                        firstError.scrollIntoView({ behavior: 'smooth', block: 'center' });
+                        firstError.focus();
+                    }
+                } else {
+                    // Show loading state on submit button
+                    const submitButton = form.querySelector('button[type="submit"]');
+                    const originalText = submitButton.innerHTML;
+                    submitButton.innerHTML = '<i class="fas fa-spinner fa-spin me-2"></i> Adding Product...';
+                    submitButton.disabled = true;
+
+                    // Reset button after 3 seconds (in case form submission fails)
+                    setTimeout(() => {
+                        submitButton.innerHTML = originalText;
+                        submitButton.disabled = false;
+                    }, 3000);
+                }
+            });
+
+            // Real-time validation
+            requiredInputs.forEach(input => {
+                input.addEventListener('input', function () {
+                    if (this.value.trim()) {
+                        this.classList.remove('is-invalid');
+                    }
+                });
+
+                input.addEventListener('blur', function () {
+                    if (!this.value.trim() && this.hasAttribute('required')) {
+                        this.classList.add('is-invalid');
+                    }
+                });
+            });
+
+            // Category radio buttons trigger visual selection
+            const categoryRadios = form.querySelectorAll('input[name="category"]');
+            categoryRadios.forEach(radio => {
+                radio.addEventListener('change', function () {
+                    categoryOptions.forEach(option => option.classList.remove('active'));
+                    const selectedOption = document.querySelector(`.category-option[data-category="${this.value}"]`);
+                    if (selectedOption) {
+                        selectedOption.classList.add('active');
+                    }
+                });
+            });
+
+            // Price and quantity validation
+            const validateNumberInput = (input, minValue) => {
+                input.addEventListener('input', function () {
+                    const value = parseFloat(this.value);
+                    if (this.value && value <= minValue) {
+                        this.classList.add('is-invalid');
+                        this.nextElementSibling.textContent = `Value must be greater than ${minValue}.`;
+                    } else {
+                        this.classList.remove('is-invalid');
+                    }
+                });
+            };
+
+            validateNumberInput(priceInput, 0);
+            validateNumberInput(quantityInput, 0);
+
+            // Auto-format price input
+            priceInput.addEventListener('blur', function () {
+                if (this.value) {
+                    const value = parseFloat(this.value);
+                    this.value = value.toFixed(2);
+                }
+            });
+
+            // Auto-format quantity input
+            quantityInput.addEventListener('blur', function () {
+                if (this.value) {
+                    const value = parseFloat(this.value);
+                    this.value = value.toFixed(1);
+                }
+            });
+        });
+    </script>
+</body>
+
+</html>

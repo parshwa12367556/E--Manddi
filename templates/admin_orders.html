@@ -1,0 +1,802 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Orders - Admin Dashboard</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <style>
+        :root {
+            --primary-color: #4361ee;
+            --secondary-color: #3a0ca3;
+            --success-color: #4cc9f0;
+            --warning-color: #f8961e;
+            --danger-color: #f72585;
+            --light-color: #f8f9fa;
+            --dark-color: #212529;
+            --primary-dark: #005f73;
+        }
+
+        body {
+            background-color: #f5f7fb;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+        }
+
+        .navbar-dark.bg-dark {
+            background: linear-gradient(135deg, var(--primary-dark) 0%, #0a9396 100%) !important;
+        }
+
+        .sidebar {
+            background: white;
+            min-height: 100vh;
+            box-shadow: 2px 0 10px rgba(0, 0, 0, 0.05);
+        }
+
+        .sidebar .nav-link {
+            color: var(--dark-color);
+        }
+
+        .sidebar .nav-link.active,
+        .sidebar .nav-link:hover {
+            background-color: rgba(0, 95, 115, 0.1);
+            color: var(--primary-dark);
+        }
+
+        .main-container {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 0 15px;
+        }
+
+        .page-header {
+            margin-bottom: 30px;
+            padding-bottom: 15px;
+            border-bottom: 1px solid #eaeaea;
+        }
+
+        .card {
+            border: none;
+            border-radius: 10px;
+            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.08);
+            margin-bottom: 30px;
+            overflow: hidden;
+        }
+
+        .card-header {
+            background-color: white;
+            border-bottom: 1px solid #eaeaea;
+            padding: 20px;
+        }
+
+        .card-body {
+            padding: 0;
+        }
+
+        .table {
+            margin-bottom: 0;
+        }
+
+        .table thead th {
+            border-bottom: 2px solid #eaeaea;
+            font-weight: 600;
+            text-transform: uppercase;
+            font-size: 0.85rem;
+            letter-spacing: 0.5px;
+            color: #6c757d;
+            padding: 15px 20px;
+        }
+
+        .table tbody td {
+            padding: 15px 20px;
+            vertical-align: middle;
+            border-color: #f1f1f1;
+        }
+
+        .table tbody tr:hover {
+            background-color: rgba(67, 97, 238, 0.03);
+        }
+
+        .badge {
+            padding: 6px 12px;
+            font-weight: 500;
+            border-radius: 20px;
+            font-size: 0.8rem;
+        }
+
+        .status-pending {
+            background-color: rgba(248, 150, 30, 0.1);
+            color: #e67e00;
+        }
+
+        .status-confirmed {
+            background-color: rgba(13, 202, 240, 0.1);
+            color: #0dcaf0;
+        }
+
+        .status-processing {
+            background-color: rgba(67, 97, 238, 0.1);
+            color: var(--primary-color);
+        }
+
+        .status-shipped {
+            background-color: rgba(76, 201, 240, 0.1);
+            color: #2d9cdb;
+        }
+
+        .status-delivered {
+            background-color: rgba(46, 204, 113, 0.1);
+            color: #27ae60;
+        }
+
+        .status-cancelled {
+            background-color: rgba(247, 37, 133, 0.1);
+            color: var(--danger-color);
+        }
+
+        .action-buttons {
+            white-space: nowrap;
+        }
+
+        .action-buttons .btn {
+            margin-right: 8px;
+            border-radius: 6px;
+            width: 36px;
+            height: 36px;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            padding: 0;
+        }
+
+        .action-buttons .btn:last-child {
+            margin-right: 0;
+        }
+
+        .empty-state {
+            text-align: center;
+            padding: 50px 20px;
+            color: #6c757d;
+        }
+
+        .empty-state i {
+            font-size: 3rem;
+            margin-bottom: 20px;
+            opacity: 0.6;
+        }
+
+        .pagination {
+            margin-bottom: 0;
+        }
+
+        .page-link {
+            border: none;
+            color: var(--primary-color);
+            padding: 8px 15px;
+            margin: 0 3px;
+            border-radius: 6px;
+        }
+
+        .page-item.active .page-link {
+            background-color: var(--primary-color);
+            color: white;
+        }
+
+        .modal-header {
+            background-color: var(--primary-color);
+            color: white;
+        }
+
+        .order-details-list {
+            list-style: none;
+            padding: 0;
+        }
+
+        .order-details-list li {
+            padding: 8px 0;
+            border-bottom: 1px solid #f1f1f1;
+        }
+
+        .order-details-list li:last-child {
+            border-bottom: none;
+        }
+
+        .order-details-list strong {
+            display: inline-block;
+            width: 140px;
+            color: #555;
+        }
+
+        .order-items-table {
+            width: 100%;
+            border-collapse: collapse;
+        }
+
+        .order-items-table th {
+            background-color: #f8f9fa;
+            padding: 10px;
+            text-align: left;
+            font-weight: 600;
+        }
+
+        .order-items-table td {
+            padding: 12px 10px;
+            border-bottom: 1px solid #eaeaea;
+        }
+
+        .order-items-table tr:last-child td {
+            border-bottom: none;
+        }
+
+        .order-items-table .item-total {
+            font-weight: 600;
+        }
+
+        @media (max-width: 768px) {
+            .table-responsive {
+                border: none;
+            }
+
+            .action-buttons .btn {
+                width: 32px;
+                height: 32px;
+                font-size: 0.85rem;
+            }
+
+            .order-details-list strong {
+                width: 100px;
+            }
+        }
+
+        /* Footer */
+        footer {
+            background-color: #001219;
+            color: white;
+            padding: 70px 0 20px;
+        }
+
+        .footer-content {
+            display: grid;
+            grid-template-columns: repeat(4, 1fr);
+            gap: 40px;
+            margin-bottom: 40px;
+        }
+
+        .footer-column h3 {
+            font-size: 1.3rem;
+            font-weight: 600;
+            margin-bottom: 25px;
+            position: relative;
+            padding-bottom: 10px;
+        }
+
+        .footer-column h3::after {
+            content: '';
+            position: absolute;
+            width: 40px;
+            height: 3px;
+            background-color: var(--primary-orange);
+            bottom: 0;
+            left: 0;
+        }
+
+        .footer-column p {
+            color: #bbb;
+            line-height: 1.7;
+            margin-bottom: 20px;
+        }
+
+        .footer-links {
+            list-style: none;
+            padding: 0;
+            margin: 0;
+        }
+
+        .footer-links li {
+            margin-bottom: 12px;
+        }
+
+        .footer-links a {
+            color: #bbb;
+            text-decoration: none;
+            transition: all 0.3s ease;
+            display: inline-block;
+        }
+
+        .footer-links a:hover {
+            color: var(--primary-orange);
+            transform: translateX(5px);
+        }
+
+        .contact-info {
+            list-style: none;
+            padding: 0;
+            margin: 0;
+        }
+
+        .contact-info li {
+            display: flex;
+            align-items: flex-start;
+            margin-bottom: 15px;
+            color: #bbb;
+            line-height: 1.6;
+        }
+
+        .contact-info i {
+            margin-right: 12px;
+            color: var(--primary-orange);
+            width: 20px;
+            text-align: center;
+            flex-shrink: 0;
+        }
+
+        .social-links {
+            display: flex;
+            margin-top: 20px;
+        }
+
+        .social-links a {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            width: 40px;
+            height: 40px;
+            background-color: rgba(255, 255, 255, 0.1);
+            border-radius: 50%;
+            margin-right: 10px;
+            transition: all 0.3s ease;
+            text-decoration: none;
+            color: white;
+        }
+
+        .social-links a:hover {
+            background-color: var(--primary-orange);
+            transform: translateY(-5px);
+        }
+
+        .copyright {
+            text-align: center;
+            padding-top: 25px;
+            border-top: 1px solid rgba(255, 255, 255, 0.1);
+            color: #bbb;
+            font-size: 0.9rem;
+        }
+
+        /* Responsive Design */
+        @media (max-width: 1200px) {
+            .hero-title {
+                font-size: 2.8rem;
+            }
+        }
+
+        @media (max-width: 992px) {
+            .footer-content {
+                grid-template-columns: repeat(2, 1fr);
+            }
+
+            .hero-title {
+                font-size: 2.5rem;
+            }
+
+            .feature-card {
+                margin-bottom: 30px;
+            }
+        }
+
+        @media (max-width: 768px) {
+            .hero-section {
+                padding: 80px 0 60px;
+            }
+
+            .hero-title {
+                font-size: 2rem;
+            }
+
+            .hero-subtitle {
+                font-size: 1.1rem;
+            }
+
+            .section-title {
+                font-size: 2rem;
+            }
+
+            .stat-number {
+                font-size: 2.5rem;
+            }
+        }
+
+        @media (max-width: 576px) {
+            .footer-content {
+                grid-template-columns: 1fr;
+            }
+
+            .social-links {
+                justify-content: flex-start;
+            }
+
+            .btn-success,
+            .btn-outline-light {
+                width: 100%;
+                margin-bottom: 10px;
+            }
+
+            .hero-title {
+                font-size: 1.8rem;
+            }
+        }
+
+        /* Animation */
+        @keyframes fadeInUp {
+            from {
+                opacity: 0;
+                transform: translateY(30px);
+            }
+
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        .fade-in {
+            animation: fadeInUp 0.8s ease-out;
+        }
+    </style>
+</head>
+
+<body>
+    <!-- Top Navigation -->
+    <nav class="navbar navbar-expand-lg navbar-dark bg-dark">
+        <div class="container-fluid">
+            <a class="navbar-brand" href="{{ url_for('admin') }}"><i class="fas fa-seedling me-2"></i>Admin
+                Dashboard</a>
+            <div class="d-flex align-items-center">
+                <div class="dropdown me-3 position-relative">
+                    <button class="btn btn-outline-light btn-sm dropdown-toggle position-relative" type="button"
+                        data-bs-toggle="dropdown">
+                        <i class="fas fa-bell"></i>
+                        {% if pending_orders_count > 0 or low_stock_count > 0 %}
+                        <span class="notification-badge"
+                            style="position: absolute; top: -5px; right: -5px; background: var(--danger-color); color: white; border-radius: 50%; width: 18px; height: 18px; font-size: 0.7rem; display: flex; align-items: center; justify-content: center;">{{
+                            pending_orders_count + low_stock_count }}</span>
+                        {% endif %}
+                    </button>
+                    <div class="dropdown-menu dropdown-menu-end">
+                        <h6 class="dropdown-header">Notifications</h6>
+                        {% if pending_orders_count > 0 %}<a class="dropdown-item" href="#"><i
+                                class="fas fa-clock text-warning me-2"></i>{{ pending_orders_count }} pending
+                            orders</a>{% endif %}
+                        {% if low_stock_count > 0 %}<a class="dropdown-item" href="#"><i
+                                class="fas fa-exclamation-triangle text-danger me-2"></i>{{ low_stock_count }} low stock
+                            items</a>{% endif %}
+                        {% if pending_orders_count == 0 and low_stock_count == 0 %}<span
+                            class="dropdown-item text-muted">No new notifications</span>{% endif %}
+                    </div>
+                </div>
+                <div class="dropdown">
+                    <button class="btn btn-outline-light btn-sm dropdown-toggle" type="button"
+                        data-bs-toggle="dropdown">
+                        <i class="fas fa-user-circle me-1"></i> {{ session.user_name }}
+                    </button>
+                    <div class="dropdown-menu dropdown-menu-end">
+                        <a class="dropdown-item" href="{{ url_for('logout') }}"><i
+                                class="fas fa-sign-out-alt me-2"></i>Logout</a>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </nav>
+
+    <div class="container-fluid">
+        <div class="row">
+            <!-- Sidebar -->
+            <nav class="col-lg-2 col-md-3 d-none d-md-block sidebar p-3">
+                <ul class="nav flex-column">
+                    <li class="nav-item"><a class="nav-link {% if active_page == 'dashboard' %}active{% endif %}"
+                            href="{{ url_for('admin') }}"><i class="fas fa-tachometer-alt"></i> Dashboard</a></li>
+                    <li class="nav-item"><a class="nav-link {% if active_page == 'orders' %}active{% endif %}"
+                            href="{{ url_for('admin_orders') }}"><i class="fas fa-shopping-cart"></i> Orders</a></li>
+                    <li class="nav-item"><a class="nav-link {% if active_page == 'products' %}active{% endif %}"
+                            href="{{ url_for('admin_products') }}"><i class="fas fa-box"></i> Products</a></li>
+                    <li class="nav-item"><a class="nav-link {% if active_page == 'users' %}active{% endif %}"
+                            href="{{ url_for('admin_users') }}"><i class="fas fa-users"></i> Users</a></li>
+                    <li class="nav-item"><a class="nav-link {% if active_page == 'analytics' %}active{% endif %}"
+                            href="{{ url_for('admin_analytics') }}"><i class="fas fa-chart-bar"></i> Analytics</a></li>
+                </ul>
+            </nav>
+
+            <!-- Main Content -->
+            <main id="main-content" class="col-lg-10 col-md-9 ms-sm-auto px-4 py-3">
+                <div class="main-container">
+                    <div class="page-header">
+                        <div class="d-flex justify-content-between align-items-center">
+                            <div>
+                                <h1 class="h3 mb-1">Order Management</h1>
+                                <p class="text-muted mb-0">View and manage all customer orders.</p>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="card">
+                        <div class="card-body p-0">
+                            <div class="table-responsive">
+                                <table class="table table-hover mb-0">
+                                    <thead>
+                                        <tr>
+                                            <th>Order ID</th>
+                                            <th>Customer</th>
+                                            <th>Amount</th>
+                                            <th>Status</th>
+                                            <th>Date</th>
+                                            <th>Actions</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody id="orders-table-body">
+                                        {% for order, customer_name in orders_pagination.items %}
+                                        <tr>
+                                            <td><strong>#{{ order.id }}</strong></td>
+                                            <td>{{ customer_name }}</td>
+                                            <td>₹{{ "%.2f"|format(order.total_amount) }}</td>
+                                            <td>
+                                                <span class="badge status-{{ order.status|lower }}">
+                                                    {{ order.status }}
+                                                </span>
+                                            </td>
+                                            <td>{{ order.created_at.strftime('%b %d, %Y') }}</td>
+                                            <td class="action-buttons">
+                                                <button class="btn btn-sm btn-outline-primary view-order-btn"
+                                                    data-order-id="{{ order.id }}" title="View Details">
+                                                    <i class="fas fa-eye"></i>
+                                                </button>
+                                                <button class="btn btn-sm btn-outline-secondary update-status-btn"
+                                                    data-order-id="{{ order.id }}"
+                                                    data-current-status="{{ order.status }}" title="Update Status">
+                                                    <i class="fas fa-edit"></i>
+                                                </button>
+                                            </td>
+                                        </tr>
+                                        {% else %}
+                                        <tr>
+                                            <td colspan="6" class="text-center py-5">
+                                                <i class="fas fa-shopping-cart fa-3x text-muted mb-3"></i>
+                                                <h4 class="text-muted">No Orders Found</h4>
+                                            </td>
+                                        </tr>
+                                        {% endfor %}
+                                    </tbody>
+                                </table>
+                            </div>
+                        </div>
+
+                        <div class="card-footer">
+                            <nav aria-label="Page navigation">
+                                {% if orders_pagination.pages > 1 %}
+                                <ul class="pagination justify-content-center mb-0" id="pagination-container">
+                                    <li class="page-item {% if not orders_pagination.has_prev %}disabled{% endif %}">
+                                        <a class="page-link"
+                                            href="{{ url_for('admin_orders', page=orders_pagination.prev_num) if orders_pagination.has_prev else '#' }}">Previous</a>
+                                    </li>
+                                    {% for page_num in orders_pagination.iter_pages() %}
+                                    {% if page_num %}
+                                    <li class="page-item {% if page_num == orders_pagination.page %}active{% endif %}">
+                                        <a class="page-link" href="{{ url_for('admin_orders', page=page_num) }}">{{
+                                            page_num }}</a>
+                                    </li>
+                                    {% else %}
+                                    <li class="page-item disabled"><span class="page-link">...</span></li>
+                                    {% endif %}
+                                    {% endfor %}
+                                    <li class="page-item {% if not orders_pagination.has_next %}disabled{% endif %}">
+                                        <a class="page-link"
+                                            href="{{ url_for('admin_orders', page=orders_pagination.next_num) if orders_pagination.has_next else '#' }}">Next</a>
+                                    </li>
+                                </ul>
+                                {% endif %}
+                            </nav>
+                        </div>
+                    </div>
+                </div>
+            </main>
+        </div>
+    </div>
+
+    <!-- Order Details Modal -->
+    <div class="modal fade" id="orderDetailsModal" tabindex="-1" aria-labelledby="orderDetailsModalLabel"
+        aria-hidden="true">
+        <div class="modal-dialog modal-lg">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title" id="orderDetailsModalLabel">Order Details - #<span
+                            id="modal-order-id"></span></h5>
+                    <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"
+                        aria-label="Close"></button>
+                </div>
+                <div class="modal-body" id="order-details-content">
+                    <!-- Order details will be populated by JavaScript -->
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Update Status Modal -->
+    <div class="modal fade" id="updateStatusModal" tabindex="-1" aria-labelledby="updateStatusModalLabel"
+        aria-hidden="true">
+        <div class="modal-dialog">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title" id="updateStatusModalLabel">Update Order Status</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <div class="modal-body">
+                    <p>Update status for Order #<span id="status-order-id"></span></p>
+                    <div class="mb-3">
+                        <label for="status-select" class="form-label">New Status</label>
+                        <select class="form-select" id="status-select">
+                            <option value="Pending">Pending</option>
+                            <option value="Confirmed">Confirmed</option>
+                            <option value="Shipped">Shipped</option>
+                            <option value="Delivered">Delivered</option>
+                            <option value="Cancelled">Cancelled</option>
+                        </select>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                    <button type="button" class="btn btn-primary" id="confirm-status-update">Update Status</button>
+                </div>
+            </div>
+        </div>
+    </div>
+    <footer>
+        <div class="container">
+            <div class="footer-content">
+                <div class="footer-column">
+                    <h3>E-Mandi - Online Marketplace</h3>
+                    <p>Your one-stop destination for fresh farm products directly from farmers to your doorstep.</p>
+                    <div class="social-links">
+                        <a href="https://www.facebook.com/mr_parshwa_patil/"><i class="fab fa-facebook-f"></i></a>
+                        <a href="https://www.twitter.com/mr_parshwa_patil/"><i class="fab fa-twitter"></i></a>
+                        <a href="https://www.instagram.com/mr_parshwa_patil/"><i class="fab fa-instagram"></i></a>
+                        <a href="#"><i class="fab fa-pinterest"></i></a>
+                    </div>
+                </div>
+                <div class="footer-column">
+                    <h3>Quick Links</h3>
+                    <ul class="footer-links">
+                        <li><a href="{{ url_for('index') }}">Home</a></li>
+                        <li><a href="{{ url_for('product') }}">Products</a></li>
+                        <li><a href="{{ url_for('feedback') }}">Feedback</a></li>
+                        <li><a href="{{ url_for('login') }}">Login</a></li>
+                        <li><a href="{{ url_for('register') }}">Register</a></li>
+                    </ul>
+                </div>
+                <div class="footer-column">
+                    <h3>Customer Service</h3>
+                    <ul class="footer-links">
+                        <li><a href="{{ url_for('shipping_info') }}">Shipping Info</a></li>
+                        <li><a href="{{ url_for('return_policy') }}">Return Policy</a></li>
+                        <li><a href="{{ url_for('faqs') }}">FAQs</a></li>
+                        <li><a href="{{ url_for('privacy_policy') }}">Privacy Policy</a></li>
+                        <li><a href="{{ url_for('terms_and_conditions') }}">Terms & Conditions</a></li>
+                    </ul>
+                </div>
+                <div class="footer-column">
+                    <h3>Contact Info</h3>
+                    <ul class="contact-info">
+                        <li><i class="fas fa-map-marker-alt"></i> XYZ colony, New York</li>
+                        <li><i class="fas fa-phone"></i> +91 23456855</li>
+                        <li><i class="fas fa-envelope"></i> agrimarketing@gmail.com</li>
+                        <li><i class="fas fa-clock"></i> Mon-Sun: 9:00 AM - 11:00 PM</li>
+                    </ul>
+                </div>
+            </div>
+            <div class="copyright">
+                <p>&copy; 2024 E-Mandi - Online Marketplace. All rights reserved.</p>
+            </div>
+        </div>
+    </footer>
+
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/js/bootstrap.bundle.min.js"></script>
+    <script>
+        let currentOrderId = null;
+
+        // Initialize the page
+        document.addEventListener('DOMContentLoaded', function () {
+            setupEventListeners();
+        });
+
+        // Set up event listeners
+        function setupEventListeners() {
+            // Event delegation for view and update buttons (since they're dynamically added)
+            document.getElementById('main-content').addEventListener('click', function (e) {
+                // View order button
+                if (e.target.closest('.view-order-btn')) {
+                    const orderId = parseInt(e.target.closest('.view-order-btn').getAttribute('data-order-id'));
+                    showOrderDetails(orderId);
+                }
+
+                // Update status button
+                if (e.target.closest('.update-status-btn')) {
+                    const orderId = parseInt(e.target.closest('.update-status-btn').getAttribute('data-order-id'));
+                    const currentStatus = e.target.closest('.update-status-btn').getAttribute('data-current-status');
+                    showUpdateStatusModal(orderId, currentStatus);
+                }
+            });
+
+            // Confirm status update button
+            document.getElementById('confirm-status-update').addEventListener('click', updateOrderStatus);
+        }
+
+        // Show order details in modal
+        function showOrderDetails(orderId) {
+            const modalBody = document.getElementById('order-details-content');
+            modalBody.innerHTML = '<p class="text-center"><i class="fas fa-spinner fa-spin"></i> Loading...</p>';
+            document.getElementById('modal-order-id').textContent = orderId;
+
+            // Show the modal
+            const modal = new bootstrap.Modal(document.getElementById('orderDetailsModal'));
+            modal.show();
+
+            // Fetch details from the server
+            fetch(`/admin/order/${orderId}`)
+                .then(response => response.json())
+                .then(data => {
+                    if (data.error) {
+                        modalBody.innerHTML = `<p class="text-danger">${data.error}</p>`;
+                        return;
+                    }
+                    const orderDetailsHtml = `
+                        <ul class="order-details-list">
+                            <li><strong>Customer:</strong> ${data.buyer.name} (${data.buyer.email})</li>
+                            <li><strong>Amount:</strong> ₹${data.total_amount.toFixed(2)}</li>
+                            <li><strong>Status:</strong> <span class="badge status-${data.status.toLowerCase()}">${data.status}</span></li>
+                            <li><strong>Payment Mode:</strong> ${data.payment_mode}</li>
+                            <li><strong>Date:</strong> ${new Date(data.created_at).toLocaleString()}</li>
+                        </ul>
+                        <p class="mt-3 text-muted small">More item details can be fetched and displayed here.</p>
+                    `;
+                    modalBody.innerHTML = orderDetailsHtml;
+                });
+        }
+
+        // Show update status modal
+        function showUpdateStatusModal(orderId, currentStatus) {
+            currentOrderId = orderId;
+            document.getElementById('status-order-id').textContent = orderId;
+            document.getElementById('status-select').value = currentStatus;
+
+            const modal = new bootstrap.Modal(document.getElementById('updateStatusModal'));
+            modal.show();
+        }
+
+        // Update order status
+        function updateOrderStatus() {
+            if (!currentOrderId) return;
+
+            const newStatus = document.getElementById('status-select').value;
+            fetch(`/admin/update_order_status/${currentOrderId}`, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ status: newStatus })
+            })
+                .then(response => response.json())
+                .then(data => {
+                    if (data.success) {
+                        const modal = bootstrap.Modal.getInstance(document.getElementById('updateStatusModal'));
+                        modal.hide();
+                        alert(data.message); // Or use a nicer toast notification
+                        location.reload(); // Easiest way to reflect change
+                    } else {
+                        alert('Error: ' + data.error);
+                    }
+                });
+        }
+    </script>
+</body>
+
+</html>

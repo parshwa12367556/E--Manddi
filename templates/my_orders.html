@@ -1,0 +1,89 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>My Orders - Cropify</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <style>
+        body { background-color: #f8f9fa; }
+        .card { border: none; box-shadow: 0 5px 15px rgba(0,0,0,0.05); }
+        .status-badge { font-size: 0.9rem; }
+    </style>
+</head>
+<body>
+    <nav class="navbar navbar-expand-lg navbar-dark bg-success mb-4">
+        <div class="container">
+            <a class="navbar-brand fw-bold" href="{{ url_for('index') }}">E-Mandi</a>
+            <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav">
+                <span class="navbar-toggler-icon"></span>
+            </button>
+            <div class="collapse navbar-collapse" id="navbarNav">
+                <div class="navbar-nav ms-auto">
+                    <a class="nav-link" href="{{ url_for('product') }}">Continue Shopping</a>
+                    <a class="nav-link" href="{{ url_for('logout') }}">Logout</a>
+                </div>
+            </div>
+        </div>
+    </nav>
+
+    <div class="container mb-5">
+        <h2 class="mb-4">My Orders</h2>
+        
+        {% if orders %}
+        <div class="card">
+            <div class="card-body p-0">
+                <div class="table-responsive">
+                    <table class="table table-hover mb-0">
+                        <thead class="bg-light">
+                            <tr>
+                                <th class="ps-4 py-3">Order ID</th>
+                                <th class="py-3">Date</th>
+                                <th class="py-3">Total Amount</th>
+                                <th class="py-3">Payment</th>
+                                <th class="py-3">Status</th>
+                                <th class="text-end pe-4 py-3">Action</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for order in orders %}
+                            <tr>
+                                <td class="ps-4 fw-bold">#{{ order.id }}</td>
+                                <td>{{ order.created_at.strftime('%b %d, %Y') }}</td>
+                                <td>₹{{ "%.2f"|format(order.total_amount) }}</td>
+                                <td>{{ order.payment_mode }}</td>
+                                <td>
+                                    {% if order.status == 'Completed' or order.status == 'Delivered' %}
+                                    <span class="badge bg-success status-badge">{{ order.status }}</span>
+                                    {% elif order.status == 'Cancelled' %}
+                                    <span class="badge bg-danger status-badge">{{ order.status }}</span>
+                                    {% else %}
+                                    <span class="badge bg-warning text-dark status-badge">{{ order.status }}</span>
+                                    {% endif %}
+                                </td>
+                                <td class="text-end pe-4">
+                                    <a href="{{ url_for('orderconformation', order_id=order.id) }}" class="btn btn-sm btn-outline-primary">
+                                        View Details
+                                    </a>
+                                </td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+        {% else %}
+        <div class="text-center py-5">
+            <i class="fas fa-shopping-bag fa-4x text-muted mb-3"></i>
+            <h3>No orders yet</h3>
+            <p class="text-muted">Looks like you haven't placed any orders yet.</p>
+            <a href="{{ url_for('product') }}" class="btn btn-success mt-2">Start Shopping</a>
+        </div>
+        {% endif %}
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/js/bootstrap.bundle.min.js"></script>
+</body>
+</html>

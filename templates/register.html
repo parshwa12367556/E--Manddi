@@ -1,0 +1,805 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Cropify - Register</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+    <style>
+        body {
+            background-color: #f8f9fa;
+            padding-top: 0;
+        }
+
+        .navbar-brand {
+            font-weight: bold;
+            font-size: 1.5rem;
+        }
+
+        .hero-section {
+            background: linear-gradient(rgba(0, 95, 115, 0.9), rgba(0, 95, 115, 0.8)),
+                url('https://images.unsplash.com/photo-1500382017468-9049fed747ef?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&auto=format&fit=crop&w=2070&q=80');
+            background-size: cover;
+            background-position: center;
+            color: white;
+            padding: 80px 0;
+            text-align: center;
+            margin-bottom: 50px;
+        }
+
+        .hero-section h1 {
+            font-size: 3rem;
+            margin-bottom: 20px;
+            font-weight: bold;
+        }
+
+        .hero-section p {
+            font-size: 1.2rem;
+            max-width: 700px;
+            margin: 0 auto 30px;
+        }
+
+        .registration-options {
+            display: flex;
+            justify-content: center;
+            gap: 30px;
+            margin-bottom: 50px;
+            flex-wrap: wrap;
+        }
+
+        .option-card {
+            width: 300px;
+            border: none;
+            border-radius: 15px;
+            overflow: hidden;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.1);
+            transition: transform 0.3s ease, box-shadow 0.3s ease;
+            cursor: pointer;
+            background: white;
+        }
+
+        .option-card:hover {
+            transform: translateY(-10px);
+            box-shadow: 0 15px 40px rgba(0, 0, 0, 0.15);
+        }
+
+        .option-card.active {
+            border: 3px solid #ee9b00;
+        }
+
+        .option-header {
+            padding: 30px 20px;
+            text-align: center;
+            color: white;
+        }
+
+        .farmer-header {
+            background-color: #0a9396;
+        }
+
+        .buyer-header {
+            background-color: #94d2bd;
+        }
+
+        .option-icon {
+            font-size: 3rem;
+            margin-bottom: 15px;
+        }
+
+        .option-title {
+            font-size: 1.8rem;
+            margin-bottom: 10px;
+            font-weight: bold;
+        }
+
+        .option-description {
+            font-size: 1rem;
+            opacity: 0.9;
+        }
+
+        .option-body {
+            padding: 30px;
+            text-align: center;
+        }
+
+        .btn-option-select {
+            background-color: #ee9b00;
+            color: white;
+            border: none;
+            padding: 12px 30px;
+            border-radius: 25px;
+            font-weight: bold;
+            transition: all 0.3s ease;
+        }
+
+        .btn-option-select:hover {
+            background-color: #ca8200;
+            transform: scale(1.05);
+        }
+
+        .registration-form-section {
+            max-width: 600px;
+            margin: 0 auto 80px;
+            display: none;
+        }
+
+        .registration-form-section.active {
+            display: block;
+            animation: fadeIn 0.5s ease;
+        }
+
+        @keyframes fadeIn {
+            from {
+                opacity: 0;
+                transform: translateY(20px);
+            }
+
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        .form-card {
+            border: none;
+            border-radius: 15px;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.1);
+            overflow: hidden;
+        }
+
+        .form-header {
+            padding: 25px 30px;
+            color: white;
+            text-align: center;
+        }
+
+        .farmer-form-header {
+            background-color: #0a9396;
+        }
+
+        .buyer-form-header {
+            background-color: #94d2bd;
+        }
+
+        .form-body {
+            padding: 40px;
+        }
+
+        .form-label {
+            font-weight: 600;
+            color: #333;
+            margin-bottom: 8px;
+        }
+
+        .form-control {
+            padding: 12px 15px;
+            border: 1px solid #ddd;
+            border-radius: 8px;
+            margin-bottom: 20px;
+            transition: all 0.3s ease;
+        }
+
+        .form-control:focus {
+            border-color: #ee9b00;
+            box-shadow: 0 0 0 0.25rem rgba(238, 155, 0, 0.25);
+        }
+
+        .btn-register {
+            background-color: #ee9b00;
+            border: none;
+            padding: 14px;
+            font-weight: bold;
+            font-size: 1.1rem;
+            border-radius: 8px;
+            transition: all 0.3s ease;
+            width: 100%;
+            color: white;
+        }
+
+        .btn-register:hover {
+            background-color: #ca8200;
+            transform: translateY(-2px);
+        }
+
+        .back-to-options {
+            text-align: center;
+            margin-top: 20px;
+        }
+
+        .back-to-options a {
+            color: #0a9396;
+            text-decoration: none;
+            font-weight: 600;
+            display: inline-flex;
+            align-items: center;
+            gap: 5px;
+            transition: color 0.3s ease;
+        }
+
+        .back-to-options a:hover {
+            color: #ee9b00;
+        }
+
+        .required-field {
+            color: #e63946;
+        }
+
+        /* Footer Styles */
+        :root {
+            --dark: #343a40;
+            --accent: #28a745;
+            --light: #f8f9fa;
+            --border: #dee2e6;
+        }
+
+        footer {
+            background-color: #001219;
+            color: white;
+            padding: 60px 0 20px;
+        }
+
+        .footer-content {
+            display: grid;
+            grid-template-columns: repeat(4, 1fr);
+            gap: 30px;
+            margin-bottom: 40px;
+        }
+
+        .footer-column h3 {
+            font-size: 18px;
+            margin-bottom: 20px;
+            position: relative;
+            padding-bottom: 10px;
+        }
+
+        .footer-column h3::after {
+            content: '';
+            position: absolute;
+            width: 40px;
+            height: 3px;
+            background-color: #ee9b00;
+            bottom: 0;
+            left: 0;
+        }
+
+        .footer-column p {
+            color: #bbb;
+            line-height: 1.6;
+        }
+
+        .footer-links {
+            list-style: none;
+            padding: 0;
+            margin: 0;
+        }
+
+        .footer-links li {
+            margin-bottom: 10px;
+        }
+
+        .footer-links a {
+            color: #bbb;
+            text-decoration: none;
+            transition: color 0.3s;
+            display: block;
+        }
+
+        .footer-links a:hover {
+            color: #ee9b00;
+            transform: translateX(5px);
+        }
+
+        .contact-info {
+            list-style: none;
+            padding: 0;
+            margin: 0;
+        }
+
+        .contact-info li {
+            display: flex;
+            align-items: flex-start;
+            margin-bottom: 15px;
+            color: #bbb;
+        }
+
+        .contact-info i {
+            margin-right: 10px;
+            color: #ee9b00;
+            width: 16px;
+            text-align: center;
+        }
+
+        .social-links {
+            display: flex;
+            margin-top: 20px;
+        }
+
+        .social-links a {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            width: 36px;
+            height: 36px;
+            background-color: rgba(255, 255, 255, 0.1);
+            border-radius: 50%;
+            margin-right: 10px;
+            transition: all 0.3s;
+            text-decoration: none;
+            color: white;
+        }
+
+        .social-links a:hover {
+            background-color: #ee9b00;
+            transform: translateY(-3px);
+        }
+
+        .copyright {
+            text-align: center;
+            padding-top: 20px;
+            border-top: 1px solid rgba(255, 255, 255, 0.1);
+            color: #bbb;
+            font-size: 14px;
+        }
+
+        /* Responsive Design */
+        @media (max-width: 992px) {
+            .footer-content {
+                grid-template-columns: repeat(2, 1fr);
+            }
+
+            .registration-options {
+                gap: 20px;
+            }
+        }
+
+        @media (max-width: 768px) {
+            .hero-section h1 {
+                font-size: 2.5rem;
+            }
+
+            .option-card {
+                width: 100%;
+                max-width: 400px;
+            }
+
+            .form-body {
+                padding: 30px 20px;
+            }
+        }
+
+        @media (max-width: 576px) {
+            .footer-content {
+                grid-template-columns: 1fr;
+            }
+
+            .social-links {
+                justify-content: center;
+            }
+
+            .hero-section {
+                padding: 50px 20px;
+            }
+
+            .hero-section h1 {
+                font-size: 2rem;
+            }
+        }
+
+        .bg-success {
+            background-color: #005f73 !important;
+        }
+
+        .btn-success {
+            background-color: #ee9b00;
+            border-color: #ee9b00;
+        }
+
+        .btn-success:hover {
+            background-color: #ca8200;
+            border-color: #ca8200;
+        }
+    </style>
+</head>
+
+<body>
+    <nav class="navbar navbar-expand-lg navbar-dark bg-success">
+        <div class="container">
+            <a class="navbar-brand" href="{{ url_for('index') }}">E-Mandi</a>
+            <div class="navbar-nav me-auto">
+                <a class="nav-link" href="{{ url_for('index') }}">Home</a>
+                <a class="nav-link" href="{{ url_for('product') }}">Products</a>
+                <a class="nav-link" href="{{ url_for('feedback') }}">Feedback</a>
+                {% if 'user_id' in session and session.user_role == 'buyer' %}
+                <a class="nav-link" href="{{ url_for('cart') }}">
+                    <i class="fas fa-shopping-cart"></i> Cart
+                    <span id="cart-count" class="badge bg-light text-dark ms-1">{{ cart_count or 0 }}</span>
+                </a>
+                {% endif %}
+            </div>
+            <div class="navbar-nav">
+                {% if 'user_id' in session %}
+                {% if session.user_role == 'admin' %}
+                <a class="nav-link" href="{{ url_for('admin') }}">Admin</a>
+                {% endif %}
+                <span class="navbar-text me-3">Hello, {{ session.user_name }}</span>
+                <a class="nav-link" href="{{ url_for('logout') }}">Logout</a>
+                {% else %}
+                <a class="nav-link" href="{{ url_for('login') }}">Login</a>
+                <a class="nav-link active" href="{{ url_for('register') }}">Register</a>
+                {% endif %}
+            </div>
+        </div>
+    </nav>
+
+    {% with messages = get_flashed_messages(with_categories=true) %}
+    {% if messages %}
+    <div class="container mt-4">
+        {% for category, message in messages %}
+        <div class="alert alert-{{ 'success' if category == 'success' else 'danger' }} alert-dismissible fade show"
+            role="alert">
+            {{ message }}
+            <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+        </div>
+        {% endfor %}
+    </div>
+    {% endif %}
+    {% endwith %}
+
+    <div class="hero-section">
+        <div class="container">
+            <h1>Join Cropify Today</h1>
+            <p>Choose your role and start your journey with us. Connect directly with farmers or buy fresh produce
+                directly from source.</p>
+            <div class="registration-options" id="roleSelection">
+                <div class="option-card" data-role="farmer">
+                    <div class="option-header farmer-header">
+                        <div class="option-icon">
+                            <i class="fas fa-tractor"></i>
+                        </div>
+                        <h3 class="option-title">Farmer/Seller</h3>
+                        <p class="option-description">Sell your fresh produce directly to buyers</p>
+                    </div>
+                    <div class="option-body">
+                        <p>• List your crops and products<br>
+                            • Set your own prices<br>
+                            • Reach more customers<br>
+                            • Manage orders easily</p>
+                        <button class="btn btn-option-select" data-role="farmer">Register as Farmer</button>
+                    </div>
+                </div>
+
+                <div class="option-card" data-role="buyer">
+                    <div class="option-header buyer-header">
+                        <div class="option-icon">
+                            <i class="fas fa-shopping-basket"></i>
+                        </div>
+                        <h3 class="option-title">Buyer/Customer</h3>
+                        <p class="option-description">Buy fresh farm products directly from farmers</p>
+                    </div>
+                    <div class="option-body">
+                        <p>• Access fresh farm products<br>
+                            • Direct from farmers<br>
+                            • Competitive prices<br>
+                            • Home delivery available</p>
+                        <button class="btn btn-option-select" data-role="buyer">Register as Buyer</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Farmer Registration Form -->
+    <div class="container">
+        <div class="registration-form-section" id="farmerForm">
+            <div class="form-card">
+                <div class="form-header farmer-form-header">
+                    <h2 class="mb-0">Farmer Registration</h2>
+                    <p class="mb-0">Join our community of farmers</p>
+                </div>
+                <div class="form-body">
+                    <form action="{{ url_for('register') }}" method="POST" id="registerFarmerForm">
+                        <input type="hidden" name="role" value="farmer">
+
+                        <div class="row">
+                            <div class="col-md-6">
+                                <label for="farmerName" class="form-label">Full Name <span
+                                        class="required-field">*</span></label>
+                                <input type="text" class="form-control" id="farmerName" name="name" required
+                                    placeholder="Enter your full name">
+                            </div>
+                            <div class="col-md-6">
+                                <label for="farmerEmail" class="form-label">Email Address <span
+                                        class="required-field">*</span></label>
+                                <input type="email" class="form-control" id="farmerEmail" name="email" required
+                                    placeholder="Enter your email">
+                            </div>
+                        </div>
+
+                        <div class="row">
+                            <div class="col-md-6">
+                                <label for="farmerPassword" class="form-label">Password <span
+                                        class="required-field">*</span></label>
+                                <input type="password" class="form-control" id="farmerPassword" name="password" required
+                                    placeholder="Create a password">
+                            </div>
+                            <div class="col-md-6">
+                                <label for="farmerConfirmPassword" class="form-label">Confirm Password <span
+                                        class="required-field">*</span></label>
+                                <input type="password" class="form-control" id="farmerConfirmPassword" required
+                                    placeholder="Confirm your password">
+                            </div>
+                        </div>
+
+                        <div class="row">
+                            <div class="col-md-6">
+                                <label for="farmerPhone" class="form-label">Phone Number <span
+                                        class="required-field">*</span></label>
+                                <input type="tel" class="form-control" id="farmerPhone" name="phone" required
+                                    placeholder="Enter your phone number">
+                            </div>
+                            <div class="col-md-6">
+                                <label for="farmerLocation" class="form-label">Farm Location <span
+                                        class="required-field">*</span></label>
+                                <input type="text" class="form-control" id="farmerLocation" name="location" required
+                                    placeholder="Enter farm location">
+                            </div>
+                        </div>
+
+                        <div class="mb-3">
+                            <label for="farmerExperience" class="form-label">Farming Experience (Years)</label>
+                            <input type="number" class="form-control" id="farmerExperience" name="experience"
+                                placeholder="Years of farming experience">
+                        </div>
+
+                        <div class="mb-3">
+                            <label for="farmerSpecialization" class="form-label">Crop Specialization</label>
+                            <input type="text" class="form-control" id="farmerSpecialization" name="specialization"
+                                placeholder="e.g., Organic Vegetables, Fruits, Grains">
+                        </div>
+
+                        <button type="submit" class="btn btn-register">Create Farmer Account</button>
+                    </form>
+
+                    <div class="back-to-options">
+                        <a href="#" onclick="showRoleSelection()">
+                            <i class="fas fa-arrow-left"></i> Back to Role Selection
+                        </a>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Buyer Registration Form -->
+        <div class="registration-form-section" id="buyerForm">
+            <div class="form-card">
+                <div class="form-header buyer-form-header">
+                    <h2 class="mb-0">Buyer Registration</h2>
+                    <p class="mb-0">Start buying fresh farm products</p>
+                </div>
+                <div class="form-body">
+                    <form action="{{ url_for('register') }}" method="POST" id="registerBuyerForm">
+                        <input type="hidden" name="role" value="buyer">
+
+                        <div class="row">
+                            <div class="col-md-6">
+                                <label for="buyerName" class="form-label">Full Name <span
+                                        class="required-field">*</span></label>
+                                <input type="text" class="form-control" id="buyerName" name="name" required
+                                    placeholder="Enter your full name">
+                            </div>
+                            <div class="col-md-6">
+                                <label for="buyerEmail" class="form-label">Email Address <span
+                                        class="required-field">*</span></label>
+                                <input type="email" class="form-control" id="buyerEmail" name="email" required
+                                    placeholder="Enter your email">
+                            </div>
+                        </div>
+
+                        <div class="row">
+                            <div class="col-md-6">
+                                <label for="buyerPassword" class="form-label">Password <span
+                                        class="required-field">*</span></label>
+                                <input type="password" class="form-control" id="buyerPassword" name="password" required
+                                    placeholder="Create a password">
+                            </div>
+                            <div class="col-md-6">
+                                <label for="buyerConfirmPassword" class="form-label">Confirm Password <span
+                                        class="required-field">*</span></label>
+                                <input type="password" class="form-control" id="buyerConfirmPassword" required
+                                    placeholder="Confirm your password">
+                            </div>
+                        </div>
+
+                        <div class="row">
+                            <div class="col-md-6">
+                                <label for="buyerPhone" class="form-label">Phone Number</label>
+                                <input type="tel" class="form-control" id="buyerPhone" name="phone"
+                                    placeholder="Enter your phone number">
+                            </div>
+                            <div class="col-md-6">
+                                <label for="buyerAddress" class="form-label">Delivery Address <span
+                                        class="required-field">*</span></label>
+                                <input type="text" class="form-control" id="buyerAddress" name="address" required
+                                    placeholder="Enter delivery address">
+                            </div>
+                        </div>
+
+                        <div class="mb-3">
+                            <label for="buyerPreferences" class="form-label">Product Preferences (Optional)</label>
+                            <textarea class="form-control" id="buyerPreferences" name="preferences" rows="3"
+                                placeholder="e.g., Organic vegetables, Seasonal fruits, Dairy products"></textarea>
+                        </div>
+
+                        <div class="form-check mb-4">
+                            <input class="form-check-input" type="checkbox" id="newsletter" name="newsletter" checked>
+                            <label class="form-check-label" for="newsletter">
+                                Subscribe to newsletter for updates on new products and offers
+                            </label>
+                        </div>
+
+                        <button type="submit" class="btn btn-register">Create Buyer Account</button>
+                    </form>
+
+                    <div class="back-to-options">
+                        <a href="#" onclick="showRoleSelection()">
+                            <i class="fas fa-arrow-left"></i> Back to Role Selection
+                        </a>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <footer>
+        <div class="container">
+            <div class="footer-content">
+                <div class="footer-column">
+                    <h3>E-Mandi - Online Marketplace</h3>
+                    <p>Your one-stop destination for fresh farm products directly from farmers to your doorstep.</p>
+                    <div class="social-links">
+                        <a href="https://www.facebook.com/mr_parshwa_patil/"><i class="fab fa-facebook-f"></i></a>
+                        <a href="https://www.twitter.com/mr_parshwa_patil/"><i class="fab fa-twitter"></i></a>
+                        <a href="https://www.instagram.com/mr_parshwa_patil/"><i class="fab fa-instagram"></i></a>
+                        <a href="#"><i class="fab fa-pinterest"></i></a>
+                    </div>
+                </div>
+                <div class="footer-column">
+                    <h3>Quick Links</h3>
+                    <ul class="footer-links">
+                        <li><a href="{{ url_for('index') }}">Home</a></li>
+                        <li><a href="{{ url_for('product') }}">Products</a></li>
+                        <li><a href="{{ url_for('feedback') }}">Feedback</a></li>
+                        <li><a href="{{ url_for('login') }}">Login</a></li>
+                        <li><a href="{{ url_for('register') }}">Register</a></li>
+                    </ul>
+                </div>
+                <div class="footer-column">
+                    <h3>Customer Service</h3>
+                    <ul class="footer-links">
+                        <li><a href="{{ url_for('shipping_info') }}">Shipping Info</a></li>
+                        <li><a href="{{ url_for('return_policy') }}">Return Policy</a></li>
+                        <li><a href="{{ url_for('faqs') }}">FAQs</a></li>
+                        <li><a href="{{ url_for('privacy_policy') }}">Privacy Policy</a></li>
+                        <li><a href="{{ url_for('terms_and_conditions') }}">Terms & Conditions</a></li>
+                    </ul>
+                </div>
+                <div class="footer-column">
+                    <h3>Contact Info</h3>
+                    <ul class="contact-info">
+                        <li><i class="fas fa-map-marker-alt"></i>XYZ coloni, Newyork</li>
+                        <li><i class="fas fa-phone"></i> +91 23456855</li>
+                        <li><i class="fas fa-envelope"></i>agrimarketing@gmail.com</li>
+                        <li><i class="fas fa-clock"></i> Mon-Sun: 9:00 AM - 11:00 PM</li>
+                    </ul>
+                </div>
+            </div>
+            <div class="copyright">
+                <p>&copy; 2024 E-Mandi - Online Marketplace. All rights reserved.</p>
+            </div>
+        </div>
+    </footer>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/js/bootstrap.bundle.min.js"></script>
+    <script>
+        // Role selection functionality
+        function selectRole(role) {
+            // Hide role selection
+            document.getElementById('roleSelection').style.display = 'none';
+
+            // Remove active class from all cards
+            document.querySelectorAll('.option-card').forEach(card => {
+                card.classList.remove('active');
+            });
+
+            // Add active class to selected card
+            document.querySelector(`.option-card[data-role="${role}"]`).classList.add('active');
+
+            // Show appropriate form
+            if (role === 'farmer') {
+                document.getElementById('farmerForm').classList.add('active');
+                document.getElementById('buyerForm').classList.remove('active');
+            } else {
+                document.getElementById('buyerForm').classList.add('active');
+                document.getElementById('farmerForm').classList.remove('active');
+            }
+        }
+
+        function showRoleSelection() {
+            // Show role selection
+            document.getElementById('roleSelection').style.display = 'flex';
+
+            // Hide all forms
+            document.getElementById('farmerForm').classList.remove('active');
+            document.getElementById('buyerForm').classList.remove('active');
+
+            // Scroll to top
+            window.scrollTo({ top: 0, behavior: 'smooth' });
+        }
+
+        // Add event listeners to role selection buttons
+        document.addEventListener('DOMContentLoaded', function () {
+            // Role selection buttons
+            document.querySelectorAll('.btn-option-select').forEach(button => {
+                button.addEventListener('click', function () {
+                    const role = this.getAttribute('data-role');
+                    selectRole(role);
+                });
+            });
+
+            // Role selection cards
+            document.querySelectorAll('.option-card').forEach(card => {
+                card.addEventListener('click', function () {
+                    const role = this.getAttribute('data-role');
+                    selectRole(role);
+                });
+            });
+
+            // Form validation
+            const farmerForm = document.getElementById('registerFarmerForm');
+            const buyerForm = document.getElementById('registerBuyerForm');
+
+            if (farmerForm) {
+                farmerForm.addEventListener('submit', function (e) {
+                    const password = document.getElementById('farmerPassword').value;
+                    const confirmPassword = document.getElementById('farmerConfirmPassword').value;
+
+                    if (password !== confirmPassword) {
+                        e.preventDefault();
+                        alert('Passwords do not match!');
+                        return false;
+                    }
+
+                    if (password.length < 6) {
+                        e.preventDefault();
+                        alert('Password must be at least 6 characters long!');
+                        return false;
+                    }
+                });
+            }
+
+            if (buyerForm) {
+                buyerForm.addEventListener('submit', function (e) {
+                    const password = document.getElementById('buyerPassword').value;
+                    const confirmPassword = document.getElementById('buyerConfirmPassword').value;
+
+                    if (password !== confirmPassword) {
+                        e.preventDefault();
+                        alert('Passwords do not match!');
+                        return false;
+                    }
+
+                    if (password.length < 6) {
+                        e.preventDefault();
+                        alert('Password must be at least 6 characters long!');
+                        return false;
+                    }
+                });
+            }
+        });
+    </script>
+</body>
+
+</html>

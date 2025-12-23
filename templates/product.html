@@ -1,0 +1,702 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Cropify - Products</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <style>
+        :root {
+            --primary-dark: #005f73;
+            --primary-orange: #ee9b00;
+            --secondary-green: #94d2bd;
+            --light-bg: #f8f9fa;
+            --dark-text: #333333;
+        }
+
+        body {
+            background-color: var(--light-bg);
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            color: var(--dark-text);
+            margin: 0;
+            padding: 0;
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+        }
+
+        .navbar {
+            box-shadow: 0 2px 15px rgba(0, 0, 0, 0.1);
+        }
+
+        .navbar-brand {
+            font-weight: 800;
+            font-size: 1.5rem;
+            color: white !important;
+        }
+
+        .bg-success {
+            background-color: var(--primary-dark) !important;
+        }
+
+        .btn-success {
+            background-color: var(--primary-orange);
+            border-color: var(--primary-orange);
+            font-weight: 600;
+            transition: all 0.3s ease;
+        }
+
+        .btn-success:hover {
+            background-color: #ca8200;
+            border-color: #ca8200;
+            transform: translateY(-2px);
+            box-shadow: 0 5px 15px rgba(238, 155, 0, 0.3);
+        }
+
+        .card {
+            box-shadow: 0 0.125rem 0.25rem rgba(0, 0, 0, 0.075);
+            border: 1px solid rgba(0, 0, 0, 0.125);
+            transition: all 0.3s ease;
+            height: 100%;
+            border-radius: 10px;
+            overflow: hidden;
+        }
+
+        .card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 10px 25px rgba(0, 0, 0, 0.1);
+        }
+
+        .list-group-item.active {
+            background-color: var(--secondary-green);
+            border-color: var(--secondary-green);
+            color: var(--primary-dark);
+            font-weight: 600;
+        }
+
+        .list-group-item {
+            border: 1px solid rgba(0, 0, 0, 0.125);
+            margin-bottom: 5px;
+            border-radius: 5px !important;
+            transition: all 0.2s ease;
+        }
+
+        .list-group-item:hover {
+            background-color: rgba(148, 210, 189, 0.1);
+            transform: translateX(5px);
+        }
+
+        .product-image {
+            height: 200px;
+            object-fit: cover;
+            width: 100%;
+            border-bottom: 1px solid #eee;
+        }
+
+        .product-category-badge {
+            position: absolute;
+            top: 10px;
+            right: 10px;
+            background: rgba(0, 95, 115, 0.9);
+            color: white;
+            padding: 5px 10px;
+            border-radius: 20px;
+            font-size: 0.8rem;
+            font-weight: 600;
+        }
+
+        .main-content {
+            flex: 1;
+            padding-bottom: 20px;
+        }
+
+        /* Footer Styles */
+        footer {
+            background-color: #001219;
+            color: white;
+            padding: 60px 0 20px;
+            margin-top: auto;
+        }
+
+        .footer-content {
+            display: grid;
+            grid-template-columns: repeat(4, 1fr);
+            gap: 40px;
+            margin-bottom: 40px;
+        }
+
+        .footer-column h3 {
+            font-size: 1.3rem;
+            font-weight: 600;
+            margin-bottom: 25px;
+            position: relative;
+            padding-bottom: 10px;
+        }
+
+        .footer-column h3::after {
+            content: '';
+            position: absolute;
+            width: 40px;
+            height: 3px;
+            background-color: var(--primary-orange);
+            bottom: 0;
+            left: 0;
+        }
+
+        .footer-column p {
+            color: #bbb;
+            line-height: 1.7;
+            margin-bottom: 20px;
+        }
+
+        .footer-links {
+            list-style: none;
+            padding: 0;
+            margin: 0;
+        }
+
+        .footer-links li {
+            margin-bottom: 12px;
+        }
+
+        .footer-links a {
+            color: #bbb;
+            text-decoration: none;
+            transition: all 0.3s ease;
+            display: inline-block;
+        }
+
+        .footer-links a:hover {
+            color: var(--primary-orange);
+            transform: translateX(5px);
+        }
+
+        .contact-info {
+            list-style: none;
+            padding: 0;
+            margin: 0;
+        }
+
+        .contact-info li {
+            display: flex;
+            align-items: flex-start;
+            margin-bottom: 15px;
+            color: #bbb;
+            line-height: 1.6;
+        }
+
+        .contact-info i {
+            margin-right: 12px;
+            color: var(--primary-orange);
+            width: 20px;
+            text-align: center;
+            flex-shrink: 0;
+        }
+
+        .social-links {
+            display: flex;
+            margin-top: 20px;
+        }
+
+        .social-links a {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            width: 40px;
+            height: 40px;
+            background-color: rgba(255, 255, 255, 0.1);
+            border-radius: 50%;
+            margin-right: 10px;
+            transition: all 0.3s ease;
+            text-decoration: none;
+            color: white;
+        }
+
+        .social-links a:hover {
+            background-color: var(--primary-orange);
+            transform: translateY(-5px);
+        }
+
+        .copyright {
+            text-align: center;
+            padding-top: 25px;
+            border-top: 1px solid rgba(255, 255, 255, 0.1);
+            color: #bbb;
+            font-size: 0.9rem;
+        }
+
+        .badge.bg-light {
+            background-color: white !important;
+            color: var(--primary-dark) !important;
+            font-weight: 600;
+        }
+
+        .price-tag {
+            font-size: 1.4rem;
+            font-weight: 700;
+            color: var(--primary-dark);
+            margin: 10px 0;
+        }
+
+        .quantity-badge {
+            background-color: var(--secondary-green);
+            color: var(--primary-dark);
+            padding: 3px 10px;
+            border-radius: 15px;
+            font-size: 0.9rem;
+            font-weight: 600;
+        }
+
+        /* Responsive Design */
+        @media (max-width: 992px) {
+            .footer-content {
+                grid-template-columns: repeat(2, 1fr);
+            }
+        }
+
+        @media (max-width: 768px) {
+            .navbar-nav {
+                padding-top: 10px;
+            }
+
+            .navbar-text {
+                padding: 5px 0;
+            }
+
+            .container {
+                padding-left: 15px;
+                padding-right: 15px;
+            }
+        }
+
+        @media (max-width: 576px) {
+            .footer-content {
+                grid-template-columns: 1fr;
+            }
+
+            .social-links {
+                justify-content: flex-start;
+            }
+
+            .col-md-4 {
+                margin-bottom: 20px;
+            }
+
+            .list-group {
+                margin-bottom: 20px;
+            }
+        }
+
+        @media (max-width: 480px) {
+            .navbar-brand {
+                font-size: 1.2rem;
+            }
+
+            .card-title {
+                font-size: 1.1rem;
+            }
+
+            .price-tag {
+                font-size: 1.2rem;
+            }
+        }
+
+        /* Empty state */
+        .empty-state {
+            text-align: center;
+            padding: 60px 20px;
+            background: white;
+            border-radius: 10px;
+            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.05);
+        }
+
+        .empty-state i {
+            font-size: 4rem;
+            color: #ccc;
+            margin-bottom: 20px;
+        }
+
+        /* Category icons */
+        .category-icon {
+            font-size: 1.2rem;
+            margin-right: 8px;
+        }
+    </style>
+</head>
+
+<body>
+    <nav class="navbar navbar-expand-lg navbar-dark bg-success">
+        <div class="container">
+            <a class="navbar-brand" href="{{ url_for('index') }}">E-Mandi</a>
+            <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav">
+                <span class="navbar-toggler-icon"></span>
+            </button>
+            <div class="collapse navbar-collapse" id="navbarNav">
+                <div class="navbar-nav me-auto">
+                    <a class="nav-link" href="{{ url_for('index') }}">Home</a>
+                    <a class="nav-link active" href="{{ url_for('product') }}">Products</a>
+                    <a class="nav-link" href="{{ url_for('feedback') }}">Feedback</a>
+                    <a class="nav-link" href="{{ url_for('cart') }}">
+                        <i class="fas fa-shopping-cart"></i> Cart
+                        <span id="cart-count" class="badge bg-light text-dark ms-1">{{ cart_count or 0 }}</span>
+                    </a>
+                </div>
+                <div class="navbar-nav">
+                    {% if 'user_id' in session %}
+                    <div class="nav-item dropdown">
+                        <a class="nav-link dropdown-toggle" href="#" id="navbarDropdown" role="button" data-bs-toggle="dropdown" aria-expanded="false">
+                            <i class="fas fa-user me-1"></i> {{ session.user_name }}
+                        </a>
+                        <ul class="dropdown-menu dropdown-menu-end" aria-labelledby="navbarDropdown">
+                            {% if session.user_role == 'admin' %}
+                            <li><a class="dropdown-item" href="{{ url_for('admin') }}"><i class="fas fa-cog me-2"></i>Admin Panel</a></li>
+                            {% endif %}
+                            {% if session.user_role in ['seller', 'farmer'] %}
+                            <li><a class="dropdown-item" href="{{ url_for('seller_dashboard') }}"><i class="fas fa-tachometer-alt me-2"></i>Dashboard</a></li>
+                            {% endif %}
+                            {% if session.user_role == 'buyer' %}
+                            <li><a class="dropdown-item" href="{{ url_for('my_orders') }}"><i class="fas fa-history me-2"></i>My Orders</a></li>
+                            {% endif %}
+                            <li><a class="dropdown-item" href="{{ url_for('profile') }}"><i class="fas fa-user-circle me-2"></i>Profile</a></li>
+                            <li><hr class="dropdown-divider"></li>
+                            <li><a class="dropdown-item" href="{{ url_for('logout') }}"><i class="fas fa-sign-out-alt me-2"></i>Logout</a></li>
+                        </ul>
+                    </div>
+                    {% else %}
+                    <a class="nav-link" href="{{ url_for('login') }}">
+                        <i class="fas fa-sign-in-alt"></i> Login
+                    </a>
+                    <a class="nav-link" href="{{ url_for('register') }}">
+                        <i class="fas fa-user-plus"></i> Register
+                    </a>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+    </nav>
+
+    <div class="main-content">
+        <div class="container mt-4">
+            <div class="row mb-4">
+                <div class="col-md-8 mx-auto">
+                    <form action="{{ url_for('product') }}" method="GET" class="d-flex shadow-sm p-2 bg-white rounded">
+                        {% if category and category != 'all' %}
+                        <input type="hidden" name="category" value="{{ category }}">
+                        {% endif %}
+                        <input class="form-control border-0 me-2" type="search" name="q" placeholder="Search for fresh fruits, vegetables..." aria-label="Search" value="{{ request.args.get('q', '') }}">
+                        <button class="btn btn-success px-4" type="submit"><i class="fas fa-search"></i></button>
+                        {% if request.args.get('q') %}
+                        <a href="{{ url_for('product', category=category) }}" class="btn btn-outline-secondary ms-2">Clear</a>
+                        {% endif %}
+                    </form>
+                </div>
+            </div>
+            <div class="row">
+                <!-- Sidebar -->
+                <div class="col-lg-3 col-md-4 mb-4">
+                    <div class="list-group mb-4">
+                        <a href="{{ url_for('product') }}"
+                            class="list-group-item list-group-item-action {% if not category or category == 'all' %}active{% endif %}">
+                            <i class="fas fa-boxes category-icon"></i> All Products
+                        </a>
+                        <a href="{{ url_for('product', category='fruits') }}"
+                            class="list-group-item list-group-item-action {% if category == 'fruits' %}active{% endif %}">
+                            <i class="fas fa-apple-alt category-icon"></i> Fruits
+                        </a>
+                        <a href="{{ url_for('product', category='vegetables') }}"
+                            class="list-group-item list-group-item-action {% if category == 'vegetables' %}active{% endif %}">
+                            <i class="fas fa-carrot category-icon"></i> Vegetables
+                        </a>
+                        <a href="{{ url_for('product', category='fertilizers') }}"
+                            class="list-group-item list-group-item-action {% if category == 'fertilizers' %}active{% endif %}">
+                            <i class="fas fa-seedling category-icon"></i> Fertilizers
+                        </a>
+                        <a href="{{ url_for('product', category='pesticides') }}"
+                            class="list-group-item list-group-item-action {% if category == 'pesticides' %}active{% endif %}">
+                            <i class="fas fa-spray-can category-icon"></i> Pesticides
+                        </a>
+                        <a href="{{ url_for('product', category='grains') }}"
+                            class="list-group-item list-group-item-action {% if category == 'grains' %}active{% endif %}">
+                            <i class="fas fa-wheat-alt category-icon"></i> Grains
+                        </a>
+                        <a href="{{ url_for('product', category='dairy') }}"
+                            class="list-group-item list-group-item-action {% if category == 'dairy' %}active{% endif %}">
+                            <i class="fas fa-cheese category-icon"></i> Dairy
+                        </a>
+                    </div>
+                </div>
+
+                <!-- Main Content -->
+                <div class="col-lg-9 col-md-8" id="product-list-container">
+                    <div class="d-flex justify-content-between align-items-center mb-4">
+                        <h2 class="mb-0">
+                            {% if category %}
+                            {{ category|capitalize }}
+                            {% else %}
+                            All Products
+                            {% endif %}
+                            <span class="badge bg-success ms-2">{{ product|length }}</span>
+                        </h2>
+                        <div class="d-flex gap-2">
+                            {% if 'user_id' in session and session.user_role in ['seller', 'farmer', 'admin'] %}
+                            <a href="{{ url_for('addproduct') }}" class="btn btn-success">
+                                <i class="fas fa-plus-circle me-2"></i> Add Product
+                            </a>
+                            {% endif %}
+                            <div class="dropdown">
+                            <button class="btn btn-outline-success dropdown-toggle" type="button" id="sortDropdown"
+                                data-bs-toggle="dropdown">
+                                <i class="fas fa-sort me-2"></i> Sort By
+                            </button>
+                            <ul class="dropdown-menu" aria-labelledby="sortDropdown">
+                                <li><a class="dropdown-item {% if sort_by == 'price_asc' %}active{% endif %}" href="{{ url_for('product', category=category, q=request.args.get('q'), sort='price_asc') }}">Price: Low to High</a></li>
+                                <li><a class="dropdown-item {% if sort_by == 'price_desc' %}active{% endif %}" href="{{ url_for('product', category=category, q=request.args.get('q'), sort='price_desc') }}">Price: High to Low</a></li>
+                                <li><a class="dropdown-item {% if sort_by == 'newest' %}active{% endif %}" href="{{ url_for('product', category=category, q=request.args.get('q'), sort='newest') }}">Newest First</a></li>
+                                <li><a class="dropdown-item {% if sort_by == 'popular' %}active{% endif %}" href="{{ url_for('product', category=category, q=request.args.get('q'), sort='popular') }}">Most Popular</a></li>
+                            </ul>
+                        </div>
+                        </div>
+                    </div>
+
+                    {% if product %}
+                    <div class="row">
+                        {% for p in product %}
+                        <div class="col-xl-3 col-lg-4 col-md-6 mb-4" id="p-{{ p.id }}">
+                            <div class="card h-100">
+                                <div class="position-relative">
+                                    {% set image_url = p.image %}
+                                    {% if image_url %}
+                                    {% if image_url.startswith('data:') or image_url.startswith('http') or
+                                    image_url.startswith('//') %}
+                                    <img src="{{ image_url }}" class="card-img-top product-image" alt="{{ p.name }}">
+                                    {% else %}
+                                    {% set images = image_url.split(',') if ',' in image_url else [image_url] %}
+                                    {% set primary = images[0].strip() if images and images[0] else None %}
+                                    {% if primary and (primary.startswith('data:') or primary.startswith('http') or
+                                    primary.startswith('//')) %}
+                                    <img src="{{ primary }}" class="card-img-top product-image" alt="{{ p.name }}">
+                                    {% else %}
+                                    {% set static_path = primary if primary else '' %}
+                                    {% if static_path.startswith('static/') %}
+                                    {% set static_path = static_path[7:] %}
+                                    {% endif %}
+                                    {% if static_path and not static_path.startswith('images/') %}
+                                    {% set static_path = 'images/' + static_path %}
+                                    {% endif %}
+                                    <img src="{{ url_for('static', filename=static_path) if static_path else 'data:image/svg+xml,%3Csvg xmlns=%22http://www.w3.org/2000/svg%22%3E%3Crect width=%22100%25%22 height=%22100%25%22 fill=%22%23ddd%22/%3C/svg%3E' }}"
+                                        class="card-img-top product-image" alt="{{ p.name }}"
+                                        onerror="this.src='https://images.unsplash.com/photo-1449300079323-02e209d9b3a4?ixlib=rb-1.2.1&auto=format&fit=crop&w=500&q=80';">
+                                    {% endif %}
+                                    {% endif %}
+                                    {% else %}
+                                    <img src="https://images.unsplash.com/photo-1449300079323-02e209d9b3a4?ixlib=rb-1.2.1&auto=format&fit=crop&w=500&q=80"
+                                        class="card-img-top product-image" alt="{{ p.name }}">
+                                    {% endif %}
+                                    <span class="product-category-badge">
+                                        {{ p.category|capitalize }}
+                                    </span>
+                                </div>
+                                <div class="card-body d-flex flex-column">
+                                    <h5 class="card-title">
+                                        <a href="{{ url_for('product_detail', product_id=p.id) }}" class="text-dark text-decoration-none">{{ p.name }}</a>
+                                    </h5>
+                                    <p class="card-text text-muted mb-2">
+                                        <small>{{ p.description or 'Fresh farm product' }}</small>
+                                    </p>
+                                    <div class="d-flex align-items-center mb-2">
+                                        {% for i in range(p.avg_rating|round|int) %}
+                                            <i class="fas fa-star text-warning"></i>
+                                        {% endfor %}
+                                        {% for i in range(5 - (p.avg_rating|round|int)) %}
+                                            <i class="far fa-star text-warning"></i>
+                                        {% endfor %}
+                                        <span class="ms-2 text-muted small">({{ p.review_count }})</span>
+                                    </div>
+                                    <div class="price-tag mt-auto">
+                                        ₹{{ "%.2f"|format(p.price) }}
+                                    </div>
+                                    <div class="d-flex justify-content-between align-items-center mt-2">
+                                        <span class="quantity-badge">
+                                            <i class="fas fa-box me-1"></i> {{ p.quantity }} available
+                                        </span>
+                                        <small class="text-muted">
+                                            ID: {{ p.id }}
+                                        </small>
+                                    </div>
+                                </div>
+                                <div class="card-footer bg-transparent border-top-0 pt-0">
+                                    <div class="d-flex gap-2">
+                                        <a href="{{ url_for('product_detail', product_id=p.id) }}" class="btn btn-outline-secondary flex-fill">
+                                            <i class="fas fa-eye me-1"></i> Detail
+                                        </a>
+                                        {% if p.quantity > 0 %}
+                                        <button class="btn btn-success add-to-cart-btn flex-fill" data-product-id="{{ p.id }}">
+                                            <i class="fas fa-cart-plus me-1"></i> Add
+                                        </button>
+                                        {% else %}
+                                        <button class="btn btn-secondary flex-fill" disabled>
+                                            <i class="fas fa-times-circle me-1"></i> Out
+                                        </button>
+                                        {% endif %}
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                        {% endfor %}
+                    </div>
+                    {% else %}
+                    <div class="empty-state">
+                        <i class="fas fa-box-open"></i>
+                        <h3>No Products Found</h3>
+                        <p class="text-muted mb-4">
+                            {% if category %}
+                            No products available in the {{ category }} category.
+                            {% else %}
+                            No products available at the moment.
+                            {% endif %}
+                        </p>
+                        <a href="{{ url_for('addproduct') }}" class="btn btn-success">
+                            <i class="fas fa-plus-circle me-2"></i> Add Your First Product
+                        </a>
+                    </div>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Footer -->
+    <footer>
+        <div class="container">
+            <div class="footer-content">
+                <div class="footer-column">
+                    <h3>E-Mandi - Online Marketplace</h3>
+                    <p>Your one-stop destination for fresh farm products directly from farmers to your doorstep.</p>
+                    <div class="social-links">
+                        <a href="https://www.facebook.com/mr_parshwa_patil/"><i class="fab fa-facebook-f"></i></a>
+                        <a href="https://www.twitter.com/mr_parshwa_patil/"><i class="fab fa-twitter"></i></a>
+                        <a href="https://www.instagram.com/mr_parshwa_patil/"><i class="fab fa-instagram"></i></a>
+                        <a href="#"><i class="fab fa-pinterest"></i></a>
+                    </div>
+                </div>
+                <div class="footer-column">
+                    <h3>Quick Links</h3>
+                    <ul class="footer-links">
+                        <li><a href="{{ url_for('index') }}">Home</a></li>
+                        <li><a href="{{ url_for('product') }}">Products</a></li>
+                        <li><a href="{{ url_for('feedback') }}">Feedback</a></li>
+                        <li><a href="{{ url_for('cart') }}">Cart</a></li>
+                    </ul>
+                </div>
+                <div class="footer-column">
+                    <h3>Customer Service</h3>
+                    <ul class="footer-links">
+                        <li><a href="{{ url_for('shipping_info') }}">Shipping Info</a></li>
+                        <li><a href="{{ url_for('return_policy') }}">Return Policy</a></li>
+                        <li><a href="{{ url_for('faqs') }}">FAQs</a></li>
+                        <li><a href="{{ url_for('privacy_policy') }}">Privacy Policy</a></li>
+                    </ul>
+                </div>
+                <div class="footer-column">
+                    <h3>Contact Info</h3>
+                    <ul class="contact-info">
+                        <li><i class="fas fa-map-marker-alt"></i>XYZ colony, New York</li>
+                        <li><i class="fas fa-phone"></i> +91 23456855</li>
+                        <li><i class="fas fa-envelope"></i> agrimarketing@gmail.com</li>
+                        <li><i class="fas fa-clock"></i> Mon-Sun: 9:00 AM - 11:00 PM</li>
+                    </ul>
+                </div>
+            </div>
+            <div class="copyright">
+                <p>&copy; 2024 E-Mandi - Online Marketplace. All rights reserved.</p>
+            </div>
+        </div>
+    </footer>
+
+    <!-- Bootstrap Toast for Notifications -->
+    <div class="position-fixed bottom-0 end-0 p-3" style="z-index: 11">
+        <div id="liveToast" class="toast hide" role="alert" aria-live="assertive" aria-atomic="true">
+            <div class="toast-header">
+                <strong class="me-auto">Notification</strong>
+                <button type="button" class="btn-close" data-bs-dismiss="toast" aria-label="Close"></button>
+            </div>
+            <div class="toast-body" id="toastMessage">
+                <!-- Message goes here -->
+            </div>
+        </div>
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/js/bootstrap.bundle.min.js"></script>
+    <script>
+        document.addEventListener('DOMContentLoaded', function () {
+            const toastEl = document.getElementById('liveToast');
+            const toast = new bootstrap.Toast(toastEl, { delay: 3000 });
+
+            function showToast(message, type = 'info') {
+                const toastMessage = document.getElementById('toastMessage');
+                const toastHeader = toastEl.querySelector('.toast-header');
+
+                // Reset classes
+                toastEl.classList.remove('bg-success', 'bg-danger', 'text-white');
+                toastHeader.classList.remove('bg-success', 'bg-danger', 'text-white');
+
+                if (type === 'success') {
+                    toastEl.classList.add('bg-success', 'text-white');
+                    toastHeader.classList.add('bg-success', 'text-white');
+                } else if (type === 'error') {
+                    toastEl.classList.add('bg-danger', 'text-white');
+                    toastHeader.classList.add('bg-danger', 'text-white');
+                }
+
+                toastMessage.textContent = message;
+                toast.show();
+            }
+
+            const productContainer = document.getElementById('product-list-container');
+            if (productContainer) { productContainer.addEventListener('click', function (event) {
+                const addToCartBtn = event.target.closest('.add-to-cart-btn');
+                if (addToCartBtn) {
+                    event.preventDefault();
+                    const productId = addToCartBtn.dataset.productId;
+                    const originalHtml = addToCartBtn.innerHTML;
+
+                    addToCartBtn.innerHTML = '<span class="spinner-border spinner-border-sm" role="status" aria-hidden="true"></span> Adding...';
+                    addToCartBtn.disabled = true;
+
+                    fetch(`/add_to_cart/${productId}`)
+                        .then(response => response.json())
+                        .then(data => {
+                            if (data.success) {
+                                const cartCountEl = document.getElementById('cart-count');
+                                if (cartCountEl) {
+                                    cartCountEl.textContent = data.cart_count;
+                                }
+                                showToast(data.message, 'success');
+                                addToCartBtn.innerHTML = '<i class="fas fa-check me-2"></i> Added!';
+                                
+                                setTimeout(() => {
+                                    addToCartBtn.innerHTML = originalHtml;
+                                    addToCartBtn.disabled = false;
+                                }, 2000);
+
+                            } else {
+                                showToast(data.message || 'An error occurred.', 'error');
+                                addToCartBtn.innerHTML = originalHtml;
+                                addToCartBtn.disabled = false;
+                            }
+                        })
+                        .catch(error => {
+                            console.error('Error:', error);
+                            showToast('An error occurred. Please try again.', 'error');
+                            addToCartBtn.innerHTML = originalHtml;
+                            addToCartBtn.disabled = false;
+                        });
+                }
+            });}
+        });
+    </script>
+</body>
+
+</html>

@@ -1,0 +1,38 @@
+first commit
+
+# Conflicts:
+#	app.py
+#	templates/addproduct.html
+#	templates/admin.html
+#	templates/cart.html
+#	templates/checkout.html
+#	templates/faqs.html
+#	templates/feedback.html
+#	templates/index.html
+#	templates/login.html
+#	templates/privacy_policy.html
+#	templates/product.html
+#	templates/register.html
+#	templates/return_policy.html
+#	templates/shipping_info.html
+#	templates/terms_and_conditions.html
+#	templates/thankyou.html
+
+# Please enter the commit message for your changes. Lines starting
+# with '#' will be ignored, and an empty message aborts the commit.
+#
+# Author:    Parshvanath Patil <patilparshwa675@gmail.com>
+#
+# On branch main
+# Last command done (1 command done):
+#    pick f26ea65 # first commit
+# Next commands to do (2 remaining commands):
+#    pick eb1c2a8 # Create README.md
+#    pick 619746c # Commit message
+# You are currently rebasing branch 'main' on 'cbdd5c5'.
+#
+# Changes to be committed:
+#	new file:   Procfile
+#	new file:   requirements.txt
+#	new file:   static/css/style.css
+#
