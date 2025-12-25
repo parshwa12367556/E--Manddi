@@ -40,6 +40,11 @@ TWILIO_AUTH_TOKEN = os.environ.get('TWILIO_AUTH_TOKEN')
 TWILIO_FROM_NUMBER = os.environ.get('TWILIO_FROM_NUMBER')
 twilio_client = Client(TWILIO_ACCOUNT_SID, TWILIO_AUTH_TOKEN) if Client and TWILIO_ACCOUNT_SID and TWILIO_AUTH_TOKEN else None
 
+# Delivery & Logistics Defaults
+DEFAULT_SHIPPING_FEE = 60
+DEFAULT_FREE_SHIPPING_THRESHOLD = 600
+DEFAULT_DELIVERY_PARTNER_COST = 45
+
 # Database Models
 class User(db.Model):
     id = db.Column(db.Integer, primary_key=True)
@@ -56,12 +61,17 @@ class Product(db.Model):
     category = db.Column(db.String(50), nullable=False)
     price = db.Column(db.Float, nullable=False)
     quantity = db.Column(db.Integer, nullable=False)
+    unit = db.Column(db.String(20), nullable=False, default='kg')
     image = db.Column(db.String(200))
     seller_id = db.Column(db.Integer, db.ForeignKey('user.id', ondelete='CASCADE'), nullable=False)
     created_at = db.Column(db.DateTime, default=datetime.utcnow)
 
     # Add relationship to reviews
     reviews = db.relationship('ProductReview', backref='product', lazy='dynamic', cascade="all, delete-orphan")
+
+    @property
+    def price_per_unit(self):
+        return f"₹{self.price} / {self.unit}"
 
 class ProductReview(db.Model):
     id = db.Column(db.Integer, primary_key=True)
@@ -84,6 +94,8 @@ class Order(db.Model):
     payment_mode = db.Column(db.String(50), nullable=False)
     shipping_address = db.Column(db.Text, nullable=True)
     status = db.Column(db.String(20), default='Pending')
+    delivery_fee = db.Column(db.Float, default=0.0)
+    delivery_cost = db.Column(db.Float, default=0.0)
     created_at = db.Column(db.DateTime, default=datetime.utcnow)
 
 class OrderItem(db.Model):
@@ -101,6 +113,10 @@ class Feedback(db.Model):
     message = db.Column(db.Text, nullable=False)
     created_at = db.Column(db.DateTime, default=datetime.utcnow)
 
+class SiteSetting(db.Model):
+    key = db.Column(db.String(50), primary_key=True)
+    value = db.Column(db.String(200), nullable=False)
+
 # Create tables
 with app.app_context():
     db.create_all()
@@ -116,6 +132,33 @@ with app.app_context():
         cols = [r[1] for r in db.session.execute(db.text('PRAGMA table_info("order")')).fetchall()]
         if 'shipping_address' not in cols:
             db.session.execute(db.text('ALTER TABLE "order" ADD COLUMN shipping_address TEXT'))
+            db.session.commit()
+    except Exception:
+        pass
+    # Check for delivery_fee and delivery_cost in order table
+    try:
+        cols = [r[1] for r in db.session.execute(db.text('PRAGMA table_info("order")')).fetchall()]
+        if 'delivery_fee' not in cols:
+            db.session.execute(db.text('ALTER TABLE "order" ADD COLUMN delivery_fee FLOAT DEFAULT 0.0'))
+        if 'delivery_cost' not in cols:
+            db.session.execute(db.text('ALTER TABLE "order" ADD COLUMN delivery_cost FLOAT DEFAULT 0.0'))
+            db.session.commit()
+    except Exception:
+        pass
+    # Check for unit in product table
+    try:
+        cols = [r[1] for r in db.session.execute(db.text('PRAGMA table_info(product)')).fetchall()]
+        if 'unit' not in cols:
+            db.session.execute(db.text("ALTER TABLE product ADD COLUMN unit VARCHAR(20) DEFAULT 'kg'"))
+            db.session.commit()
+    except Exception:
+        pass
+    # Initialize default settings
+    try:
+        if not SiteSetting.query.first():
+            db.session.add(SiteSetting(key='shipping_fee', value=str(DEFAULT_SHIPPING_FEE)))
+            db.session.add(SiteSetting(key='free_shipping_threshold', value=str(DEFAULT_FREE_SHIPPING_THRESHOLD)))
+            db.session.add(SiteSetting(key='delivery_partner_cost', value=str(DEFAULT_DELIVERY_PARTNER_COST)))
             db.session.commit()
     except Exception:
         pass
@@ -189,6 +232,16 @@ def send_reset_email(to_email, reset_link):
     except Exception as e:
         print(f"Failed to send email: {e}")
         return False
+
+def get_site_setting(key, default_val, type_func=float):
+    """Helper to get a site setting with a default fallback."""
+    try:
+        setting = SiteSetting.query.get(key)
+        if setting:
+            return type_func(setting.value)
+    except Exception:
+        pass
+    return default_val
 
 # Routes
 @app.route('/')
@@ -361,6 +414,7 @@ def addproduct():
         category = request.form['category']
         price = float(request.form['price'])
         quantity = int(request.form['quantity'])
+        unit = request.form.get('unit') or 'kg'
         image = request.form['image'] or None
         
         new_product = Product(
@@ -368,6 +422,7 @@ def addproduct():
             category=category,
             price=price,
             quantity=quantity,
+            unit=unit,
             image=image,
             seller_id=session['user_id']
         )
@@ -375,10 +430,11 @@ def addproduct():
         db.session.add(new_product)
         db.session.commit()
         
-        flash(f'Product "{name}" added successfully with ID: {new_product.id}', 'success')
+        flash(f'Product "{name}" added successfully! Price: ₹{price}/{unit}', 'success')
         return redirect(url_for('product'))
     
-    return render_template('addproduct.html')
+    units = ['kg', 'gram', 'liter', 'dozen', 'packet', 'piece']
+    return render_template('addproduct.html', units=units)
 
 @app.route('/add_to_cart/<int:product_id>')
 @roles_required('buyer')
@@ -423,8 +479,21 @@ def buy_now(product_id):
     if quantity <= 0 or quantity > product.quantity:
         flash('Invalid quantity', 'error')
         return redirect(url_for('product'))
-    total_amount = product.price * quantity
-    new_order = Order(buyer_id=session['user_id'], total_amount=total_amount, payment_mode='COD', status='Confirmed')
+    
+    # Fetch dynamic settings
+    shipping_fee = get_site_setting('shipping_fee', DEFAULT_SHIPPING_FEE)
+    free_shipping_threshold = get_site_setting('free_shipping_threshold', DEFAULT_FREE_SHIPPING_THRESHOLD)
+    delivery_partner_cost = get_site_setting('delivery_partner_cost', DEFAULT_DELIVERY_PARTNER_COST)
+
+    product_total = product.price * quantity
+    shipping_charge = 0 if product_total > free_shipping_threshold else shipping_fee
+    total_amount = product_total + shipping_charge
+    
+    new_order = Order(
+        buyer_id=session['user_id'], total_amount=total_amount, payment_mode='COD', status='Confirmed',
+        delivery_fee=shipping_charge, delivery_cost=delivery_partner_cost
+    )
+    
     db.session.add(new_order)
     db.session.flush()
     oi = OrderItem(order_id=new_order.id, product_id=product.id, product_name=product.name, price=product.price, quantity=quantity)
@@ -455,6 +524,7 @@ def get_cart_details(user_id):
             'name': product.name,
             'price': product.price,
             'quantity': cart_item.quantity,
+            'unit': product.unit,
             'total': item_total,
             'image': product.image
         })
@@ -524,7 +594,10 @@ def generate_upi_qr():
     if not cart_products:
         return "Cart is empty", 400
 
-    shipping = 0 if total_amount > 600 else 50
+    shipping_fee = get_site_setting('shipping_fee', DEFAULT_SHIPPING_FEE)
+    free_shipping_threshold = get_site_setting('free_shipping_threshold', DEFAULT_FREE_SHIPPING_THRESHOLD)
+
+    shipping = 0 if total_amount > free_shipping_threshold else shipping_fee
     tax = total_amount * 0.05
     grand_total = total_amount + shipping + tax
 
@@ -551,7 +624,9 @@ def create_payment():
             return jsonify({'error': 'Cart is empty'}), 400
         
         # Calculate shipping
-        shipping_charge = 0 if total_amount > 600 else 50
+        shipping_fee = get_site_setting('shipping_fee', DEFAULT_SHIPPING_FEE)
+        free_shipping_threshold = get_site_setting('free_shipping_threshold', DEFAULT_FREE_SHIPPING_THRESHOLD)
+        shipping_charge = 0 if total_amount > free_shipping_threshold else shipping_fee
         grand_total = total_amount + shipping_charge
 
         # Create Razorpay order
@@ -624,7 +699,11 @@ def verify_payment():
         shipping_address = data.get('shipping_address', '')
         
         # Calculate shipping
-        shipping_charge = 0 if total_amount > 600 else 50
+        shipping_fee = get_site_setting('shipping_fee', DEFAULT_SHIPPING_FEE)
+        free_shipping_threshold = get_site_setting('free_shipping_threshold', DEFAULT_FREE_SHIPPING_THRESHOLD)
+        delivery_partner_cost = get_site_setting('delivery_partner_cost', DEFAULT_DELIVERY_PARTNER_COST)
+
+        shipping_charge = 0 if total_amount > free_shipping_threshold else shipping_fee
         grand_total = total_amount + shipping_charge
 
         # Create order in database
@@ -633,7 +712,9 @@ def verify_payment():
             total_amount=grand_total,
             payment_mode='Razorpay',
             shipping_address=shipping_address,
-            status='Confirmed'
+            status='Confirmed',
+            delivery_fee=shipping_charge,
+            delivery_cost=delivery_partner_cost
         )
         
         db.session.add(new_order)
@@ -668,7 +749,11 @@ def checkout():
         return redirect(url_for('product'))
     
     # Calculate shipping
-    shipping_charge = 0 if total_amount > 600 else 50
+    shipping_fee = get_site_setting('shipping_fee', DEFAULT_SHIPPING_FEE)
+    free_shipping_threshold = get_site_setting('free_shipping_threshold', DEFAULT_FREE_SHIPPING_THRESHOLD)
+    delivery_partner_cost = get_site_setting('delivery_partner_cost', DEFAULT_DELIVERY_PARTNER_COST)
+
+    shipping_charge = 0 if total_amount > free_shipping_threshold else shipping_fee
     grand_total = total_amount + shipping_charge
 
     if request.method == 'POST':
@@ -684,7 +769,9 @@ def checkout():
             total_amount=grand_total,
             payment_mode=payment_mode,
             shipping_address=shipping_address,
-            status='Confirmed'
+            status='Confirmed',
+            delivery_fee=shipping_charge,
+            delivery_cost=delivery_partner_cost
         )
         db.session.add(new_order)
         db.session.flush()  # Flush to get the new_order.id before using it
@@ -783,17 +870,50 @@ def admin():
     total_users_count = User.query.count()
     total_products_count = Product.query.count()
 
+    # Calculate delivery earnings (Profit from logistics)
+    total_delivery_earnings = db.session.query(db.func.sum(Order.delivery_fee - Order.delivery_cost)).scalar() or 0
+
     # Fetch all products for the management table
     all_products = Product.query.order_by(Product.created_at.desc()).all()
 
     # Chart Data (last 7 days) - Sales by month/day
     sales_labels = []
     sales_values = []
+    shipping_revenue_values = []
+    delivery_cost_values = []
+    produce_sales_values = []
+    supplies_sales_values = []
+    produce_cats = ['fruits', 'vegetables', 'grains', 'dairy']
+    supplies_cats = ['seeds', 'fertilizers', 'pesticides', 'tools', 'machinery']
+
     for i in range(7):
         day = today - timedelta(days=i)
         day_sales = db.session.query(db.func.sum(Order.total_amount)).filter(db.func.date(Order.created_at) == day).scalar() or 0
         sales_labels.insert(0, day.strftime('%b %d'))
         sales_values.insert(0, day_sales)
+        
+        day_shipping = db.session.query(db.func.sum(Order.delivery_fee)).filter(db.func.date(Order.created_at) == day).scalar() or 0
+        day_cost = db.session.query(db.func.sum(Order.delivery_cost)).filter(db.func.date(Order.created_at) == day).scalar() or 0
+        shipping_revenue_values.insert(0, day_shipping)
+        delivery_cost_values.insert(0, day_cost)
+
+        # Calculate Produce Sales
+        day_produce_sales = db.session.query(db.func.sum(OrderItem.price * OrderItem.quantity))\
+            .join(Product, OrderItem.product_id == Product.id)\
+            .join(Order, OrderItem.order_id == Order.id)\
+            .filter(db.func.date(Order.created_at) == day)\
+            .filter(Product.category.in_(produce_cats))\
+            .scalar() or 0
+        produce_sales_values.insert(0, day_produce_sales)
+
+        # Calculate Supplies Sales
+        day_supplies_sales = db.session.query(db.func.sum(OrderItem.price * OrderItem.quantity))\
+            .join(Product, OrderItem.product_id == Product.id)\
+            .join(Order, OrderItem.order_id == Order.id)\
+            .filter(db.func.date(Order.created_at) == day)\
+            .filter(Product.category.in_(supplies_cats))\
+            .scalar() or 0
+        supplies_sales_values.insert(0, day_supplies_sales)
     
     sales_by_month = {
         'labels': sales_labels,
@@ -858,6 +978,7 @@ def admin():
         total_orders_count=total_orders_count,
         total_users_count=total_users_count,
         total_products_count=total_products_count,
+        total_delivery_earnings=total_delivery_earnings,
         recent_orders=recent_orders,
         users=recent_users,
         all_products=all_products,
@@ -868,6 +989,10 @@ def admin():
         products_by_category=products_by_category,
         chart_labels=sales_labels,
         chart_values=sales_values,
+        shipping_revenue_values=shipping_revenue_values,
+        delivery_cost_values=delivery_cost_values,
+        produce_sales_values=produce_sales_values,
+        supplies_sales_values=supplies_sales_values,
         week_sales=week_sales,
         month_sales=month_sales,
         pending_orders_count=pending_orders_count,
@@ -996,11 +1121,18 @@ def admin_products():
     total_products_count = Product.query.count()
     low_stock_count = Product.query.filter(Product.quantity <= low_stock_threshold).count()
     search_query = request.args.get('q', '').strip()
+    filter_type = request.args.get('filter', 'all')
 
     # Query with pagination
     query = Product.query
     if search_query:
         query = query.filter(Product.name.ilike(f'%{search_query}%'))
+    
+    # Apply category filter
+    if filter_type == 'produce':
+        query = query.filter(Product.category.in_(['fruits', 'vegetables', 'grains', 'dairy']))
+    elif filter_type == 'supplies':
+        query = query.filter(Product.category.in_(['seeds', 'fertilizers', 'pesticides', 'tools', 'machinery']))
     
     products_pagination = query.order_by(Product.created_at.desc()).paginate(page=page, per_page=per_page, error_out=False)
     
@@ -1008,7 +1140,7 @@ def admin_products():
     products_data = [
         {
             'id': p.id, 'name': p.name, 'category': p.category, 'price': p.price, 
-            'quantity': p.quantity, 'seller_id': p.seller_id, 'image': p.image,
+            'quantity': p.quantity, 'unit': p.unit, 'seller_id': p.seller_id, 'image': p.image,
             'created_at': p.created_at.strftime('%Y-%m-%d')
         } for p in products_pagination.items
     ]
@@ -1025,7 +1157,8 @@ def admin_products():
         total_orders_count=total_orders_count,
         total_users_count=total_users_count,
         total_products_count=total_products_count,
-        search_query=search_query
+        search_query=search_query,
+        filter_type=filter_type
     )
 
 @app.route('/admin/users')
@@ -1094,6 +1227,37 @@ def admin_categories():
                            total_orders_count=total_orders_count,
                            total_users_count=total_users_count,
                            total_products_count=total_products_count)
+
+@app.route('/admin/settings', methods=['GET', 'POST'])
+@roles_required('admin')
+def admin_settings():
+    """Dedicated page for admin settings."""
+    if request.method == 'POST':
+        shipping_fee = request.form.get('shipping_fee')
+        free_shipping_threshold = request.form.get('free_shipping_threshold')
+        delivery_partner_cost = request.form.get('delivery_partner_cost')
+        
+        settings_map = {
+            'shipping_fee': shipping_fee,
+            'free_shipping_threshold': free_shipping_threshold,
+            'delivery_partner_cost': delivery_partner_cost
+        }
+        
+        for key, val in settings_map.items():
+            if val is not None:
+                setting = SiteSetting.query.get(key)
+                if not setting:
+                    setting = SiteSetting(key=key, value=str(val))
+                    db.session.add(setting)
+                else:
+                    setting.value = str(val)
+        
+        db.session.commit()
+        flash('Settings updated successfully!', 'success')
+        return redirect(url_for('admin_settings'))
+
+    settings = {s.key: s.value for s in SiteSetting.query.all()}
+    return render_template('admin_settings.html', settings=settings, active_page='settings')
 
 @app.route('/admin/reviews')
 @roles_required('admin')
@@ -1168,7 +1332,8 @@ def admin_edit_product(product_id):
             'name': product.name,
             'category': product.category,
             'price': product.price,
-            'quantity': product.quantity
+            'quantity': product.quantity,
+            'unit': product.unit
         }), 200
 
     if request.method == 'POST':
@@ -1178,6 +1343,7 @@ def admin_edit_product(product_id):
             product.category = data.get('category', product.category)
             product.price = float(data.get('price', product.price))
             product.quantity = int(data.get('quantity', product.quantity))
+            product.unit = data.get('unit', product.unit)
             db.session.commit()
             return jsonify({'success': True, 'message': f'Product "{product.name}" updated successfully.'}), 200
         except (ValueError, TypeError) as e:
@@ -1186,6 +1352,83 @@ def admin_edit_product(product_id):
         except Exception as e:
             db.session.rollback()
             return jsonify({'success': False, 'error': str(e)}), 500
+
+@app.route('/admin/api/chart-data')
+@roles_required('admin')
+def admin_chart_data():
+    start_date_str = request.args.get('start_date')
+    end_date_str = request.args.get('end_date')
+
+    try:
+        start_date = datetime.strptime(start_date_str, '%Y-%m-%d').date()
+        end_date = datetime.strptime(end_date_str, '%Y-%m-%d').date()
+    except (ValueError, TypeError):
+        end_date = datetime.now().date()
+        start_date = end_date - timedelta(days=6)
+
+    # Helper to get dict of date->value
+    def get_daily_sums(query):
+        results = query.group_by(db.func.date(Order.created_at)).all()
+        return {str(r[0]): r[1] for r in results}
+
+    # Sales
+    sales_query = db.session.query(
+        db.func.date(Order.created_at),
+        db.func.sum(Order.total_amount)
+    ).filter(
+        db.func.date(Order.created_at) >= start_date,
+        db.func.date(Order.created_at) <= end_date
+    )
+    sales_map = get_daily_sums(sales_query)
+
+    # Produce
+    produce_cats = ['fruits', 'vegetables', 'grains', 'dairy']
+    produce_query = db.session.query(
+        db.func.date(Order.created_at),
+        db.func.sum(OrderItem.price * OrderItem.quantity)
+    ).join(Product, OrderItem.product_id == Product.id)\
+     .join(Order, OrderItem.order_id == Order.id)\
+     .filter(
+        db.func.date(Order.created_at) >= start_date,
+        db.func.date(Order.created_at) <= end_date,
+        Product.category.in_(produce_cats)
+    )
+    produce_map = get_daily_sums(produce_query)
+
+    # Supplies
+    supplies_cats = ['seeds', 'fertilizers', 'pesticides', 'tools', 'machinery']
+    supplies_query = db.session.query(
+        db.func.date(Order.created_at),
+        db.func.sum(OrderItem.price * OrderItem.quantity)
+    ).join(Product, OrderItem.product_id == Product.id)\
+     .join(Order, OrderItem.order_id == Order.id)\
+     .filter(
+        db.func.date(Order.created_at) >= start_date,
+        db.func.date(Order.created_at) <= end_date,
+        Product.category.in_(supplies_cats)
+    )
+    supplies_map = get_daily_sums(supplies_query)
+
+    labels = []
+    sales_values = []
+    produce_values = []
+    supplies_values = []
+
+    delta = (end_date - start_date).days + 1
+    for i in range(delta):
+        day = start_date + timedelta(days=i)
+        day_str = str(day)
+        labels.append(day.strftime('%b %d'))
+        sales_values.append(sales_map.get(day_str, 0))
+        produce_values.append(produce_map.get(day_str, 0))
+        supplies_values.append(supplies_map.get(day_str, 0))
+
+    return jsonify({
+        'labels': labels,
+        'sales': sales_values,
+        'produce': produce_values,
+        'supplies': supplies_values
+    })
 
 @app.route('/admin/update_order_status/<int:order_id>', methods=['POST'])
 @roles_required('admin')
@@ -1291,7 +1534,7 @@ def admin_low_stock():
     except ValueError:
         threshold = 5
     products = Product.query.filter(Product.quantity <= threshold).order_by(Product.quantity.asc()).all()
-    data = [{'id': p.id, 'name': p.name, 'quantity': p.quantity} for p in products]
+    data = [{'id': p.id, 'name': p.name, 'quantity': p.quantity, 'unit': p.unit} for p in products]
     return {'products': data, 'threshold': threshold, 'count': len(data)}, 200
 
 
@@ -1472,10 +1715,29 @@ def seller_dashboard():
     total_earnings = sales_data[0] or 0
     total_sold = sales_data[1] or 0
     
+    # Chart Data (last 7 days)
+    today = datetime.now().date()
+    sales_labels = []
+    sales_values = []
+    
+    for i in range(7):
+        day = today - timedelta(days=i)
+        day_sales = db.session.query(
+            db.func.sum(OrderItem.price * OrderItem.quantity)
+        ).join(Product, OrderItem.product_id == Product.id)\
+         .join(Order, OrderItem.order_id == Order.id)\
+         .filter(Product.seller_id == user_id)\
+         .filter(db.func.date(Order.created_at) == day).scalar() or 0
+        
+        sales_labels.insert(0, day.strftime('%b %d'))
+        sales_values.insert(0, day_sales)
+
     return render_template('seller_dashboard.html', 
                            products=products, 
                            total_earnings=total_earnings, 
-                           total_sold=total_sold)
+                           total_sold=total_sold,
+                           sales_labels=sales_labels,
+                           sales_values=sales_values)
 
 @app.route('/seller/edit_product/<int:product_id>', methods=['GET', 'POST'])
 @roles_required('seller', 'farmer')
@@ -1496,6 +1758,7 @@ def seller_edit_product(product_id):
             product.category = data.get('category', product.category)
             product.price = float(data.get('price', product.price))
             product.quantity = int(data.get('quantity', product.quantity))
+            product.unit = data.get('unit', product.unit)
             product.image = data.get('image', product.image)
             db.session.commit()
             return jsonify({'success': True, 'message': 'Product updated successfully!'})
@@ -1510,6 +1773,7 @@ def seller_edit_product(product_id):
         'category': product.category,
         'price': product.price,
         'quantity': product.quantity,
+        'unit': product.unit,
         'image': product.image or ''
     })
 

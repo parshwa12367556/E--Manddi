@@ -432,6 +432,8 @@
                                 <div class="mb-4">
                                     <label class="form-label">Category *</label>
                                     <div class="category-options">
+                                        <h6 class="text-muted mb-3 border-bottom pb-2"><i
+                                                class="fas fa-leaf me-2"></i>Fresh Produce</h6>
                                         <div class="row">
                                             <div class="col-6 mb-3">
                                                 <div class="category-option text-center" data-category="fruits">
@@ -450,8 +452,37 @@
                                                 </div>
                                             </div>
                                             <div class="col-6 mb-3">
-                                                <div class="category-option text-center" data-category="fertilizers">
+                                                <div class="category-option text-center" data-category="Grains">
+                                                    <i class="fas fa-wheat-alt category-icon"></i>
+                                                    <div class="mt-2">Grains</div>
+                                                    <input class="form-check-input d-none" type="radio" name="category"
+                                                        id="categoryGrains" value="grains">
+                                                </div>
+                                            </div>
+                                            <div class="col-6 mb-3">
+                                                <div class="category-option text-center" data-category="Dairy">
+                                                    <i class="fas fa-cheese category-icon"></i>
+                                                    <div class="mt-2">Dairy</div>
+                                                    <input class="form-check-input d-none" type="radio" name="category"
+                                                        id="categoryDairy" value="dairy">
+                                                </div>
+                                            </div>
+                                        </div>
+
+                                        <h6 class="text-muted mb-3 mt-2 border-bottom pb-2"><i
+                                                class="fas fa-tools me-2"></i>Farming Supplies</h6>
+                                        <div class="row">
+                                            <div class="col-6 mb-3">
+                                                <div class="category-option text-center" data-category="seeds">
                                                     <i class="fas fa-seedling category-icon"></i>
+                                                    <div class="mt-2">Seeds</div>
+                                                    <input class="form-check-input d-none" type="radio" name="category"
+                                                        id="categorySeeds" value="seeds">
+                                                </div>
+                                            </div>
+                                            <div class="col-6 mb-3">
+                                                <div class="category-option text-center" data-category="fertilizers">
+                                                    <i class="fas fa-flask category-icon"></i>
                                                     <div class="mt-2">Fertilizers</div>
                                                     <input class="form-check-input d-none" type="radio" name="category"
                                                         id="categoryFertilizers" value="fertilizers">
@@ -466,19 +497,19 @@
                                                 </div>
                                             </div>
                                             <div class="col-6 mb-3">
-                                                <div class="category-option text-center" data-category="Grains">
-                                                    <i class="fas fa-spray-can category-icon"></i>
-                                                    <div class="mt-2">Grains</div>
+                                                <div class="category-option text-center" data-category="tools">
+                                                    <i class="fas fa-hammer category-icon"></i>
+                                                    <div class="mt-2">Farming Tools</div>
                                                     <input class="form-check-input d-none" type="radio" name="category"
-                                                        id="categoryGrains" value="grains">
+                                                        id="categoryTools" value="tools">
                                                 </div>
                                             </div>
                                             <div class="col-6 mb-3">
-                                                <div class="category-option text-center" data-category="Dairy">
-                                                    <i class="fas fa-spray-can category-icon"></i>
-                                                    <div class="mt-2">Dairy</div>
+                                                <div class="category-option text-center" data-category="machinery">
+                                                    <i class="fas fa-tractor category-icon"></i>
+                                                    <div class="mt-2">Machinery</div>
                                                     <input class="form-check-input d-none" type="radio" name="category"
-                                                        id="categoryDairy" value="dairy">
+                                                        id="categoryMachinery" value="machinery">
                                                 </div>
                                             </div>
                                         </div>
@@ -489,12 +520,19 @@
                                         <label for="categorySelect" class="form-label">Or choose a category</label>
                                         <select id="categorySelect" class="form-select">
                                             <option value="">Select a category</option>
-                                            <option value="fruits">Fruits</option>
-                                            <option value="vegetables">Vegetables</option>
-                                            <option value="fertilizers">Fertilizers</option>
-                                            <option value="pesticides">Pesticides</option>
-                                            <option value="grains">Grains</option>
-                                            <option value="dairy">Dairy</option>
+                                            <optgroup label="Fresh Produce">
+                                                <option value="fruits">Fruits</option>
+                                                <option value="vegetables">Vegetables</option>
+                                                <option value="grains">Grains</option>
+                                                <option value="dairy">Dairy</option>
+                                            </optgroup>
+                                            <optgroup label="Farming Supplies">
+                                                <option value="seeds">Seeds</option>
+                                                <option value="fertilizers">Fertilizers</option>
+                                                <option value="pesticides">Pesticides</option>
+                                                <option value="tools">Farming Tools</option>
+                                                <option value="machinery">Machinery</option>
+                                            </optgroup>
                                         </select>
                                     </div>
                                 </div>

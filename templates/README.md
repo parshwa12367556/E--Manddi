@@ -11,6 +11,7 @@ Cropify is a modern, user-friendly web application designed to bridge the gap be
 - **User Authentication**: Secure registration and login functionality.
 - **Feedback System**: Customers can submit feedback and ratings to help improve the service.
 - **Admin Dashboard**: A dedicated dashboard for administrators to view registered users, recent feedback, and manage all products on the platform.
+- **Logistics Margin System**: Built-in system to calculate and track profits from delivery operations (Shipping Fee vs Delivery Cost).
 - **Responsive Design**: Built with Bootstrap 5, the UI is fully responsive and works seamlessly on desktops, tablets, and mobile devices.
 
 ## 🛠️ Tech Stack
@@ -113,6 +114,24 @@ The frontend communicates with the Flask backend via the following API endpoints
 4.  **Add to Cart**: Click the "Add to Cart" button on any product to add it to your shopping cart. The cart count in the navigation bar will update automatically.
 5.  **View Cart**: Click on the Cart link in the navigation to review your items and total price.
 6.  **Add a Product (Sellers)**: If registered as a seller, you can navigate to the "Add New Product" page to list your items for sale.
+
+## 🚚 Delivery & Logistics Margin System
+
+The platform implements a profit margin system for logistics:
+
+### Workflow
+1.  **Configuration**: Admin configures `Shipping Fee` (Customer Charge) and `Delivery Partner Cost` (Expense) in settings.
+2.  **Calculation**:
+    - **Revenue**: Customer pays the shipping fee (e.g., ₹60).
+    - **Cost**: Platform owes the delivery partner (e.g., ₹45).
+    - **Profit**: The difference (₹15) is retained as platform earnings.
+3.  **Free Shipping**: Orders above a specific threshold (e.g., ₹600) get free shipping. In this case, the platform absorbs the delivery cost.
+
+### Real-World Example
+- **Customer Order**: ₹400 (Below free shipping threshold)
+- **Shipping Fee Charged**: ₹60
+- **Delivery Partner Cost**: ₹45
+- **Net Profit**: ₹60 - ₹45 = **₹15**
 
 ---
 

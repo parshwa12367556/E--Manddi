@@ -123,6 +123,7 @@
             width: 25px;
             text-align: center;
         }
+
         .payment-logos {
             display: flex;
             align-items: center;
@@ -239,14 +240,16 @@
                             <div class="payment-option" onclick="selectPayment('online')">
                                 <input class="form-check-input" type="radio" name="payment_mode" id="online"
                                     value="Razorpay">
-                                <label class="form-check-label w-100 d-flex justify-content-between align-items-center" for="online">
+                                <label class="form-check-label w-100 d-flex justify-content-between align-items-center"
+                                    for="online">
                                     <div>
                                         <i class="fas fa-credit-card payment-icon"></i>
                                         <span>Online Payment</span>
                                         <div class="text-muted small mt-1">Cards, UPI, Netbanking & Wallets</div>
                                     </div>
                                     <div class="payment-logos fs-4 text-muted">
-                                        <i class="fab fa-cc-visa mx-1"></i><i class="fab fa-cc-mastercard mx-1"></i><i class="fab fa-google-pay mx-1"></i>
+                                        <i class="fab fa-cc-visa mx-1"></i><i class="fab fa-cc-mastercard mx-1"></i><i
+                                            class="fab fa-google-pay mx-1"></i>
                                     </div>
                                 </label>
                             </div>
@@ -327,11 +330,11 @@
         function selectPayment(id) {
             const radio = document.getElementById(id);
             if (!radio) return;
-            
+
             radio.checked = true;
             document.querySelectorAll('.payment-option').forEach(el => el.classList.remove('selected'));
             radio.closest('.payment-option').classList.add('selected');
-            
+
             // Update UI based on selection
             updatePaymentUI(radio.value);
         }
@@ -423,7 +426,7 @@
                                     });
                             },
                             "modal": {
-                                "ondismiss": function(){
+                                "ondismiss": function () {
                                     // Restore button when user closes the Razorpay modal
                                     updatePaymentUI('Razorpay');
                                     placeOrderBtn.disabled = false;

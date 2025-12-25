@@ -340,9 +340,12 @@
                         <p class="text-muted mb-0">Deep dive into your sales and product data.</p>
                     </div>
                     <div class="btn-group" role="group" aria-label="Analytics Period">
-                        <a href="{{ url_for('admin_analytics', period='weekly') }}" class="btn btn-outline-primary {% if period == 'weekly' %}active{% endif %}">Weekly</a>
-                        <a href="{{ url_for('admin_analytics', period='monthly') }}" class="btn btn-outline-primary {% if period == 'monthly' or not period %}active{% endif %}">Monthly</a>
-                        <a href="{{ url_for('admin_analytics', period='yearly') }}" class="btn btn-outline-primary {% if period == 'yearly' %}active{% endif %}">Yearly</a>
+                        <a href="{{ url_for('admin_analytics', period='weekly') }}"
+                            class="btn btn-outline-primary {% if period == 'weekly' %}active{% endif %}">Weekly</a>
+                        <a href="{{ url_for('admin_analytics', period='monthly') }}"
+                            class="btn btn-outline-primary {% if period == 'monthly' or not period %}active{% endif %}">Monthly</a>
+                        <a href="{{ url_for('admin_analytics', period='yearly') }}"
+                            class="btn btn-outline-primary {% if period == 'yearly' %}active{% endif %}">Yearly</a>
                     </div>
                 </div>
 
@@ -351,7 +354,8 @@
                     <div class="col-lg-8 mb-4">
                         <div class="card h-100">
                             <div class="card-header d-flex justify-content-between align-items-center">
-                                <h5 class="mb-0"><i class="fas fa-chart-line me-2"></i>Sales Overview ({{ period|capitalize }})</h5>
+                                <h5 class="mb-0"><i class="fas fa-chart-line me-2"></i>Sales Overview ({{
+                                    period|capitalize }})</h5>
                             </div>
                             <div class="card-body">
                                 <div class="chart-container">

@@ -533,17 +533,24 @@
                         </a>
                         <ul class="dropdown-menu dropdown-menu-end" aria-labelledby="navbarDropdown">
                             {% if session.user_role == 'admin' %}
-                            <li><a class="dropdown-item" href="{{ url_for('admin') }}"><i class="fas fa-cog me-2"></i>Admin Panel</a></li>
+                            <li><a class="dropdown-item" href="{{ url_for('admin') }}"><i
+                                        class="fas fa-cog me-2"></i>Admin Panel</a></li>
                             {% endif %}
                             {% if session.user_role in ['seller', 'farmer'] %}
-                            <li><a class="dropdown-item" href="{{ url_for('seller_dashboard') }}"><i class="fas fa-tachometer-alt me-2"></i>Dashboard</a></li>
+                            <li><a class="dropdown-item" href="{{ url_for('seller_dashboard') }}"><i
+                                        class="fas fa-tachometer-alt me-2"></i>Dashboard</a></li>
                             {% endif %}
                             {% if session.user_role == 'buyer' %}
-                            <li><a class="dropdown-item" href="{{ url_for('my_orders') }}"><i class="fas fa-history me-2"></i>My Orders</a></li>
+                            <li><a class="dropdown-item" href="{{ url_for('my_orders') }}"><i
+                                        class="fas fa-history me-2"></i>My Orders</a></li>
                             {% endif %}
-                            <li><a class="dropdown-item" href="{{ url_for('profile') }}"><i class="fas fa-user-circle me-2"></i>Profile</a></li>
-                            <li><hr class="dropdown-divider"></li>
-                            <li><a class="dropdown-item" href="{{ url_for('logout') }}"><i class="fas fa-sign-out-alt me-2"></i>Logout</a></li>
+                            <li><a class="dropdown-item" href="{{ url_for('profile') }}"><i
+                                        class="fas fa-user-circle me-2"></i>Profile</a></li>
+                            <li>
+                                <hr class="dropdown-divider">
+                            </li>
+                            <li><a class="dropdown-item" href="{{ url_for('logout') }}"><i
+                                        class="fas fa-sign-out-alt me-2"></i>Logout</a></li>
                         </ul>
                     </div>
                     {% else %}

@@ -1,5 +1,6 @@
 <!DOCTYPE html>
 <html lang="en">
+
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -14,55 +15,82 @@
             --dark-text: #333333;
             --warning: #ffc107;
         }
-        body { background-color: var(--light-bg); }
-        .navbar { background-color: var(--primary-dark) !important; }
+
+        body {
+            background-color: var(--light-bg);
+        }
+
+        .navbar {
+            background-color: var(--primary-dark) !important;
+        }
+
         .product-image {
             width: 100%;
             height: auto;
             max-height: 500px;
             object-fit: cover;
             border-radius: 15px;
-            box-shadow: 0 5px 20px rgba(0,0,0,0.1);
+            box-shadow: 0 5px 20px rgba(0, 0, 0, 0.1);
         }
+
         .product-details-card {
             background: white;
             border-radius: 15px;
             padding: 30px;
-            box-shadow: 0 5px 20px rgba(0,0,0,0.05);
+            box-shadow: 0 5px 20px rgba(0, 0, 0, 0.05);
         }
-        .rating-stars .fa-star { color: var(--warning); }
-        .review-form, .reviews-section {
+
+        .rating-stars .fa-star {
+            color: var(--warning);
+        }
+
+        .review-form,
+        .reviews-section {
             margin-top: 40px;
             background: white;
             border-radius: 15px;
             padding: 30px;
-            box-shadow: 0 5px 20px rgba(0,0,0,0.05);
+            box-shadow: 0 5px 20px rgba(0, 0, 0, 0.05);
         }
+
         .review-item {
             border-bottom: 1px solid #eee;
             padding: 20px 0;
         }
-        .review-item:last-child { border-bottom: none; }
-        .review-author { font-weight: 600; }
+
+        .review-item:last-child {
+            border-bottom: none;
+        }
+
+        .review-author {
+            font-weight: 600;
+        }
+
         .star-rating-input {
             direction: rtl;
             display: inline-block;
             padding: 0;
         }
-        .star-rating-input > input { display: none; }
-        .star-rating-input > label {
+
+        .star-rating-input>input {
+            display: none;
+        }
+
+        .star-rating-input>label {
             color: #ddd;
             cursor: pointer;
             font-size: 2rem;
             transition: color 0.2s;
         }
-        .star-rating-input > input:checked ~ label,
-        .star-rating-input > label:hover,
-        .star-rating-input > label:hover ~ label {
+
+        .star-rating-input>input:checked~label,
+        .star-rating-input>label:hover,
+        .star-rating-input>label:hover~label {
             color: var(--warning);
         }
     </style>
 </head>
+
 <body>
     <!-- Navbar -->
     <nav class="navbar navbar-expand-lg navbar-dark mb-4">
@@ -71,7 +99,8 @@
             <div class="navbar-nav ms-auto">
                 <a class="nav-link" href="{{ url_for('product') }}">Back to Products</a>
                 <a class="nav-link" href="{{ url_for('cart') }}">
-                    <i class="fas fa-shopping-cart"></i> Cart <span id="cart-count" class="badge bg-light text-dark">{{ cart_count }}</span>
+                    <i class="fas fa-shopping-cart"></i> Cart <span id="cart-count" class="badge bg-light text-dark">{{
+                        cart_count }}</span>
                 </a>
                 {% if 'user_id' in session %}
                 <a class="nav-link" href="{{ url_for('logout') }}">Logout</a>
@@ -83,25 +112,27 @@
     <div class="container my-5">
         <!-- Flash Messages -->
         {% with messages = get_flashed_messages(with_categories=true) %}
-            {% if messages %}
-                {% for category, message in messages %}
-                    <div class="alert alert-{{ category if category != 'error' else 'danger' }} alert-dismissible fade show">
-                        {{ message }}
-                        <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
-                    </div>
-                {% endfor %}
-            {% endif %}
+        {% if messages %}
+        {% for category, message in messages %}
+        <div class="alert alert-{{ category if category != 'error' else 'danger' }} alert-dismissible fade show">
+            {{ message }}
+            <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+        </div>
+        {% endfor %}
+        {% endif %}
         {% endwith %}
 
         <div class="product-details-card">
             <div class="row">
                 <div class="col-md-6">
-                    <img src="{{ product.image or 'https://via.placeholder.com/500' }}" alt="{{ product.name }}" class="product-image">
+                    <img src="{{ product.image or 'https://via.placeholder.com/500' }}" alt="{{ product.name }}"
+                        class="product-image">
                 </div>
                 <div class="col-md-6 d-flex flex-column">
                     <h1 class="fw-bold">{{ product.name }}</h1>
-                    <span class="badge bg-secondary mb-3" style="width: fit-content;">{{ product.category|capitalize }}</span>
-                    
+                    <span class="badge bg-secondary mb-3" style="width: fit-content;">{{ product.category|capitalize
+                        }}</span>
+
                     <div class="d-flex align-items-center mb-3 rating-stars">
                         {% for i in range(avg_rating|round|int) %}<i class="fas fa-star"></i>{% endfor %}
                         {% for i in range(5 - (avg_rating|round|int)) %}<i class="far fa-star"></i>{% endfor %}
@@ -109,15 +140,15 @@
                     </div>
 
                     <h2 class="text-success fw-bold mb-3">₹{{ "%.2f"|format(product.price) }}</h2>
-                    
+
                     <p class="text-muted">{{ product.description or 'No description available for this product.' }}</p>
 
                     <div class="mt-auto">
-                        <p><strong>Availability:</strong> 
+                        <p><strong>Availability:</strong>
                             {% if product.quantity > 0 %}
-                                <span class="text-success">{{ product.quantity }} in stock</span>
+                            <span class="text-success">{{ product.quantity }} in stock</span>
                             {% else %}
-                                <span class="text-danger">Out of Stock</span>
+                            <span class="text-danger">Out of Stock</span>
                             {% endif %}
                         </p>
                         {% if product.quantity > 0 %}
@@ -140,16 +171,22 @@
                 <div class="mb-3">
                     <label class="form-label">Your Rating</label>
                     <div class="star-rating-input">
-                        <input type="radio" name="rating" id="rating-5" value="5" required><label for="rating-5" class="fas fa-star"></label>
-                        <input type="radio" name="rating" id="rating-4" value="4"><label for="rating-4" class="fas fa-star"></label>
-                        <input type="radio" name="rating" id="rating-3" value="3"><label for="rating-3" class="fas fa-star"></label>
-                        <input type="radio" name="rating" id="rating-2" value="2"><label for="rating-2" class="fas fa-star"></label>
-                        <input type="radio" name="rating" id="rating-1" value="1"><label for="rating-1" class="fas fa-star"></label>
+                        <input type="radio" name="rating" id="rating-5" value="5" required><label for="rating-5"
+                            class="fas fa-star"></label>
+                        <input type="radio" name="rating" id="rating-4" value="4"><label for="rating-4"
+                            class="fas fa-star"></label>
+                        <input type="radio" name="rating" id="rating-3" value="3"><label for="rating-3"
+                            class="fas fa-star"></label>
+                        <input type="radio" name="rating" id="rating-2" value="2"><label for="rating-2"
+                            class="fas fa-star"></label>
+                        <input type="radio" name="rating" id="rating-1" value="1"><label for="rating-1"
+                            class="fas fa-star"></label>
                     </div>
                 </div>
                 <div class="mb-3">
                     <label for="review_text" class="form-label">Your Review</label>
-                    <textarea class="form-control" id="review_text" name="review_text" rows="4" placeholder="Share your thoughts about the product..."></textarea>
+                    <textarea class="form-control" id="review_text" name="review_text" rows="4"
+                        placeholder="Share your thoughts about the product..."></textarea>
                 </div>
                 <button type="submit" class="btn btn-primary">Submit Review</button>
             </form>
@@ -160,21 +197,21 @@
         <div class="reviews-section">
             <h3 class="mb-4">Customer Reviews ({{ review_count }})</h3>
             {% if reviews_with_users %}
-                {% for review, user_name in reviews_with_users %}
-                <div class="review-item">
-                    <div class="d-flex justify-content-between">
-                        <span class="review-author">{{ user_name }}</span>
-                        <span class="text-muted small">{{ review.created_at.strftime('%b %d, %Y') }}</span>
-                    </div>
-                    <div class="rating-stars my-2">
-                        {% for i in range(review.rating) %}<i class="fas fa-star"></i>{% endfor %}
-                        {% for i in range(5 - review.rating) %}<i class="far fa-star"></i>{% endfor %}
-                    </div>
-                    <p class="mb-0">{{ review.review_text }}</p>
+            {% for review, user_name in reviews_with_users %}
+            <div class="review-item">
+                <div class="d-flex justify-content-between">
+                    <span class="review-author">{{ user_name }}</span>
+                    <span class="text-muted small">{{ review.created_at.strftime('%b %d, %Y') }}</span>
                 </div>
-                {% endfor %}
+                <div class="rating-stars my-2">
+                    {% for i in range(review.rating) %}<i class="fas fa-star"></i>{% endfor %}
+                    {% for i in range(5 - review.rating) %}<i class="far fa-star"></i>{% endfor %}
+                </div>
+                <p class="mb-0">{{ review.review_text }}</p>
+            </div>
+            {% endfor %}
             {% else %}
-                <p class="text-muted">Be the first to review this product!</p>
+            <p class="text-muted">Be the first to review this product!</p>
             {% endif %}
         </div>
     </div>
@@ -258,4 +295,5 @@
         });
     </script>
 </body>
+
 </html>

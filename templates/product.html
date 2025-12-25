@@ -346,22 +346,30 @@
                 <div class="navbar-nav">
                     {% if 'user_id' in session %}
                     <div class="nav-item dropdown">
-                        <a class="nav-link dropdown-toggle" href="#" id="navbarDropdown" role="button" data-bs-toggle="dropdown" aria-expanded="false">
+                        <a class="nav-link dropdown-toggle" href="#" id="navbarDropdown" role="button"
+                            data-bs-toggle="dropdown" aria-expanded="false">
                             <i class="fas fa-user me-1"></i> {{ session.user_name }}
                         </a>
                         <ul class="dropdown-menu dropdown-menu-end" aria-labelledby="navbarDropdown">
                             {% if session.user_role == 'admin' %}
-                            <li><a class="dropdown-item" href="{{ url_for('admin') }}"><i class="fas fa-cog me-2"></i>Admin Panel</a></li>
+                            <li><a class="dropdown-item" href="{{ url_for('admin') }}"><i
+                                        class="fas fa-cog me-2"></i>Admin Panel</a></li>
                             {% endif %}
                             {% if session.user_role in ['seller', 'farmer'] %}
-                            <li><a class="dropdown-item" href="{{ url_for('seller_dashboard') }}"><i class="fas fa-tachometer-alt me-2"></i>Dashboard</a></li>
+                            <li><a class="dropdown-item" href="{{ url_for('seller_dashboard') }}"><i
+                                        class="fas fa-tachometer-alt me-2"></i>Dashboard</a></li>
                             {% endif %}
                             {% if session.user_role == 'buyer' %}
-                            <li><a class="dropdown-item" href="{{ url_for('my_orders') }}"><i class="fas fa-history me-2"></i>My Orders</a></li>
+                            <li><a class="dropdown-item" href="{{ url_for('my_orders') }}"><i
+                                        class="fas fa-history me-2"></i>My Orders</a></li>
                             {% endif %}
-                            <li><a class="dropdown-item" href="{{ url_for('profile') }}"><i class="fas fa-user-circle me-2"></i>Profile</a></li>
-                            <li><hr class="dropdown-divider"></li>
-                            <li><a class="dropdown-item" href="{{ url_for('logout') }}"><i class="fas fa-sign-out-alt me-2"></i>Logout</a></li>
+                            <li><a class="dropdown-item" href="{{ url_for('profile') }}"><i
+                                        class="fas fa-user-circle me-2"></i>Profile</a></li>
+                            <li>
+                                <hr class="dropdown-divider">
+                            </li>
+                            <li><a class="dropdown-item" href="{{ url_for('logout') }}"><i
+                                        class="fas fa-sign-out-alt me-2"></i>Logout</a></li>
                         </ul>
                     </div>
                     {% else %}
@@ -385,10 +393,13 @@
                         {% if category and category != 'all' %}
                         <input type="hidden" name="category" value="{{ category }}">
                         {% endif %}
-                        <input class="form-control border-0 me-2" type="search" name="q" placeholder="Search for fresh fruits, vegetables..." aria-label="Search" value="{{ request.args.get('q', '') }}">
+                        <input class="form-control border-0 me-2" type="search" name="q"
+                            placeholder="Search for fresh fruits, vegetables..." aria-label="Search"
+                            value="{{ request.args.get('q', '') }}">
                         <button class="btn btn-success px-4" type="submit"><i class="fas fa-search"></i></button>
                         {% if request.args.get('q') %}
-                        <a href="{{ url_for('product', category=category) }}" class="btn btn-outline-secondary ms-2">Clear</a>
+                        <a href="{{ url_for('product', category=category) }}"
+                            class="btn btn-outline-secondary ms-2">Clear</a>
                         {% endif %}
                     </form>
                 </div>
@@ -401,6 +412,8 @@
                             class="list-group-item list-group-item-action {% if not category or category == 'all' %}active{% endif %}">
                             <i class="fas fa-boxes category-icon"></i> All Products
                         </a>
+
+                        <div class="list-group-item bg-light fw-bold text-muted small py-2 mt-2">FRESH PRODUCE</div>
                         <a href="{{ url_for('product', category='fruits') }}"
                             class="list-group-item list-group-item-action {% if category == 'fruits' %}active{% endif %}">
                             <i class="fas fa-apple-alt category-icon"></i> Fruits
@@ -409,14 +422,6 @@
                             class="list-group-item list-group-item-action {% if category == 'vegetables' %}active{% endif %}">
                             <i class="fas fa-carrot category-icon"></i> Vegetables
                         </a>
-                        <a href="{{ url_for('product', category='fertilizers') }}"
-                            class="list-group-item list-group-item-action {% if category == 'fertilizers' %}active{% endif %}">
-                            <i class="fas fa-seedling category-icon"></i> Fertilizers
-                        </a>
-                        <a href="{{ url_for('product', category='pesticides') }}"
-                            class="list-group-item list-group-item-action {% if category == 'pesticides' %}active{% endif %}">
-                            <i class="fas fa-spray-can category-icon"></i> Pesticides
-                        </a>
                         <a href="{{ url_for('product', category='grains') }}"
                             class="list-group-item list-group-item-action {% if category == 'grains' %}active{% endif %}">
                             <i class="fas fa-wheat-alt category-icon"></i> Grains
@@ -424,6 +429,28 @@
                         <a href="{{ url_for('product', category='dairy') }}"
                             class="list-group-item list-group-item-action {% if category == 'dairy' %}active{% endif %}">
                             <i class="fas fa-cheese category-icon"></i> Dairy
+                        </a>
+
+                        <div class="list-group-item bg-light fw-bold text-muted small py-2 mt-2">FARMING SUPPLIES</div>
+                        <a href="{{ url_for('product', category='seeds') }}"
+                            class="list-group-item list-group-item-action {% if category == 'seeds' %}active{% endif %}">
+                            <i class="fas fa-seedling category-icon"></i> Seeds
+                        </a>
+                        <a href="{{ url_for('product', category='fertilizers') }}"
+                            class="list-group-item list-group-item-action {% if category == 'fertilizers' %}active{% endif %}">
+                            <i class="fas fa-flask category-icon"></i> Fertilizers
+                        </a>
+                        <a href="{{ url_for('product', category='pesticides') }}"
+                            class="list-group-item list-group-item-action {% if category == 'pesticides' %}active{% endif %}">
+                            <i class="fas fa-spray-can category-icon"></i> Pesticides
+                        </a>
+                        <a href="{{ url_for('product', category='tools') }}"
+                            class="list-group-item list-group-item-action {% if category == 'tools' %}active{% endif %}">
+                            <i class="fas fa-hammer category-icon"></i> Tools
+                        </a>
+                        <a href="{{ url_for('product', category='machinery') }}"
+                            class="list-group-item list-group-item-action {% if category == 'machinery' %}active{% endif %}">
+                            <i class="fas fa-tractor category-icon"></i> Machinery
                         </a>
                     </div>
                 </div>
@@ -446,17 +473,25 @@
                             </a>
                             {% endif %}
                             <div class="dropdown">
-                            <button class="btn btn-outline-success dropdown-toggle" type="button" id="sortDropdown"
-                                data-bs-toggle="dropdown">
-                                <i class="fas fa-sort me-2"></i> Sort By
-                            </button>
-                            <ul class="dropdown-menu" aria-labelledby="sortDropdown">
-                                <li><a class="dropdown-item {% if sort_by == 'price_asc' %}active{% endif %}" href="{{ url_for('product', category=category, q=request.args.get('q'), sort='price_asc') }}">Price: Low to High</a></li>
-                                <li><a class="dropdown-item {% if sort_by == 'price_desc' %}active{% endif %}" href="{{ url_for('product', category=category, q=request.args.get('q'), sort='price_desc') }}">Price: High to Low</a></li>
-                                <li><a class="dropdown-item {% if sort_by == 'newest' %}active{% endif %}" href="{{ url_for('product', category=category, q=request.args.get('q'), sort='newest') }}">Newest First</a></li>
-                                <li><a class="dropdown-item {% if sort_by == 'popular' %}active{% endif %}" href="{{ url_for('product', category=category, q=request.args.get('q'), sort='popular') }}">Most Popular</a></li>
-                            </ul>
-                        </div>
+                                <button class="btn btn-outline-success dropdown-toggle" type="button" id="sortDropdown"
+                                    data-bs-toggle="dropdown">
+                                    <i class="fas fa-sort me-2"></i> Sort By
+                                </button>
+                                <ul class="dropdown-menu" aria-labelledby="sortDropdown">
+                                    <li><a class="dropdown-item {% if sort_by == 'price_asc' %}active{% endif %}"
+                                            href="{{ url_for('product', category=category, q=request.args.get('q'), sort='price_asc') }}">Price:
+                                            Low to High</a></li>
+                                    <li><a class="dropdown-item {% if sort_by == 'price_desc' %}active{% endif %}"
+                                            href="{{ url_for('product', category=category, q=request.args.get('q'), sort='price_desc') }}">Price:
+                                            High to Low</a></li>
+                                    <li><a class="dropdown-item {% if sort_by == 'newest' %}active{% endif %}"
+                                            href="{{ url_for('product', category=category, q=request.args.get('q'), sort='newest') }}">Newest
+                                            First</a></li>
+                                    <li><a class="dropdown-item {% if sort_by == 'popular' %}active{% endif %}"
+                                            href="{{ url_for('product', category=category, q=request.args.get('q'), sort='popular') }}">Most
+                                            Popular</a></li>
+                                </ul>
+                            </div>
                         </div>
                     </div>
 
@@ -500,17 +535,18 @@
                                 </div>
                                 <div class="card-body d-flex flex-column">
                                     <h5 class="card-title">
-                                        <a href="{{ url_for('product_detail', product_id=p.id) }}" class="text-dark text-decoration-none">{{ p.name }}</a>
+                                        <a href="{{ url_for('product_detail', product_id=p.id) }}"
+                                            class="text-dark text-decoration-none">{{ p.name }}</a>
                                     </h5>
                                     <p class="card-text text-muted mb-2">
                                         <small>{{ p.description or 'Fresh farm product' }}</small>
                                     </p>
                                     <div class="d-flex align-items-center mb-2">
                                         {% for i in range(p.avg_rating|round|int) %}
-                                            <i class="fas fa-star text-warning"></i>
+                                        <i class="fas fa-star text-warning"></i>
                                         {% endfor %}
                                         {% for i in range(5 - (p.avg_rating|round|int)) %}
-                                            <i class="far fa-star text-warning"></i>
+                                        <i class="far fa-star text-warning"></i>
                                         {% endfor %}
                                         <span class="ms-2 text-muted small">({{ p.review_count }})</span>
                                     </div>
@@ -528,11 +564,13 @@
                                 </div>
                                 <div class="card-footer bg-transparent border-top-0 pt-0">
                                     <div class="d-flex gap-2">
-                                        <a href="{{ url_for('product_detail', product_id=p.id) }}" class="btn btn-outline-secondary flex-fill">
+                                        <a href="{{ url_for('product_detail', product_id=p.id) }}"
+                                            class="btn btn-outline-secondary flex-fill">
                                             <i class="fas fa-eye me-1"></i> Detail
                                         </a>
                                         {% if p.quantity > 0 %}
-                                        <button class="btn btn-success add-to-cart-btn flex-fill" data-product-id="{{ p.id }}">
+                                        <button class="btn btn-success add-to-cart-btn flex-fill"
+                                            data-product-id="{{ p.id }}">
                                             <i class="fas fa-cart-plus me-1"></i> Add
                                         </button>
                                         {% else %}
@@ -655,46 +693,48 @@
             }
 
             const productContainer = document.getElementById('product-list-container');
-            if (productContainer) { productContainer.addEventListener('click', function (event) {
-                const addToCartBtn = event.target.closest('.add-to-cart-btn');
-                if (addToCartBtn) {
-                    event.preventDefault();
-                    const productId = addToCartBtn.dataset.productId;
-                    const originalHtml = addToCartBtn.innerHTML;
+            if (productContainer) {
+                productContainer.addEventListener('click', function (event) {
+                    const addToCartBtn = event.target.closest('.add-to-cart-btn');
+                    if (addToCartBtn) {
+                        event.preventDefault();
+                        const productId = addToCartBtn.dataset.productId;
+                        const originalHtml = addToCartBtn.innerHTML;
 
-                    addToCartBtn.innerHTML = '<span class="spinner-border spinner-border-sm" role="status" aria-hidden="true"></span> Adding...';
-                    addToCartBtn.disabled = true;
+                        addToCartBtn.innerHTML = '<span class="spinner-border spinner-border-sm" role="status" aria-hidden="true"></span> Adding...';
+                        addToCartBtn.disabled = true;
 
-                    fetch(`/add_to_cart/${productId}`)
-                        .then(response => response.json())
-                        .then(data => {
-                            if (data.success) {
-                                const cartCountEl = document.getElementById('cart-count');
-                                if (cartCountEl) {
-                                    cartCountEl.textContent = data.cart_count;
-                                }
-                                showToast(data.message, 'success');
-                                addToCartBtn.innerHTML = '<i class="fas fa-check me-2"></i> Added!';
-                                
-                                setTimeout(() => {
+                        fetch(`/add_to_cart/${productId}`)
+                            .then(response => response.json())
+                            .then(data => {
+                                if (data.success) {
+                                    const cartCountEl = document.getElementById('cart-count');
+                                    if (cartCountEl) {
+                                        cartCountEl.textContent = data.cart_count;
+                                    }
+                                    showToast(data.message, 'success');
+                                    addToCartBtn.innerHTML = '<i class="fas fa-check me-2"></i> Added!';
+
+                                    setTimeout(() => {
+                                        addToCartBtn.innerHTML = originalHtml;
+                                        addToCartBtn.disabled = false;
+                                    }, 2000);
+
+                                } else {
+                                    showToast(data.message || 'An error occurred.', 'error');
                                     addToCartBtn.innerHTML = originalHtml;
                                     addToCartBtn.disabled = false;
-                                }, 2000);
-
-                            } else {
-                                showToast(data.message || 'An error occurred.', 'error');
+                                }
+                            })
+                            .catch(error => {
+                                console.error('Error:', error);
+                                showToast('An error occurred. Please try again.', 'error');
                                 addToCartBtn.innerHTML = originalHtml;
                                 addToCartBtn.disabled = false;
-                            }
-                        })
-                        .catch(error => {
-                            console.error('Error:', error);
-                            showToast('An error occurred. Please try again.', 'error');
-                            addToCartBtn.innerHTML = originalHtml;
-                            addToCartBtn.disabled = false;
-                        });
-                }
-            });}
+                            });
+                    }
+                });
+            }
         });
     </script>
 </body>

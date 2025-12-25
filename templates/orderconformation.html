@@ -1,5 +1,6 @@
 <!DOCTYPE html>
 <html lang="en">
+
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -49,8 +50,15 @@
         }
 
         @keyframes scaleIn {
-            from { transform: scale(0); opacity: 0; }
-            to { transform: scale(1); opacity: 1; }
+            from {
+                transform: scale(0);
+                opacity: 0;
+            }
+
+            to {
+                transform: scale(1);
+                opacity: 1;
+            }
         }
 
         .confirmation-header h2 {
@@ -70,6 +78,7 @@
             position: relative;
             margin-bottom: 40px;
         }
+
         .status-tracker::before {
             content: '';
             position: absolute;
@@ -80,11 +89,13 @@
             background-color: #e0e0e0;
             transform: translateY(-50%);
         }
+
         .status-step {
             position: relative;
             text-align: center;
             width: 25%;
         }
+
         .status-icon {
             width: 40px;
             height: 40px;
@@ -98,19 +109,23 @@
             border: 3px solid var(--light-bg);
             transition: all 0.3s ease;
         }
+
         .status-label {
             margin-top: 10px;
             font-size: 0.9rem;
             color: #6c757d;
         }
+
         .status-step.completed .status-icon,
         .status-step.active .status-icon {
             background-color: var(--success-color);
         }
+
         .status-step.active .status-label {
             font-weight: 700;
             color: var(--text-dark);
         }
+
         .status-step.completed .status-label {
             color: var(--success-color);
         }
@@ -127,19 +142,27 @@
             width: 100%;
             margin-bottom: 20px;
         }
+
         .order-items-table td {
             padding: 10px 0;
             vertical-align: middle;
             border-bottom: 1px solid #f0f0f0;
         }
-        .item-name { font-weight: 600; }
-        .item-qty { color: #6c757d; }
+
+        .item-name {
+            font-weight: 600;
+        }
+
+        .item-qty {
+            color: #6c757d;
+        }
 
         .summary-row {
             display: flex;
             justify-content: space-between;
             padding: 8px 0;
         }
+
         .summary-row.total {
             font-size: 1.2rem;
             font-weight: 700;
@@ -155,8 +178,14 @@
             padding: 20px;
             height: 100%;
         }
-        .details-card p { margin-bottom: 5px; }
-        .details-card address { white-space: pre-line; }
+
+        .details-card p {
+            margin-bottom: 5px;
+        }
+
+        .details-card address {
+            white-space: pre-line;
+        }
 
         .confirmation-footer {
             padding: 20px 30px;
@@ -172,12 +201,26 @@
         }
 
         @media print {
-            body, .confirmation-container { background: white; box-shadow: none; }
-            .navbar, .confirmation-footer, .btn-print { display: none; }
-            .confirmation-body { padding: 0; }
+
+            body,
+            .confirmation-container {
+                background: white;
+                box-shadow: none;
+            }
+
+            .navbar,
+            .confirmation-footer,
+            .btn-print {
+                display: none;
+            }
+
+            .confirmation-body {
+                padding: 0;
+            }
         }
     </style>
 </head>
+
 <body>
     <nav class="navbar navbar-expand-lg navbar-dark" style="background-color: var(--primary-color);">
         <div class="container">
@@ -231,16 +274,17 @@
                 {% set current_status_index = statuses.index(order.status) if order.status in statuses else -1 %}
                 <div class="status-tracker">
                     {% for status in statuses %}
-                        {% set loop_index = loop.index0 %}
-                        <div class="status-step {% if loop_index <= current_status_index %}completed{% endif %} {% if loop_index == current_status_index %}active{% endif %}">
-                            <div class="status-icon">
-                                {% if status == 'Confirmed' %}<i class="fas fa-check"></i>
-                                {% elif status == 'Shipped' %}<i class="fas fa-truck"></i>
-                                {% elif status == 'Delivered' %}<i class="fas fa-home"></i>
-                                {% endif %}
-                            </div>
-                            <div class="status-label">{{ status }}</div>
+                    {% set loop_index = loop.index0 %}
+                    <div
+                        class="status-step {% if loop_index <= current_status_index %}completed{% endif %} {% if loop_index == current_status_index %}active{% endif %}">
+                        <div class="status-icon">
+                            {% if status == 'Confirmed' %}<i class="fas fa-check"></i>
+                            {% elif status == 'Shipped' %}<i class="fas fa-truck"></i>
+                            {% elif status == 'Delivered' %}<i class="fas fa-home"></i>
+                            {% endif %}
                         </div>
+                        <div class="status-label">{{ status }}</div>
+                    </div>
                     {% endfor %}
                 </div>
 
@@ -315,4 +359,5 @@
 
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/js/bootstrap.bundle.min.js"></script>
 </body>
+
 </html>

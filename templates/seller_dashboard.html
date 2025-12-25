@@ -1,5 +1,6 @@
 <!DOCTYPE html>
 <html lang="en">
+
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -11,17 +12,28 @@
             --primary-dark: #1e5631;
             --primary-orange: #f0932b;
             --light-bg: #f4f7f6;
-            --card-shadow: 0 10px 20px rgba(0,0,0,0.05);
+            --card-shadow: 0 10px 20px rgba(0, 0, 0, 0.05);
         }
-        body { background-color: var(--light-bg); }
-        .navbar { background-color: var(--primary-dark) !important; }
+
+        body {
+            background-color: var(--light-bg);
+        }
+
+        .navbar {
+            background-color: var(--primary-dark) !important;
+        }
+
         .card-stat {
             border: none;
             border-radius: 20px;
             box-shadow: var(--card-shadow);
             transition: transform 0.2s;
         }
-        .card-stat:hover { transform: translateY(-5px); }
+
+        .card-stat:hover {
+            transform: translateY(-5px);
+        }
+
         .icon-box {
             width: 50px;
             height: 50px;
@@ -32,9 +44,19 @@
             font-size: 1.5rem;
             color: white;
         }
-        .bg-orange { background-color: var(--primary-orange); }
-        .bg-blue { background-color: var(--primary-dark); }
-        .bg-green { background-color: #28a745; }
+
+        .bg-orange {
+            background-color: var(--primary-orange);
+        }
+
+        .bg-blue {
+            background-color: var(--primary-dark);
+        }
+
+        .bg-green {
+            background-color: #28a745;
+        }
+
         .product-img-thumb {
             width: 50px;
             height: 50px;
@@ -43,10 +65,11 @@
         }
     </style>
 </head>
+
 <body>
     <!-- Navbar -->
     <nav class="navbar navbar-expand-lg navbar-dark mb-4">
-        <div zclass="container">
+        <div class="container">
             <a class="navbar-brand fw-bold" href="{{ url_for('index') }}">E-Mandi Seller</a>
             <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav">
                 <span class="navbar-toggler-icon"></span>
@@ -54,12 +77,19 @@
             <div class="collapse navbar-collapse" id="navbarNav">
                 <ul class="navbar-nav ms-auto">
                     <li class="nav-item"><a class="nav-link" href="{{ url_for('product') }}">View Marketplace</a></li>
-                    <li class="nav-itemas fa-user me-1"></i> Hello, {{ session.user_name }}
+                    <li class="nav-item dropdown">
+                        <a class="nav-link dropdown-toggle" href="#" id="navbarDropdown" role="button"
+                            data-bs-toggle="dropdown" aria-expanded="false">
+                            <i class="fas fa-user me-1"></i> Hello, {{ session.user_name }}
                         </a>
                         <ul class="dropdown-menu dropdown-menu-end" aria-labelledby="navbarDropdown">
-                            <li><a class="dropdown-item" href="{{ url_for('profile') }}"><i class="fas fa-user-circle me-2"></i>Profile</a></li>
-                            <li><hr class="dropdown-divider"></li>
-                            <li><a class="dropdown-item" href="{{ url_for('logout') }}"><i class="fas fa-sign-out-alt me-2"></i>Logout</a></li>
+                            <li><a class="dropdown-item" href="{{ url_for('profile') }}"><i
+                                        class="fas fa-user-circle me-2"></i>Profile</a></li>
+                            <li>
+                                <hr class="dropdown-divider">
+                            </li>
+                            <li><a class="dropdown-item" href="{{ url_for('logout') }}"><i
+                                        class="fas fa-sign-out-alt me-2"></i>Logout</a></li>
                         </ul>
                     </li>
                 </ul>
@@ -70,19 +100,20 @@
     <div class="container">
         <!-- Flash Messages -->
         {% with messages = get_flashed_messages(with_categories=true) %}
-            {% if messages %}
-                {% for category, message in messages %}
-                    <div class="alert alert-{{ category if category != 'error' else 'danger' }} alert-dismissible fade show">
-                        {{ message }}
-                        <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
-                    </div>
-                {% endfor %}
-            {% endif %}
+        {% if messages %}
+        {% for category, message in messages %}
+        <div class="alert alert-{{ category if category != 'error' else 'danger' }} alert-dismissible fade show">
+            {{ message }}
+            <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+        </div>
+        {% endfor %}
+        {% endif %}
         {% endwith %}
 
         <div class="d-flex justify-content-between align-items-center mb-4">
             <h2>Dashboard</h2>
-            <a href="{{ url_for('addproduct') }}" class="btn btn-success"><i class="fas fa-plus me-2"></i>Add New Product</a>
+            <a href="{{ url_for('addproduct') }}" class="btn btn-success"><i class="fas fa-plus me-2"></i>Add New
+                Product</a>
         </div>
 
         <!-- Stats Cards -->
@@ -122,6 +153,18 @@
             </div>
         </div>
 
+        <!-- Sales Chart -->
+        <div class="card shadow-sm mb-4" style="border: none; border-radius: 20px;">
+            <div class="card-header bg-white py-3">
+                <h5 class="mb-0">Sales Overview (Last 7 Days)</h5>
+            </div>
+            <div class="card-body">
+                <div style="height: 300px;">
+                    <canvas id="sellerSalesChart"></canvas>
+                </div>
+            </div>
+        </div>
+
         <!-- Inventory Table -->
         <div class="card shadow-sm" style="border: none; border-radius: 20px; overflow: hidden;">
             <div class="card-header bg-white py-3">
@@ -144,7 +187,8 @@
                             <tr>
                                 <td class="ps-4">
                                     <div class="d-flex align-items-center">
-                                        <img src="{{ p.image or 'https://via.placeholder.com/50' }}" class="product-img-thumb me-3" alt="">
+                                        <img src="{{ p.image or 'https://via.placeholder.com/50' }}"
+                                            class="product-img-thumb me-3" alt="">
                                         <span class="fw-bold">{{ p.name }}</span>
                                     </div>
                                 </td>
@@ -157,25 +201,22 @@
                                 </td>
                                 <td class="text-end pe-4">
                                     <button class="btn btn-sm btn-outline-primary me-1 edit-product-btn"
-                                            data-bs-toggle="modal"
-                                            data-bs-target="#editProductModal"
-                                            data-product-id="{{ p.id }}"
-                                            title="Edit Product">
+                                        data-bs-toggle="modal" data-bs-target="#editProductModal"
+                                        data-product-id="{{ p.id }}" title="Edit Product">
                                         <i class="fas fa-edit"></i>
                                     </button>
                                     <button class="btn btn-sm btn-outline-danger delete-product-btn"
-                                            data-bs-toggle="modal"
-                                            data-bs-target="#deleteProductModal"
-                                            data-product-id="{{ p.id }}"
-                                            data-product-name="{{ p.name }}"
-                                            title="Delete Product">
+                                        data-bs-toggle="modal" data-bs-target="#deleteProductModal"
+                                        data-product-id="{{ p.id }}" data-product-name="{{ p.name }}"
+                                        title="Delete Product">
                                         <i class="fas fa-trash"></i>
                                     </button>
                                 </td>
                             </tr>
                             {% else %}
                             <tr>
-                                <td colspan="5" class="text-center py-4 text-muted">You haven't added any products yet.</td>
+                                <td colspan="5" class="text-center py-4 text-muted">You haven't added any products yet.
+                                </td>
                             </tr>
                             {% endfor %}
                         </tbody>
@@ -186,7 +227,8 @@
     </div>
 
     <!-- Edit Product Modal -->
-    <div class="modal fade" id="editProductModal" tabindex="-1" aria-labelledby="editProductModalLabel" aria-hidden="true">
+    <div class="modal fade" id="editProductModal" tabindex="-1" aria-labelledby="editProductModalLabel"
+        aria-hidden="true">
         <div class="modal-dialog">
             <div class="modal-content">
                 <div class="modal-header">
@@ -214,11 +256,13 @@
                         <div class="row">
                             <div class="col-md-6 mb-3">
                                 <label for="editProductPrice" class="form-label">Price</label>
-                                <input type="number" step="0.01" class="form-control" id="editProductPrice" name="price" required>
+                                <input type="number" step="0.01" class="form-control" id="editProductPrice" name="price"
+                                    required>
                             </div>
                             <div class="col-md-6 mb-3">
                                 <label for="editProductQuantity" class="form-label">Quantity</label>
-                                <input type="number" class="form-control" id="editProductQuantity" name="quantity" required>
+                                <input type="number" class="form-control" id="editProductQuantity" name="quantity"
+                                    required>
                             </div>
                         </div>
                         <div class="mb-3">
@@ -236,76 +280,113 @@
     </div>
 
     <!-- Delete Confirmation Modal -->
-    <div class="modal fade" id="deleteProductModal" tabindex="-1" aria-labelledby="deleteProductModalLabel" aria-hidden="true">
-      <div class="modal-dialog">
-        <div class="modal-content">
-          <div class="modal-header">
-            <h5 class="modal-title" id="deleteProductModalLabel">Confirm Deletion</h5>
-            <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
-          </div>
-          <div class="modal-body">
-            Are you sure you want to delete the product "<strong id="deleteProductName"></strong>"? This action cannot be undone.
-          </div>
-          <div class="modal-footer">
-            <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
-            <button type="button" class="btn btn-danger" id="confirmDeleteBtn">Delete</button>
-          </div>
+    <div class="modal fade" id="deleteProductModal" tabindex="-1" aria-labelledby="deleteProductModalLabel"
+        aria-hidden="true">
+        <div class="modal-dialog">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title" id="deleteProductModalLabel">Confirm Deletion</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <div class="modal-body">
+                    Are you sure you want to delete the product "<strong id="deleteProductName"></strong>"? This action
+                    cannot be undone.
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                    <button type="button" class="btn btn-danger" id="confirmDeleteBtn">Delete</button>
+                </div>
+            </div>
         </div>
-      </div>
     </div>
 
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/js/bootstrap.bundle.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <script id="seller-chart-data" type="application/json">
+    {
+        "labels": {{ sales_labels|default([])|tojson }},
+        "values": {{ sales_values|default([])|tojson }}
+    }
+    </script>
     <script>
-    document.addEventListener('DOMContentLoaded', function () {
-        const editProductModal = new bootstrap.Modal(document.getElementById('editProductModal'));
-        const deleteProductModal = new bootstrap.Modal(document.getElementById('deleteProductModal'));
-        let currentProductIdToDelete = null;
+        document.addEventListener('DOMContentLoaded', function () {
+            // Initialize Sales Chart
+            const chartData = JSON.parse(document.getElementById('seller-chart-data').textContent);
+            const ctx = document.getElementById('sellerSalesChart').getContext('2d');
+            new Chart(ctx, {
+                type: 'line',
+                data: {
+                    labels: chartData.labels,
+                    datasets: [{
+                        label: 'Sales (₹)',
+                        data: chartData.values,
+                        borderColor: '#f0932b',
+                        backgroundColor: 'rgba(240, 147, 43, 0.1)',
+                        borderWidth: 2,
+                        fill: true,
+                        tension: 0.4
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: { legend: { display: false } },
+                    scales: {
+                        y: { beginAtZero: true, ticks: { callback: function (v) { return '₹' + v; } } }
+                    }
+                }
+            });
 
-        document.querySelector('tbody').addEventListener('click', function (event) {
-            const editBtn = event.target.closest('.edit-product-btn');
-            if (editBtn) {
-                const productId = editBtn.dataset.productId;
-                fetch(`/seller/edit_product/${productId}`)
-                    .then(response => response.json())
-                    .then(data => {
-                        if (data.error) { return alert('Error: ' + data.error); }
-                        document.getElementById('editProductId').value = data.id;
-                        document.getElementById('editProductName').value = data.name;
-                        document.getElementById('editProductCategory').value = data.category;
-                        document.getElementById('editProductPrice').value = data.price;
-                        document.getElementById('editProductQuantity').value = data.quantity;
-                        document.getElementById('editProductImage').value = data.image || '';
-                        editProductModal.show();
+            const editProductModal = new bootstrap.Modal(document.getElementById('editProductModal'));
+            const deleteProductModal = new bootstrap.Modal(document.getElementById('deleteProductModal'));
+            let currentProductIdToDelete = null;
+
+            document.querySelector('tbody').addEventListener('click', function (event) {
+                const editBtn = event.target.closest('.edit-product-btn');
+                if (editBtn) {
+                    const productId = editBtn.dataset.productId;
+                    fetch(`/seller/edit_product/${productId}`)
+                        .then(response => response.json())
+                        .then(data => {
+                            if (data.error) { return alert('Error: ' + data.error); }
+                            document.getElementById('editProductId').value = data.id;
+                            document.getElementById('editProductName').value = data.name;
+                            document.getElementById('editProductCategory').value = data.category;
+                            document.getElementById('editProductPrice').value = data.price;
+                            document.getElementById('editProductQuantity').value = data.quantity;
+                            document.getElementById('editProductImage').value = data.image || '';
+                            editProductModal.show();
+                        });
+                }
+
+                const deleteBtn = event.target.closest('.delete-product-btn');
+                if (deleteBtn) {
+                    currentProductIdToDelete = deleteBtn.dataset.productId;
+                    document.getElementById('deleteProductName').textContent = deleteBtn.dataset.productName;
+                    deleteProductModal.show();
+                }
+            });
+
+            document.getElementById('saveProductChangesBtn').addEventListener('click', function () {
+                const productId = document.getElementById('editProductId').value;
+                const form = document.getElementById('editProductForm');
+                const data = { name: form.name.value, category: form.category.value, price: form.price.value, quantity: form.quantity.value, image: form.image.value };
+                fetch(`/seller/edit_product/${productId}`, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(data) })
+                    .then(res => res.json()).then(result => {
+                        alert(result.message || result.error);
+                        if (result.success) { editProductModal.hide(); location.reload(); }
                     });
-            }
+            });
 
-            const deleteBtn = event.target.closest('.delete-product-btn');
-            if (deleteBtn) {
-                currentProductIdToDelete = deleteBtn.dataset.productId;
-                document.getElementById('deleteProductName').textContent = deleteBtn.dataset.productName;
-                deleteProductModal.show();
-            }
-        });
-
-        document.getElementById('saveProductChangesBtn').addEventListener('click', function() {
-            const productId = document.getElementById('editProductId').value;
-            const form = document.getElementById('editProductForm');
-            const data = { name: form.name.value, category: form.category.value, price: form.price.value, quantity: form.quantity.value, image: form.image.value };
-            fetch(`/seller/edit_product/${productId}`, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(data) })
-            .then(res => res.json()).then(result => {
-                alert(result.message || result.error);
-                if (result.success) { editProductModal.hide(); location.reload(); }
+            document.getElementById('confirmDeleteBtn').addEventListener('click', function () {
+                if (!currentProductIdToDelete) return;
+                fetch(`/seller/delete_product/${currentProductIdToDelete}`, { method: 'POST' }).then(res => res.json()).then(data => {
+                    alert(data.message || data.error);
+                    if (data.success) { deleteProductModal.hide(); location.reload(); }
+                });
             });
         });
-
-        document.getElementById('confirmDeleteBtn').addEventListener('click', function() {
-            if (!currentProductIdToDelete) return;
-            fetch(`/seller/delete_product/${currentProductIdToDelete}`, { method: 'POST' }).then(res => res.json()).then(data => {
-                alert(data.message || data.error);
-                if (data.success) { deleteProductModal.hide(); location.reload(); }
-            });
-        });
-    });
     </script>
 </body>
+
 </html>

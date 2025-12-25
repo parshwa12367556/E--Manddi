@@ -1,5 +1,6 @@
 <!DOCTYPE html>
 <html lang="en">
+
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -7,10 +8,17 @@
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/css/bootstrap.min.css" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <style>
-        body { background-color: #f8f9fa; }
-        .card { border: none; box-shadow: 0 5px 15px rgba(0,0,0,0.05); }
+        body {
+            background-color: #f8f9fa;
+        }
+
+        .card {
+            border: none;
+            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.05);
+        }
     </style>
 </head>
+
 <body>
     <div class="container mt-5">
         <div class="row justify-content-center">
@@ -23,38 +31,58 @@
                         <form action="{{ url_for('seller_edit_product', product_id=product.id) }}" method="POST">
                             <div class="mb-3">
                                 <label for="name" class="form-label">Product Name</label>
-                                <input type="text" class="form-control" id="name" name="name" value="{{ product.name }}" required>
+                                <input type="text" class="form-control" id="name" name="name" value="{{ product.name }}"
+                                    required>
                             </div>
-                            
+
                             <div class="mb-3">
                                 <label for="category" class="form-label">Category</label>
                                 <select class="form-select" id="category" name="category" required>
-                                    <option value="fruits" {% if product.category == 'fruits' %}selected{% endif %}>Fruits</option>
-                                    <option value="vegetables" {% if product.category == 'vegetables' %}selected{% endif %}>Vegetables</option>
-                                    <option value="fertilizers" {% if product.category == 'fertilizers' %}selected{% endif %}>Fertilizers</option>
-                                    <option value="pesticides" {% if product.category == 'pesticides' %}selected{% endif %}>Pesticides</option>
-                                    <option value="grains" {% if product.category == 'grains' %}selected{% endif %}>Grains</option>
-                                    <option value="dairy" {% if product.category == 'dairy' %}selected{% endif %}>Dairy</option>
+                                    <optgroup label="Fresh Produce">
+                                        <option value="fruits" {% if product.category=='fruits' %}selected{% endif %}>
+                                            Fruits</option>
+                                        <option value="vegetables" {% if product.category=='vegetables' %}selected{%
+                                            endif %}>Vegetables</option>
+                                        <option value="grains" {% if product.category=='grains' %}selected{% endif %}>
+                                            Grains</option>
+                                        <option value="dairy" {% if product.category=='dairy' %}selected{% endif %}>
+                                            Dairy</option>
+                                    </optgroup>
+                                    <optgroup label="Farming Supplies">
+                                        <option value="seeds" {% if product.category=='seeds' %}selected{% endif %}>
+                                            Seeds</option>
+                                        <option value="fertilizers" {% if product.category=='fertilizers' %}selected{%
+                                            endif %}>Fertilizers</option>
+                                        <option value="pesticides" {% if product.category=='pesticides' %}selected{%
+                                            endif %}>Pesticides</option>
+                                        <option value="tools" {% if product.category=='tools' %}selected{% endif %}>
+                                            Farming Tools</option>
+                                        <option value="machinery" {% if product.category=='machinery' %}selected{% endif
+                                            %}>Machinery</option>
+                                    </optgroup>
                                 </select>
                             </div>
-                            
+
                             <div class="row">
                                 <div class="col-md-6 mb-3">
                                     <label for="price" class="form-label">Price (₹)</label>
-                                    <input type="number" step="0.01" class="form-control" id="price" name="price" value="{{ product.price }}" required>
+                                    <input type="number" step="0.01" class="form-control" id="price" name="price"
+                                        value="{{ product.price }}" required>
                                 </div>
                                 <div class="col-md-6 mb-3">
                                     <label for="quantity" class="form-label">Quantity</label>
-                                    <input type="number" class="form-control" id="quantity" name="quantity" value="{{ product.quantity }}" required>
+                                    <input type="number" class="form-control" id="quantity" name="quantity"
+                                        value="{{ product.quantity }}" required>
                                 </div>
                             </div>
-                            
+
                             <div class="mb-4">
                                 <label for="image" class="form-label">Image URL</label>
-                                <input type="text" class="form-control" id="image" name="image" value="{{ product.image }}" placeholder="https://example.com/image.jpg">
+                                <input type="text" class="form-control" id="image" name="image"
+                                    value="{{ product.image }}" placeholder="https://example.com/image.jpg">
                                 <div class="form-text">Enter a valid URL for the product image.</div>
                             </div>
-                            
+
                             <div class="d-grid gap-2">
                                 <button type="submit" class="btn btn-primary">Update Product</button>
                                 <a href="{{ url_for('seller_dashboard') }}" class="btn btn-outline-secondary">Cancel</a>
@@ -67,4 +95,5 @@
     </div>
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/js/bootstrap.bundle.min.js"></script>
 </body>
+
 </html>

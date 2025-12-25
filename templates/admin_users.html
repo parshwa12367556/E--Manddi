@@ -76,7 +76,7 @@
             padding: 20px;
             border-radius: 12px;
             box-shadow: 0 4px 12px var(--shadow-color);
-            box-shadow: 0 10px 30px rgba(0,0,0,0.05);
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.05);
         }
 
         .page-subtitle {
@@ -310,6 +310,7 @@
                 opacity: 0;
                 transform: translateY(30px);
             }
+
             to {
                 opacity: 1;
                 transform: translateY(0);
@@ -326,7 +327,8 @@
     <!-- Top Navigation -->
     <nav class="navbar navbar-expand-lg navbar-dark bg-dark">
         <div class="container-fluid">
-            <a class="navbar-brand" href="{{ url_for('admin') }}"><i class="fas fa-seedling me-2"></i>Admin Dashboard</a>
+            <a class="navbar-brand" href="{{ url_for('admin') }}"><i class="fas fa-seedling me-2"></i>Admin
+                Dashboard</a>
             <div class="d-flex align-items-center">
                 <div class="dropdown me-3 position-relative">
                     <button class="btn btn-outline-light btn-sm dropdown-toggle position-relative" type="button"
@@ -339,10 +341,12 @@
                     <div class="dropdown-menu dropdown-menu-end">
                         <h6 class="dropdown-header">Notifications</h6>
                         {% if pending_orders_count > 0 %}
-                        <a class="dropdown-item" href="#"><i class="fas fa-clock text-warning me-2"></i>{{ pending_orders_count }} pending orders</a>
+                        <a class="dropdown-item" href="#"><i class="fas fa-clock text-warning me-2"></i>{{
+                            pending_orders_count }} pending orders</a>
                         {% endif %}
                         {% if low_stock_count > 0 %}
-                        <a class="dropdown-item" href="#"><i class="fas fa-exclamation-triangle text-danger me-2"></i>{{ low_stock_count }} low stock items</a>
+                        <a class="dropdown-item" href="#"><i class="fas fa-exclamation-triangle text-danger me-2"></i>{{
+                            low_stock_count }} low stock items</a>
                         {% endif %}
                         {% if pending_orders_count == 0 and low_stock_count == 0 %}
                         <span class="dropdown-item text-muted">No new notifications</span>
@@ -350,11 +354,13 @@
                     </div>
                 </div>
                 <div class="dropdown">
-                    <button class="btn btn-outline-light btn-sm dropdown-toggle" type="button" data-bs-toggle="dropdown">
+                    <button class="btn btn-outline-light btn-sm dropdown-toggle" type="button"
+                        data-bs-toggle="dropdown">
                         <i class="fas fa-user-circle me-1"></i> {{ session.user_name }}
                     </button>
                     <div class="dropdown-menu dropdown-menu-end">
-                        <a class="dropdown-item" href="{{ url_for('logout') }}"><i class="fas fa-sign-out-alt me-2"></i>Logout</a>
+                        <a class="dropdown-item" href="{{ url_for('logout') }}"><i
+                                class="fas fa-sign-out-alt me-2"></i>Logout</a>
                     </div>
                 </div>
             </div>
@@ -367,37 +373,44 @@
             <nav class="col-lg-2 col-md-3 d-none d-md-block sidebar p-3">
                 <ul class="nav flex-column">
                     <li class="nav-item">
-                        <a class="nav-link {% if active_page == 'dashboard' %}active{% endif %}" href="{{ url_for('admin') }}">
+                        <a class="nav-link {% if active_page == 'dashboard' %}active{% endif %}"
+                            href="{{ url_for('admin') }}">
                             <i class="fas fa-tachometer-alt"></i> Dashboard
                         </a>
                     </li>
                     <li class="nav-item">
-                        <a class="nav-link {% if active_page == 'orders' %}active{% endif %}" href="{{ url_for('admin_orders') }}">
+                        <a class="nav-link {% if active_page == 'orders' %}active{% endif %}"
+                            href="{{ url_for('admin_orders') }}">
                             <i class="fas fa-shopping-cart"></i> Orders
                         </a>
                     </li>
                     <li class="nav-item">
-                        <a class="nav-link {% if active_page == 'products' %}active{% endif %}" href="{{ url_for('admin_products') }}">
+                        <a class="nav-link {% if active_page == 'products' %}active{% endif %}"
+                            href="{{ url_for('admin_products') }}">
                             <i class="fas fa-box"></i> Products
                         </a>
                     </li>
                     <li class="nav-item">
-                        <a class="nav-link {% if active_page == 'users' %}active{% endif %}" href="{{ url_for('admin_users') }}">
+                        <a class="nav-link {% if active_page == 'users' %}active{% endif %}"
+                            href="{{ url_for('admin_users') }}">
                             <i class="fas fa-users"></i> Users
                         </a>
                     </li>
                     <li class="nav-item">
-                        <a class="nav-link {% if active_page == 'analytics' %}active{% endif %}" href="{{ url_for('admin_analytics') }}">
+                        <a class="nav-link {% if active_page == 'analytics' %}active{% endif %}"
+                            href="{{ url_for('admin_analytics') }}">
                             <i class="fas fa-chart-bar"></i> Analytics
                         </a>
                     </li>
                     <li class="nav-item">
-                        <a class="nav-link {% if active_page == 'categories' %}active{% endif %}" href="{{ url_for('admin_categories') }}">
+                        <a class="nav-link {% if active_page == 'categories' %}active{% endif %}"
+                            href="{{ url_for('admin_categories') }}">
                             <i class="fas fa-tags"></i> Categories
                         </a>
                     </li>
                     <li class="nav-item">
-                        <a class="nav-link {% if active_page == 'reviews' %}active{% endif %}" href="{{ url_for('admin_reviews') }}">
+                        <a class="nav-link {% if active_page == 'reviews' %}active{% endif %}"
+                            href="{{ url_for('admin_reviews') }}">
                             <i class="fas fa-star"></i> Reviews
                         </a>
                     </li>
@@ -414,7 +427,8 @@
                     </div>
                     <div class="d-flex">
                         <form action="{{ url_for('admin_users') }}" method="GET" class="d-flex">
-                            <input class="form-control me-2" type="search" name="q" placeholder="Search users..." value="{{ search_query }}">
+                            <input class="form-control me-2" type="search" name="q" placeholder="Search users..."
+                                value="{{ search_query }}">
                             <button class="btn btn-outline-primary" type="submit">Search</button>
                         </form>
                     </div>
@@ -461,8 +475,7 @@
                                             </button>
                                             {% if user.role != 'admin' %}
                                             <button class="btn btn-sm btn-outline-danger remove-user-btn"
-                                                data-user-id="{{ user.id }}" 
-                                                data-user-name="{{ user.name }}"
+                                                data-user-id="{{ user.id }}" data-user-name="{{ user.name }}"
                                                 title="Remove User">
                                                 <i class="fas fa-trash"></i>
                                             </button>
@@ -498,17 +511,17 @@
                                     </a>
                                 </li>
                                 {% for page_num in users_pagination.iter_pages() %}
-                                    {% if page_num %}
-                                    <li class="page-item {% if page_num == users_pagination.page %}active{% endif %}">
-                                        <a class="page-link" href="{{ url_for('admin_users', page=page_num) }}">
-                                            {{ page_num }}
-                                        </a>
-                                    </li>
-                                    {% else %}
-                                    <li class="page-item disabled">
-                                        <span class="page-link">...</span>
-                                    </li>
-                                    {% endif %}
+                                {% if page_num %}
+                                <li class="page-item {% if page_num == users_pagination.page %}active{% endif %}">
+                                    <a class="page-link" href="{{ url_for('admin_users', page=page_num) }}">
+                                        {{ page_num }}
+                                    </a>
+                                </li>
+                                {% else %}
+                                <li class="page-item disabled">
+                                    <span class="page-link">...</span>
+                                </li>
+                                {% endif %}
                                 {% endfor %}
                                 <li class="page-item {% if not users_pagination.has_next %}disabled{% endif %}">
                                     <a class="page-link"
@@ -564,7 +577,8 @@
     </div>
 
     <!-- Delete User Modal -->
-    <div class="modal fade" id="removeUserModal" tabindex="-1" aria-labelledby="removeUserModalLabel" aria-hidden="true">
+    <div class="modal fade" id="removeUserModal" tabindex="-1" aria-labelledby="removeUserModalLabel"
+        aria-hidden="true">
         <div class="modal-dialog">
             <div class="modal-content">
                 <div class="modal-header">
@@ -634,13 +648,13 @@
 
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/js/bootstrap.bundle.min.js"></script>
     <script>
-        document.addEventListener('DOMContentLoaded', function() {
+        document.addEventListener('DOMContentLoaded', function () {
             const removeUserModal = new bootstrap.Modal(document.getElementById('removeUserModal'));
             const editUserModal = new bootstrap.Modal(document.getElementById('editUserModal'));
             let userIdToRemove = null;
 
             // Handle remove user button clicks
-            document.querySelector('tbody').addEventListener('click', function(event) {
+            document.querySelector('tbody').addEventListener('click', function (event) {
                 const removeBtn = event.target.closest('.remove-user-btn');
                 if (removeBtn) {
                     userIdToRemove = removeBtn.dataset.userId;
@@ -665,36 +679,36 @@
             });
 
             // Handle confirm remove user
-            document.getElementById('confirmRemoveUserBtn').addEventListener('click', function() {
+            document.getElementById('confirmRemoveUserBtn').addEventListener('click', function () {
                 if (!userIdToRemove) return;
-                
-                fetch(`/admin/remove_user/${userIdToRemove}`, { 
+
+                fetch(`/admin/remove_user/${userIdToRemove}`, {
                     method: 'POST',
                     headers: {
                         'Content-Type': 'application/json',
                     }
                 })
-                .then(response => response.json())
-                .then(data => {
-                    removeUserModal.hide();
-                    if (data.success) {
-                        alert(data.message);
-                        document.getElementById(`user-row-${userIdToRemove}`).remove();
-                    } else {
-                        alert('Error: ' + (data.error || 'Could not remove user.'));
-                    }
-                    userIdToRemove = null;
-                })
-                .catch(error => {
-                    console.error('Error:', error);
-                    alert('An unexpected error occurred.');
-                    removeUserModal.hide();
-                    userIdToRemove = null;
-                });
+                    .then(response => response.json())
+                    .then(data => {
+                        removeUserModal.hide();
+                        if (data.success) {
+                            alert(data.message);
+                            document.getElementById(`user-row-${userIdToRemove}`).remove();
+                        } else {
+                            alert('Error: ' + (data.error || 'Could not remove user.'));
+                        }
+                        userIdToRemove = null;
+                    })
+                    .catch(error => {
+                        console.error('Error:', error);
+                        alert('An unexpected error occurred.');
+                        removeUserModal.hide();
+                        userIdToRemove = null;
+                    });
             });
 
             // Handle save user changes
-            document.getElementById('saveUserChangesBtn').addEventListener('click', function() {
+            document.getElementById('saveUserChangesBtn').addEventListener('click', function () {
                 const userId = document.getElementById('editUserId').value;
                 const data = {
                     name: document.getElementById('editUserName').value,
@@ -707,11 +721,11 @@
                     headers: { 'Content-Type': 'application/json' },
                     body: JSON.stringify(data)
                 })
-                .then(res => res.json())
-                .then(result => {
-                    if (result.success) { location.reload(); }
-                    else { alert('Error: ' + result.error); }
-                });
+                    .then(res => res.json())
+                    .then(result => {
+                        if (result.success) { location.reload(); }
+                        else { alert('Error: ' + result.error); }
+                    });
             });
         });
     </script>

@@ -146,6 +146,10 @@
             border-top: 4px solid var(--danger);
         }
 
+        .stat-card.logistics {
+            border-top: 4px solid #6f42c1;
+        }
+
         .card .card-header {
             background: linear-gradient(90deg, var(--primary-dark), #0a9396);
             color: white;
@@ -661,7 +665,7 @@
 
                 <!-- Stats Cards -->
                 <div class="row">
-                    <div class="col-xl-2 col-md-4 col-sm-6 mb-4">
+                    <div class="col-xl-3 col-md-4 col-sm-6 mb-4">
                         <div class="card stat-card sales">
                             <div class="card-body">
                                 <h5 class="card-title">Today's Sales</h5>
@@ -677,7 +681,7 @@
                             </div>
                         </div>
                     </div>
-                    <div class="col-xl-2 col-md-4 col-sm-6 mb-4">
+                    <div class="col-xl-3 col-md-4 col-sm-6 mb-4">
                         <div class="card stat-card orders">
                             <div class="card-body">
                                 <h5 class="card-title">Today's Orders</h5>
@@ -689,7 +693,7 @@
                             </div>
                         </div>
                     </div>
-                    <div class="col-xl-2 col-md-4 col-sm-6 mb-4">
+                    <div class="col-xl-3 col-md-4 col-sm-6 mb-4">
                         <div class="card stat-card sales">
                             <div class="card-body">
                                 <h5 class="card-title">Total Sales</h5>
@@ -699,7 +703,7 @@
                             </div>
                         </div>
                     </div>
-                    <div class="col-xl-2 col-md-4 col-sm-6 mb-4">
+                    <div class="col-xl-3 col-md-4 col-sm-6 mb-4">
                         <div class="card stat-card orders">
                             <div class="card-body">
                                 <h5 class="card-title">Total Orders</h5>
@@ -711,7 +715,7 @@
                             </div>
                         </div>
                     </div>
-                    <div class="col-xl-2 col-md-4 col-sm-6 mb-4">
+                    <div class="col-xl-3 col-md-4 col-sm-6 mb-4">
                         <div class="card stat-card users">
                             <div class="card-body">
                                 <h5 class="card-title">Total Users</h5>
@@ -724,7 +728,7 @@
                             </div>
                         </div>
                     </div>
-                    <div class="col-xl-2 col-md-4 col-sm-6 mb-4">
+                    <div class="col-xl-3 col-md-4 col-sm-6 mb-4">
                         <div class="card stat-card products">
                             <div class="card-body">
                                 <h5 class="card-title">Total Products</h5>
@@ -732,6 +736,16 @@
                                 <p class="card-subtext">
                                     {{ active_products_count|default(total_products_count) }} active
                                 </p>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col-xl-3 col-md-4 col-sm-6 mb-4">
+                        <div class="card stat-card logistics">
+                            <div class="card-body">
+                                <h5 class="card-title">Logistics Earnings</h5>
+                                <p class="card-text">₹{{ "%.2f"|format(total_delivery_earnings) }}</p>
+                                <p class="card-subtext">Net profit from delivery</p>
+                                <i class="fas fa-truck icon"></i>
                             </div>
                         </div>
                     </div>
@@ -862,6 +876,36 @@
                                             {% endfor %}
                                         </tbody>
                                     </table>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Sales Breakdown Charts -->
+                <div class="row">
+                    <!-- Produce Sales Chart -->
+                    <div class="col-lg-6 mb-4">
+                        <div class="card h-100">
+                            <div class="card-header">
+                                <h5 class="mb-0"><i class="fas fa-leaf me-2"></i>Fresh Produce Sales</h5>
+                            </div>
+                            <div class="card-body">
+                                <div class="chart-container">
+                                    <canvas id="produceSalesChart"></canvas>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    <!-- Supplies Sales Chart -->
+                    <div class="col-lg-6 mb-4">
+                        <div class="card h-100">
+                            <div class="card-header">
+                                <h5 class="mb-0"><i class="fas fa-tools me-2"></i>Farming Supplies Sales</h5>
+                            </div>
+                            <div class="card-body">
+                                <div class="chart-container">
+                                    <canvas id="suppliesSalesChart"></canvas>
                                 </div>
                             </div>
                         </div>
@@ -1069,12 +1113,19 @@
                                     <div class="mb-3">
                                         <label for="editProductCategory" class="form-label">Category</label>
                                         <select class="form-select" id="editProductCategory" name="category" required>
-                                            <option value="fruits">Fruits</option>
-                                            <option value="vegetables">Vegetables</option>
-                                            <option value="fertilizers">Fertilizers</option>
-                                            <option value="pesticides">Pesticides</option>
-                                            <option value="grains">Grains</option>
-                                            <option value="dairy">Dairy</option>
+                                            <optgroup label="Fresh Produce">
+                                                <option value="fruits">Fruits</option>
+                                                <option value="vegetables">Vegetables</option>
+                                                <option value="grains">Grains</option>
+                                                <option value="dairy">Dairy</option>
+                                            </optgroup>
+                                            <optgroup label="Farming Supplies">
+                                                <option value="seeds">Seeds</option>
+                                                <option value="fertilizers">Fertilizers</option>
+                                                <option value="pesticides">Pesticides</option>
+                                                <option value="tools">Farming Tools</option>
+                                                <option value="machinery">Machinery</option>
+                                            </optgroup>
                                         </select>
                                     </div>
                                     <div class="mb-3">
@@ -1228,6 +1279,8 @@
     {
         "chart_labels": {{ chart_labels|default([])|tojson }},
         "chart_values": {{ chart_values|default([])|tojson }},
+        "produce_sales": {{ produce_sales_values|default([])|tojson }},
+        "supplies_sales": {{ supplies_sales_values|default([])|tojson }},
         "products_by_category": {{ products_by_category|default({})|tojson }},
         "urls": {
         }
@@ -1237,6 +1290,7 @@
                 <script>
                     // Initialize Toast
                     var editProductModal, viewOrderModal, updateStatusModal;
+                    var salesChart, produceSalesChart, suppliesSalesChart; // Global chart instances
                     document.addEventListener('DOMContentLoaded', function () {
                         editProductModal = new bootstrap.Modal(document.getElementById('editProductModal'));
                         viewOrderModal = new bootstrap.Modal(document.getElementById('viewOrderModal'));
@@ -1258,7 +1312,7 @@
                         try {
                             if (window.jQuery && typeof $.fn.daterangepicker === 'function' && window.moment) {
                                 $('#reportrange').daterangepicker({
-                                    startDate: moment(),
+                                    startDate: moment().subtract(6, 'days'),
                                     endDate: moment(),
                                     ranges: {
                                         'Today': [moment(), moment()],
@@ -1271,12 +1325,44 @@
                                 }, function (start, end) {
                                     $('#reportrange span').html(start.format('MMMM D, YYYY') + ' - ' + end.format('MMMM D, YYYY'));
                                     showToast('Loading data for selected period...');
+                                    fetchChartData(start, end);
                                 });
                             }
                         } catch (e) {
                             console.warn('Date range picker not initialized:', e);
                         }
                     })();
+
+                    // Function to fetch and update chart data
+                    function fetchChartData(start, end) {
+                        const startDate = start.format('YYYY-MM-DD');
+                        const endDate = end.format('YYYY-MM-DD');
+
+                        fetch(`/admin/api/chart-data?start_date=${startDate}&end_date=${endDate}`)
+                            .then(response => response.json())
+                            .then(data => {
+                                if (salesChart) {
+                                    salesChart.data.labels = data.labels;
+                                    salesChart.data.datasets[0].data = data.sales;
+                                    salesChart.update();
+                                }
+                                if (produceSalesChart) {
+                                    produceSalesChart.data.labels = data.labels;
+                                    produceSalesChart.data.datasets[0].data = data.produce;
+                                    produceSalesChart.update();
+                                }
+                                if (suppliesSalesChart) {
+                                    suppliesSalesChart.data.labels = data.labels;
+                                    suppliesSalesChart.data.datasets[0].data = data.supplies;
+                                    suppliesSalesChart.update();
+                                }
+                                showToast('Charts updated', 'success');
+                            })
+                            .catch(err => {
+                                console.error(err);
+                                showToast('Failed to update charts', 'error');
+                            });
+                    }
 
                     // Chart Initialization
                     document.addEventListener('DOMContentLoaded', function () {
@@ -1298,7 +1384,7 @@
                                 const salesCtx = salesEl.getContext('2d');
                                 const labels = adminChartData.chart_labels || [];
                                 const values = adminChartData.chart_values || [];
-                                new Chart(salesCtx, {
+                                salesChart = new Chart(salesCtx, {
                                     type: 'line',
                                     data: {
                                         labels: labels,
@@ -1360,6 +1446,82 @@
                             } catch (err) {
                                 console.error('Error initializing category chart:', err);
                             }
+                        })();
+
+                        // Produce Sales Chart
+                        (function () {
+                            const ctx = document.getElementById('produceSalesChart');
+                            if (!ctx) return;
+
+                            const labels = adminChartData.chart_labels || [];
+                            const data = adminChartData.produce_sales || [];
+
+                            produceSalesChart = new Chart(ctx, {
+                                type: 'line',
+                                data: {
+                                    labels: labels,
+                                    datasets: [{
+                                        label: 'Fresh Produce',
+                                        data: data,
+                                        borderColor: '#28a745',
+                                        backgroundColor: 'rgba(40, 167, 69, 0.1)',
+                                        borderWidth: 2,
+                                        fill: true,
+                                        tension: 0.4
+                                    }]
+                                },
+                                options: {
+                                    responsive: true,
+                                    maintainAspectRatio: false,
+                                    plugins: { legend: { display: false } },
+                                    scales: {
+                                        y: {
+                                            beginAtZero: true,
+                                            grid: { drawBorder: false },
+                                            ticks: { callback: function (v) { return '₹' + v.toLocaleString(); } }
+                                        },
+                                        x: { grid: { display: false } }
+                                    }
+                                }
+                            });
+                        })();
+
+                        // Supplies Sales Chart
+                        (function () {
+                            const ctx = document.getElementById('suppliesSalesChart');
+                            if (!ctx) return;
+
+                            const labels = adminChartData.chart_labels || [];
+                            const data = adminChartData.supplies_sales || [];
+
+                            suppliesSalesChart = new Chart(ctx, {
+                                type: 'line',
+                                data: {
+                                    labels: labels,
+                                    datasets: [{
+                                        label: 'Farming Supplies',
+                                        data: data,
+                                        borderColor: '#ee9b00',
+                                        backgroundColor: 'rgba(238, 155, 0, 0.1)',
+                                        borderWidth: 2,
+                                        fill: true,
+                                        tension: 0.4
+                                    }]
+                                },
+                                options: {
+                                    responsive: true,
+                                    maintainAspectRatio: false,
+                                    plugins: { legend: { display: false } },
+                                    scales: {
+                                        y: {
+                                            beginAtZero: true,
+                                            grid: { drawBorder: false },
+                                            ticks: { callback: function (v) { return '₹' + v.toLocaleString(); } }
+                                        },
+                                        x: { grid: { display: false } }
+                                    }
+                                }
+                            });
                         })();
 
                         // Chart Period Selector (guarded)
