@@ -4,6 +4,7 @@ from flask import send_file, jsonify, make_response
 from flask_sqlalchemy import SQLAlchemy
 from functools import wraps
 from werkzeug.security import generate_password_hash, check_password_hash
+from werkzeug.utils import secure_filename
 from datetime import datetime, timedelta
 from itsdangerous import URLSafeTimedSerializer
 import smtplib
@@ -25,6 +26,7 @@ app = Flask(__name__, template_folder='templates')
 app.config['SECRET_KEY'] = os.environ.get('FLASK_SECRET_KEY', 'a-default-fallback-secret-key-for-dev')
 app.config['SQLALCHEMY_DATABASE_URI'] = 'sqlite:///database.db'
 app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
+app.config['UPLOAD_FOLDER'] = os.path.join(app.root_path, 'static', 'uploads')
 
 db = SQLAlchemy(app)
 serializer = URLSafeTimedSerializer(app.config['SECRET_KEY'])
@@ -44,6 +46,7 @@ twilio_client = Client(TWILIO_ACCOUNT_SID, TWILIO_AUTH_TOKEN) if Client and TWIL
 DEFAULT_SHIPPING_FEE = 60
 DEFAULT_FREE_SHIPPING_THRESHOLD = 600
 DEFAULT_DELIVERY_PARTNER_COST = 45
+DEFAULT_COMMISSION_RATE = 0.10
 
 # Database Models
 class User(db.Model):
@@ -53,7 +56,10 @@ class User(db.Model):
     password = db.Column(db.String(200), nullable=False)
     role = db.Column(db.String(20), nullable=False)
     phone = db.Column(db.String(20))
+    account_number = db.Column(db.String(50), nullable=True)
+    upi_phone_number = db.Column(db.String(20), nullable=True)
     created_at = db.Column(db.DateTime, default=datetime.utcnow)
+    is_approved = db.Column(db.Boolean, default=True)
 
 class Product(db.Model):
     id = db.Column(db.Integer, primary_key=True)
@@ -97,14 +103,58 @@ class Order(db.Model):
     delivery_fee = db.Column(db.Float, default=0.0)
     delivery_cost = db.Column(db.Float, default=0.0)
     created_at = db.Column(db.DateTime, default=datetime.utcnow)
+    delivery_person_id = db.Column(db.Integer, db.ForeignKey('delivery_person.id'), nullable=True)
+    delivery_person = db.relationship('DeliveryPerson')
 
 class OrderItem(db.Model):
     id = db.Column(db.Integer, primary_key=True)
     order_id = db.Column(db.Integer, db.ForeignKey('order.id', ondelete='CASCADE'), nullable=False)
     product_id = db.Column(db.Integer, db.ForeignKey('product.id', ondelete='SET NULL'), nullable=True)
+    seller_id = db.Column(db.Integer, nullable=True)
     product_name = db.Column(db.String(100), nullable=False) # Snapshot of name
     price = db.Column(db.Float, nullable=False) # Snapshot of price
     quantity = db.Column(db.Integer, nullable=False)
+    is_paid_to_seller = db.Column(db.Boolean, default=False)
+    commission_amount = db.Column(db.Float, default=0.0)
+
+class OrderStatusHistory(db.Model):
+    id = db.Column(db.Integer, primary_key=True)
+    order_id = db.Column(db.Integer, db.ForeignKey('order.id', ondelete='CASCADE'), nullable=False)
+    status = db.Column(db.String(50), nullable=False)
+    timestamp = db.Column(db.DateTime, default=datetime.utcnow)
+
+class OrderNote(db.Model):
+    id = db.Column(db.Integer, primary_key=True)
+    order_id = db.Column(db.Integer, db.ForeignKey('order.id', ondelete='CASCADE'), nullable=False)
+    author_id = db.Column(db.Integer, db.ForeignKey('user.id'), nullable=False)
+    note_text = db.Column(db.Text, nullable=False)
+    is_public = db.Column(db.Boolean, default=False, nullable=False)
+    created_at = db.Column(db.DateTime, default=datetime.utcnow)
+    updated_at = db.Column(db.DateTime, onupdate=datetime.utcnow)
+    author = db.relationship('User')
+
+class DeliveryPerson(db.Model):
+    id = db.Column(db.Integer, primary_key=True)
+    name = db.Column(db.String(100), nullable=False)
+    phone = db.Column(db.String(20), unique=True, nullable=False)
+    address = db.Column(db.Text, nullable=True)
+    vehicle_type = db.Column(db.String(50), nullable=True, default='Bike')
+    vehicle_number = db.Column(db.String(20), unique=True, nullable=False)
+    license_number = db.Column(db.String(30), unique=True, nullable=False)
+    is_active = db.Column(db.Boolean, default=True, nullable=False)
+    created_at = db.Column(db.DateTime, default=datetime.utcnow)
+    profile_picture = db.Column(db.String(200), nullable=True)
+    license_image = db.Column(db.String(200), nullable=True)
+
+
+class Payout(db.Model):
+    id = db.Column(db.Integer, primary_key=True)
+    seller_id = db.Column(db.Integer, db.ForeignKey('user.id'), nullable=False)
+    amount = db.Column(db.Float, nullable=False)
+    transaction_ref = db.Column(db.String(100), nullable=True)
+    commission_total = db.Column(db.Float, default=0.0)
+    status = db.Column(db.String(20), default='Completed')
+    created_at = db.Column(db.DateTime, default=datetime.utcnow)
 
 class Feedback(db.Model):
     id = db.Column(db.Integer, primary_key=True)
@@ -127,6 +177,23 @@ with app.app_context():
             db.session.commit()
     except Exception:
         pass
+    try:
+        cols = [r[1] for r in db.session.execute(db.text('PRAGMA table_info(user)')).fetchall()]
+        if 'account_number' not in cols:
+            db.session.execute(db.text('ALTER TABLE user ADD COLUMN account_number VARCHAR(50)'))
+        if 'upi_phone_number' not in cols:
+            db.session.execute(db.text('ALTER TABLE user ADD COLUMN upi_phone_number VARCHAR(20)'))
+        db.session.commit()
+    except Exception:
+        pass
+    # Check for is_approved in user table
+    try:
+        cols = [r[1] for r in db.session.execute(db.text('PRAGMA table_info(user)')).fetchall()]
+        if 'is_approved' not in cols:
+            db.session.execute(db.text('ALTER TABLE user ADD COLUMN is_approved BOOLEAN DEFAULT 1'))
+            db.session.commit()
+    except Exception:
+        pass
     # Check for shipping_address in order table
     try:
         cols = [r[1] for r in db.session.execute(db.text('PRAGMA table_info("order")')).fetchall()]
@@ -142,6 +209,8 @@ with app.app_context():
             db.session.execute(db.text('ALTER TABLE "order" ADD COLUMN delivery_fee FLOAT DEFAULT 0.0'))
         if 'delivery_cost' not in cols:
             db.session.execute(db.text('ALTER TABLE "order" ADD COLUMN delivery_cost FLOAT DEFAULT 0.0'))
+        if 'delivery_person_id' not in cols:
+            db.session.execute(db.text('ALTER TABLE "order" ADD COLUMN delivery_person_id INTEGER REFERENCES delivery_person(id)'))
             db.session.commit()
     except Exception:
         pass
@@ -153,13 +222,44 @@ with app.app_context():
             db.session.commit()
     except Exception:
         pass
+    # Check for seller_id and is_paid_to_seller in order_item
+    try:
+        cols = [r[1] for r in db.session.execute(db.text('PRAGMA table_info(order_item)')).fetchall()]
+        if 'seller_id' not in cols:
+            db.session.execute(db.text('ALTER TABLE order_item ADD COLUMN seller_id INTEGER'))
+            # Backfill seller_id from product table for existing items
+            db.session.execute(db.text('UPDATE order_item SET seller_id = (SELECT seller_id FROM product WHERE product.id = order_item.product_id) WHERE seller_id IS NULL'))
+            db.session.commit()
+        if 'is_paid_to_seller' not in cols:
+            db.session.execute(db.text('ALTER TABLE order_item ADD COLUMN is_paid_to_seller BOOLEAN DEFAULT 0'))
+            db.session.commit()
+        if 'commission_amount' not in cols:
+            db.session.execute(db.text('ALTER TABLE order_item ADD COLUMN commission_amount FLOAT DEFAULT 0.0'))
+            # Backfill commission for existing items based on default rate
+            db.session.execute(db.text(f'UPDATE order_item SET commission_amount = price * quantity * {DEFAULT_COMMISSION_RATE} WHERE commission_amount = 0.0'))
+            db.session.commit()
+    except Exception:
+        pass
+    # Check for commission_total in payout table
+    try:
+        cols = [r[1] for r in db.session.execute(db.text('PRAGMA table_info(payout)')).fetchall()]
+        if 'commission_total' not in cols:
+            db.session.execute(db.text('ALTER TABLE payout ADD COLUMN commission_total FLOAT DEFAULT 0.0'))
+            db.session.commit()
+    except Exception:
+        pass
     # Initialize default settings
     try:
         if not SiteSetting.query.first():
             db.session.add(SiteSetting(key='shipping_fee', value=str(DEFAULT_SHIPPING_FEE)))
             db.session.add(SiteSetting(key='free_shipping_threshold', value=str(DEFAULT_FREE_SHIPPING_THRESHOLD)))
             db.session.add(SiteSetting(key='delivery_partner_cost', value=str(DEFAULT_DELIVERY_PARTNER_COST)))
+            db.session.add(SiteSetting(key='commission_rate', value=str(DEFAULT_COMMISSION_RATE)))
             db.session.commit()
+        # Ensure commission_rate exists if settings are already there
+        elif not db.session.get(SiteSetting, 'commission_rate'):
+             db.session.add(SiteSetting(key='commission_rate', value=str(DEFAULT_COMMISSION_RATE)))
+             db.session.commit()
     except Exception:
         pass
     # Create admin user if not exists
@@ -233,15 +333,73 @@ def send_reset_email(to_email, reset_link):
         print(f"Failed to send email: {e}")
         return False
 
+def send_notification_email(to_email, subject, body):
+    """Sends a general notification email."""
+    sender_email = os.environ.get('MAIL_USERNAME')
+    sender_password = os.environ.get('MAIL_PASSWORD')
+    smtp_server = os.environ.get('MAIL_SERVER', 'smtp.gmail.com')
+    smtp_port = int(os.environ.get('MAIL_PORT', 587))
+
+    # If credentials are missing, log to console for development
+    if not sender_email or not sender_password:
+        print(f"\n[DEV MODE] Email to {to_email}\nSubject: {subject}\nBody: {body}\n")
+        return True
+
+    try:
+        msg = MIMEMultipart()
+        msg['From'] = sender_email
+        msg['To'] = to_email
+        msg['Subject'] = subject
+        msg.attach(MIMEText(body, 'plain'))
+
+        server = smtplib.SMTP(smtp_server, smtp_port)
+        server.starttls()
+        server.login(sender_email, sender_password)
+        server.sendmail(sender_email, to_email, msg.as_string())
+        server.quit()
+        return True
+    except Exception as e:
+        print(f"Failed to send email: {e}")
+        return False
+
 def get_site_setting(key, default_val, type_func=float):
     """Helper to get a site setting with a default fallback."""
     try:
-        setting = SiteSetting.query.get(key)
+        setting = db.session.get(SiteSetting, key)
         if setting:
             return type_func(setting.value)
     except Exception:
         pass
     return default_val
+
+def calculate_delivery_charges(distance_km):
+    """Calculates delivery fee and cost based on distance and commission slabs."""
+    try:
+        distance_km = float(distance_km)
+    except (ValueError, TypeError):
+        # Default to a high tier if distance is invalid
+        return 150, 100
+
+    if distance_km <= 5:
+        fee = 40
+        cost = fee - 10  # 30
+    elif distance_km <= 15:
+        fee = 60
+        cost = fee - 20  # 40
+    elif distance_km <= 30:
+        fee = 90
+        cost = fee - 35  # 55
+    else: # For distances > 30km, a higher flat rate
+        fee = 150
+        cost = 100 # 50 profit
+    return fee, cost
+
+def log_order_status(order_id, new_status, commit=True):
+    """Logs a new status for an order."""
+    history_entry = OrderStatusHistory(order_id=order_id, status=new_status)
+    db.session.add(history_entry)
+    if commit:
+        db.session.commit()
 
 # Routes
 @app.route('/')
@@ -258,6 +416,12 @@ def login():
         
         if user and check_password_hash(user.password, password):
             session['user_id'] = user.id
+            
+            # Check approval status for sellers/farmers
+            if user.role in ['seller', 'farmer'] and not user.is_approved:
+                flash('Your account is pending approval by an admin. Please wait for approval.', 'warning')
+                return render_template('login.html')
+
             session['user_name'] = user.name
             session['user_role'] = user.role
             
@@ -282,23 +446,36 @@ def register():
         password = request.form['password']
         role = request.form['role']
         phone = request.form.get('phone')
+        account_number = request.form.get('account_number')
+        upi_phone_number = request.form.get('upi_phone_number')
         
         if User.query.filter_by(email=email).first():
             flash('Email already registered', 'error')
             return redirect(url_for('register'))
         
+        # Set approval status based on role
+        is_approved = True
+        if role in ['seller', 'farmer']:
+            is_approved = False
+
         new_user = User(
             name=name,
             email=email,
             password=generate_password_hash(password),
             role=role,
-            phone=phone
+            phone=phone,
+            account_number=account_number,
+            upi_phone_number=upi_phone_number,
+            is_approved=is_approved
         )
         
         db.session.add(new_user)
         db.session.commit()
         
-        flash('Registration successful! Please login.', 'success')
+        if not is_approved:
+            flash('Registration successful! Your account is pending approval by an admin.', 'info')
+        else:
+            flash('Registration successful! Please login.', 'success')
         return redirect(url_for('login'))
     
     return render_template('register.html')
@@ -352,6 +529,8 @@ def reset_password(token):
 @roles_required('buyer', 'seller', 'admin', 'farmer')
 def product():
     # Normalize category parameter and perform case-insensitive filtering
+    page = request.args.get('page', 1, type=int)
+    per_page = 12  # Number of products per page
     category = request.args.get('category', 'all')
     search_query = request.args.get('q', '').strip()
     sort_by = request.args.get('sort', 'newest')  # Get sort param, default to 'newest'
@@ -387,10 +566,12 @@ def product():
     else:  # 'newest' or default
         query = query.order_by(Product.created_at.desc())
 
-    product_data = query.add_columns(
+    pagination = query.add_columns(
         avg_rating_subquery.c.avg_rating,
         avg_rating_subquery.c.review_count
-    ).all()
+    ).paginate(page=page, per_page=per_page, error_out=False)
+
+    product_data = pagination.items
 
     # Process into a list of product objects with attached rating info
     products_with_ratings = []
@@ -405,17 +586,28 @@ def product():
         cart_count = db.session.query(db.func.coalesce(db.func.sum(Cart.quantity), 0)).filter(Cart.buyer_id == session['user_id']).scalar() or 0
 
     # pass normalized category key and sort_by for template active state
-    return render_template('product.html', product=products_with_ratings, category=cat_key, cart_count=cart_count, sort_by=sort_by)
+    return render_template('product.html', product=products_with_ratings, category=cat_key, cart_count=cart_count, sort_by=sort_by, pagination=pagination)
 
 @app.route('/addproduct', methods=['GET', 'POST'])
+@roles_required('seller', 'farmer', 'admin')
 def addproduct():
+    units = ['kg', 'gram', 'liter', 'dozen', 'packet', 'piece']
     if request.method == 'POST':
         name = request.form['name']
         category = request.form['category']
-        price = float(request.form['price'])
-        quantity = int(request.form['quantity'])
         unit = request.form.get('unit') or 'kg'
         image = request.form['image'] or None
+
+        try:
+            price = float(request.form.get('price'))
+            quantity = int(request.form.get('quantity'))
+        except (ValueError, TypeError):
+            flash('Price and quantity must be valid numbers.', 'error')
+            return render_template('addproduct.html', units=units, form_data=request.form)
+
+        if price <= 0 or quantity <= 0:
+            flash('Price and quantity must be positive values.', 'error')
+            return render_template('addproduct.html', units=units, form_data=request.form)
         
         new_product = Product(
             name=name,
@@ -433,13 +625,12 @@ def addproduct():
         flash(f'Product "{name}" added successfully! Price: ₹{price}/{unit}', 'success')
         return redirect(url_for('product'))
     
-    units = ['kg', 'gram', 'liter', 'dozen', 'packet', 'piece']
     return render_template('addproduct.html', units=units)
 
 @app.route('/add_to_cart/<int:product_id>')
 @roles_required('buyer')
 def add_to_cart(product_id):
-    product = Product.query.get(product_id)
+    product = db.session.get(Product, product_id)
     if not product:
         return jsonify({'success': False, 'message': 'Product not found.'}), 404
 
@@ -476,37 +667,27 @@ def add_to_cart(product_id):
 def buy_now(product_id):
     product = Product.query.get_or_404(product_id)
     quantity = int(request.form.get('quantity', 1))
-    if quantity <= 0 or quantity > product.quantity:
-        flash('Invalid quantity', 'error')
-        return redirect(url_for('product'))
-    
-    # Fetch dynamic settings
-    shipping_fee = get_site_setting('shipping_fee', DEFAULT_SHIPPING_FEE)
-    free_shipping_threshold = get_site_setting('free_shipping_threshold', DEFAULT_FREE_SHIPPING_THRESHOLD)
-    delivery_partner_cost = get_site_setting('delivery_partner_cost', DEFAULT_DELIVERY_PARTNER_COST)
 
-    product_total = product.price * quantity
-    shipping_charge = 0 if product_total > free_shipping_threshold else shipping_fee
-    total_amount = product_total + shipping_charge
+    if quantity <= 0 or quantity > product.quantity:
+        flash('Invalid quantity or not enough stock.', 'error')
+        return redirect(url_for('product_detail', product_id=product_id))
     
-    new_order = Order(
-        buyer_id=session['user_id'], total_amount=total_amount, payment_mode='COD', status='Confirmed',
-        delivery_fee=shipping_charge, delivery_cost=delivery_partner_cost
+    # --- New "Buy Now" Logic ---
+    # 1. Clear the user's current cart to ensure it's a "buy now" flow
+    Cart.query.filter_by(buyer_id=session['user_id']).delete()
+
+    # 2. Add the new item to the now-empty cart
+    new_cart_item = Cart(
+        buyer_id=session['user_id'],
+        product_id=product_id,
+        quantity=quantity
     )
-    
-    db.session.add(new_order)
-    db.session.flush()
-    oi = OrderItem(order_id=new_order.id, product_id=product.id, product_name=product.name, price=product.price, quantity=quantity)
-    db.session.add(oi)
-    product.quantity -= quantity
-    if product.quantity <= 0:
-        db.session.delete(product)
+    db.session.add(new_cart_item)
     db.session.commit()
-    user = User.query.get(session['user_id'])
-    if user and user.phone:
-        send_sms(user.phone, f'Order #{new_order.id} placed')
-    flash('Order placed', 'success')
-    return redirect(url_for('orderconformation', order_id=new_order.id))
+    
+    flash('Proceed to checkout for your item.', 'info')
+    # 3. Redirect to the checkout page to enter distance and complete purchase
+    return redirect(url_for('checkout'))
 
 def get_cart_details(user_id):
     """Helper function to get cart items and total amount."""
@@ -526,7 +707,8 @@ def get_cart_details(user_id):
             'quantity': cart_item.quantity,
             'unit': product.unit,
             'total': item_total,
-            'image': product.image
+            'image': product.image,
+            'seller_id': product.seller_id
         })
     
     return cart_products, total_amount
@@ -555,7 +737,7 @@ def update_cart(product_id, action):
     cart_item = Cart.query.filter_by(buyer_id=session['user_id'], product_id=product_id).first()
     if cart_item:
         if action == 'increase':
-            product = Product.query.get(product_id)
+            product = db.session.get(Product, product_id)
             if cart_item.quantity < product.quantity:
                 cart_item.quantity += 1
                 db.session.commit()
@@ -597,7 +779,7 @@ def generate_upi_qr():
     shipping_fee = get_site_setting('shipping_fee', DEFAULT_SHIPPING_FEE)
     free_shipping_threshold = get_site_setting('free_shipping_threshold', DEFAULT_FREE_SHIPPING_THRESHOLD)
 
-    shipping = 0 if total_amount > free_shipping_threshold else shipping_fee
+    shipping = 0 if total_amount >= free_shipping_threshold else shipping_fee
     tax = total_amount * 0.05
     grand_total = total_amount + shipping + tax
 
@@ -608,6 +790,35 @@ def generate_upi_qr():
     img.save(buf, 'PNG')
     buf.seek(0)
     return send_file(buf, mimetype='image/png')
+
+@app.route('/api/calculate_shipping', methods=['POST'])
+def api_calculate_shipping():
+    if 'user_id' not in session:
+        return jsonify({'success': False, 'error': 'User not logged in'}), 401
+        
+    data = request.get_json()
+    distance = data.get('distance')
+    
+    try:
+        distance = float(distance)
+        if distance < 0: raise ValueError
+    except (ValueError, TypeError):
+        return jsonify({'success': False, 'error': 'Invalid distance'}), 400
+
+    delivery_fee, _ = calculate_delivery_charges(distance)
+    
+    _, total_amount = get_cart_details(session['user_id'])
+    free_shipping_threshold = get_site_setting('free_shipping_threshold', DEFAULT_FREE_SHIPPING_THRESHOLD)
+    
+    shipping_charge = 0 if total_amount >= free_shipping_threshold else delivery_fee
+    grand_total = total_amount + shipping_charge
+    
+    return jsonify({
+        'success': True,
+        'shipping_charge': shipping_charge,
+        'grand_total': grand_total,
+        'is_free': shipping_charge == 0
+    })
 
 @app.route('/create-payment', methods=['POST'])
 @roles_required('buyer')
@@ -623,10 +834,18 @@ def create_payment():
         if not cart_products:
             return jsonify({'error': 'Cart is empty'}), 400
         
+        # Get distance from request
+        data = request.get_json()
+        distance = data.get('distance')
+        
+        if not distance:
+            return jsonify({'error': 'Distance is required'}), 400
+            
+        delivery_fee, _ = calculate_delivery_charges(distance)
+        
         # Calculate shipping
-        shipping_fee = get_site_setting('shipping_fee', DEFAULT_SHIPPING_FEE)
         free_shipping_threshold = get_site_setting('free_shipping_threshold', DEFAULT_FREE_SHIPPING_THRESHOLD)
-        shipping_charge = 0 if total_amount > free_shipping_threshold else shipping_fee
+        shipping_charge = 0 if total_amount >= free_shipping_threshold else delivery_fee
         grand_total = total_amount + shipping_charge
 
         # Create Razorpay order
@@ -659,13 +878,24 @@ def _process_order_items_and_stock(user_id, new_order, cart_products):
     3. Delete products if stock runs out.
     4. Clear the user's cart.
     """
+    commission_rate = get_site_setting('commission_rate', DEFAULT_COMMISSION_RATE)
+    seller_items_map = {} # Map seller_id to list of product names for notification
+
     for item in cart_products:
-        order_item = OrderItem(order_id=new_order.id, product_id=item['id'], product_name=item['name'], price=item['price'], quantity=item['quantity'])
+        item_total = item['price'] * item['quantity']
+        commission = item_total * commission_rate
+        order_item = OrderItem(order_id=new_order.id, product_id=item['id'], seller_id=item['seller_id'], product_name=item['name'], price=item['price'], quantity=item['quantity'], commission_amount=commission)
         db.session.add(order_item)
+
+        # Group items by seller for notification
+        sid = item['seller_id']
+        if sid not in seller_items_map:
+            seller_items_map[sid] = []
+        seller_items_map[sid].append(f"{item['name']} (Qty: {item['quantity']})")
 
     cart_items = db.session.query(Cart).filter_by(buyer_id=user_id).all()
     for item in cart_items:
-        product = Product.query.get(item.product_id)
+        product = db.session.get(Product, item.product_id)
         if product:
             product.quantity -= item.quantity
             if product.quantity <= 0:
@@ -673,6 +903,14 @@ def _process_order_items_and_stock(user_id, new_order, cart_products):
                 db.session.delete(product)
     # Clear cart after processing stock
     Cart.query.filter_by(buyer_id=user_id).delete()
+
+    # Send notifications to sellers
+    for sid, products_list in seller_items_map.items():
+        seller = db.session.get(User, sid)
+        if seller and seller.phone:
+            product_str = ", ".join(products_list)
+            msg = f"New Order! You have sold: {product_str}. Check your dashboard."
+            send_sms(seller.phone, msg)
 
 @app.route('/verify-payment', methods=['POST'])
 @roles_required('buyer')
@@ -697,13 +935,14 @@ def verify_payment():
         cart_products, total_amount = get_cart_details(session['user_id'])
         
         shipping_address = data.get('shipping_address', '')
+        distance = data.get('distance')
+        
+        # Calculate delivery charges based on distance
+        delivery_fee, delivery_cost = calculate_delivery_charges(distance)
         
         # Calculate shipping
-        shipping_fee = get_site_setting('shipping_fee', DEFAULT_SHIPPING_FEE)
         free_shipping_threshold = get_site_setting('free_shipping_threshold', DEFAULT_FREE_SHIPPING_THRESHOLD)
-        delivery_partner_cost = get_site_setting('delivery_partner_cost', DEFAULT_DELIVERY_PARTNER_COST)
-
-        shipping_charge = 0 if total_amount > free_shipping_threshold else shipping_fee
+        shipping_charge = 0 if total_amount >= free_shipping_threshold else delivery_fee
         grand_total = total_amount + shipping_charge
 
         # Create order in database
@@ -714,11 +953,12 @@ def verify_payment():
             shipping_address=shipping_address,
             status='Confirmed',
             delivery_fee=shipping_charge,
-            delivery_cost=delivery_partner_cost
+            delivery_cost=delivery_cost
         )
         
         db.session.add(new_order)
         db.session.flush()  # Flush to get the new_order.id before using it
+        log_order_status(new_order.id, new_order.status, commit=False)
 
         # Process order items, stock, and clear cart
         _process_order_items_and_stock(session['user_id'], new_order, cart_products)
@@ -726,7 +966,7 @@ def verify_payment():
         db.session.commit()
         
         flash('Payment successful! Order placed.', 'success')
-        buyer = User.query.get(session['user_id'])
+        buyer = db.session.get(User, session['user_id'])
         if buyer and buyer.phone:
             send_sms(buyer.phone, f'Payment received. Order #{new_order.id} placed')
         return jsonify({'success': True, 'order_id': new_order.id})
@@ -749,43 +989,56 @@ def checkout():
         return redirect(url_for('product'))
     
     # Calculate shipping
-    shipping_fee = get_site_setting('shipping_fee', DEFAULT_SHIPPING_FEE)
+    # For display on GET request, we show the default flat rate as an estimate.
+    # The final calculation happens on POST.
+    initial_shipping_fee = get_site_setting('shipping_fee', DEFAULT_SHIPPING_FEE)
     free_shipping_threshold = get_site_setting('free_shipping_threshold', DEFAULT_FREE_SHIPPING_THRESHOLD)
-    delivery_partner_cost = get_site_setting('delivery_partner_cost', DEFAULT_DELIVERY_PARTNER_COST)
 
-    shipping_charge = 0 if total_amount > free_shipping_threshold else shipping_fee
-    grand_total = total_amount + shipping_charge
+    shipping_charge = 0 if total_amount >= free_shipping_threshold else initial_shipping_fee
+    grand_total = total_amount + shipping_charge # This is an initial estimate for display
 
     if request.method == 'POST':
         payment_mode = request.form['payment_mode']
         shipping_address = request.form.get('shipping_address')
+        distance_str = request.form.get('distance')
 
         if not shipping_address:
             flash('Shipping address is required.', 'error')
             return redirect(url_for('checkout'))
         
-        new_order = Order(
-            buyer_id=session['user_id'],
-            total_amount=grand_total,
-            payment_mode=payment_mode,
-            shipping_address=shipping_address,
-            status='Confirmed',
-            delivery_fee=shipping_charge,
-            delivery_cost=delivery_partner_cost
-        )
-        db.session.add(new_order)
-        db.session.flush()  # Flush to get the new_order.id before using it
+        if not distance_str:
+            flash('Distance is required for calculating delivery charges.', 'error')
+            return redirect(url_for('checkout'))
         
-        # Process order items, stock, and clear cart
-        _process_order_items_and_stock(session['user_id'], new_order, cart_products)
+        try:
+            distance = float(distance_str)
+            if distance < 0: raise ValueError
+        except (ValueError, TypeError):
+            flash('Please enter a valid, positive distance.', 'error')
+            return redirect(url_for('checkout'))
 
-        db.session.commit()
-        
-        flash('Order placed successfully!', 'success')
-        buyer = User.query.get(session['user_id'])
-        if buyer and buyer.phone:
-            send_sms(buyer.phone, f'Order #{new_order.id} placed')
-        return redirect(url_for('orderconformation', order_id=new_order.id))
+        # This part handles COD/UPI form submissions
+        if payment_mode in ['COD', 'UPI']:
+            delivery_fee, delivery_cost = calculate_delivery_charges(distance)
+            shipping_charge_for_customer = 0 if total_amount >= free_shipping_threshold else delivery_fee
+            final_grand_total = total_amount + shipping_charge_for_customer
+
+            new_order = Order(
+                buyer_id=session['user_id'],
+                total_amount=final_grand_total,
+                payment_mode=payment_mode,
+                shipping_address=shipping_address,
+                status='Confirmed',
+                delivery_fee=shipping_charge_for_customer,
+                delivery_cost=delivery_cost
+            )
+            db.session.add(new_order)
+            db.session.flush()
+            log_order_status(new_order.id, new_order.status, commit=False)
+            _process_order_items_and_stock(session['user_id'], new_order, cart_products)
+            db.session.commit()
+            flash('Order placed successfully!', 'success')
+            return redirect(url_for('orderconformation', order_id=new_order.id))
     
     return render_template('checkout.html', cart_product=cart_products, total_amount=total_amount, shipping_charge=shipping_charge, grand_total=grand_total, upi_qr_url=url_for('generate_upi_qr'), upi_id=UPI_ID)
 
@@ -796,6 +1049,35 @@ def my_orders():
     orders = Order.query.filter_by(buyer_id=session['user_id']).order_by(Order.created_at.desc()).all()
     return render_template('my_orders.html', orders=orders)
 
+@app.route('/track_order/<int:order_id>')
+@roles_required('buyer')
+def track_order(order_id):
+    order = Order.query.get_or_404(order_id)
+    
+    # Security check: ensure the order belongs to the logged-in buyer
+    if order.buyer_id != session['user_id']:
+        flash('You are not authorized to view this order.', 'error')
+        return redirect(url_for('my_orders'))
+ 
+    status_history = OrderStatusHistory.query.filter_by(order_id=order.id).order_by(OrderStatusHistory.timestamp.asc()).all()
+    order_notes = OrderNote.query.filter_by(order_id=order.id, is_public=True).options(db.joinedload(OrderNote.author)).order_by(OrderNote.created_at.asc()).all()
+    
+    # Backfill initial status if it's missing for older orders
+    if not status_history:
+        log_order_status(order.id, order.status)
+        status_history = OrderStatusHistory.query.filter_by(order_id=order.id).order_by(OrderStatusHistory.timestamp.asc()).all()
+
+    # Combine and sort timeline events
+    timeline_events = []
+    for history in status_history:
+        timeline_events.append({'type': 'status', 'data': history, 'timestamp': history.timestamp})
+    for note in order_notes:
+        timeline_events.append({'type': 'note', 'data': note, 'timestamp': note.created_at})
+    
+    timeline_events.sort(key=lambda x: x['timestamp'])
+
+    return render_template('track_order.html', order=order, timeline_events=timeline_events)
+
 @app.route('/orderconformation/<int:order_id>')
 @roles_required('buyer', 'admin')
 def orderconformation(order_id):
@@ -805,7 +1087,7 @@ def orderconformation(order_id):
         flash('You are not authorized to view this order.', 'error')
         return redirect(url_for('index'))
 
-    buyer = User.query.get(order.buyer_id)
+    buyer = db.session.get(User, order.buyer_id)
     order_items = db.session.query(OrderItem).filter_by(order_id=order.id).all()
 
     # To show a price breakdown, we calculate subtotal from items
@@ -873,6 +1155,23 @@ def admin():
     # Calculate delivery earnings (Profit from logistics)
     total_delivery_earnings = db.session.query(db.func.sum(Order.delivery_fee - Order.delivery_cost)).scalar() or 0
 
+    # Calculate total platform earnings from commission
+    total_platform_earnings = db.session.query(
+        db.func.sum(OrderItem.commission_amount)
+    ).join(Order, OrderItem.order_id == Order.id)\
+     .filter(
+         Order.status.in_(['Delivered', 'Completed'])
+     ).scalar() or 0
+
+    # Calculate total pending payouts for dashboard widget
+    total_pending_payouts = db.session.query(
+        db.func.sum((OrderItem.price * OrderItem.quantity) - OrderItem.commission_amount)
+    ).join(Order, OrderItem.order_id == Order.id)\
+     .filter(
+         OrderItem.is_paid_to_seller == False,
+         Order.status.in_(['Delivered', 'Completed'])
+     ).scalar() or 0
+
     # Fetch all products for the management table
     all_products = Product.query.order_by(Product.created_at.desc()).all()
 
@@ -935,6 +1234,9 @@ def admin():
     # Pending orders
     pending_orders_count = Order.query.filter_by(status='Pending').count()
 
+    # Pending user approvals
+    pending_approvals_count = User.query.filter_by(is_approved=False).count()
+
     # Low stock alerts (threshold = 5)
     low_stock_threshold = 5
     low_stock_products = Product.query.filter(Product.quantity <= low_stock_threshold).order_by(Product.quantity.asc()).all()
@@ -979,6 +1281,7 @@ def admin():
         total_users_count=total_users_count,
         total_products_count=total_products_count,
         total_delivery_earnings=total_delivery_earnings,
+        total_platform_earnings=total_platform_earnings,
         recent_orders=recent_orders,
         users=recent_users,
         all_products=all_products,
@@ -996,12 +1299,15 @@ def admin():
         week_sales=week_sales,
         month_sales=month_sales,
         pending_orders_count=pending_orders_count,
+        pending_approvals_count=pending_approvals_count,
         low_stock_count=low_stock_count,
         low_stock_products=low_stock_products,
         low_stock_threshold=low_stock_threshold,
         yesterday_sales=yesterday_sales,
         current_year=current_year,
-        current_time=current_time
+        current_time=current_time,
+        total_pending_payouts=total_pending_payouts,
+        active_page='dashboard'
     )
     
 @app.route('/admin/orders')
@@ -1016,19 +1322,26 @@ def admin_orders():
     total_orders_count = Order.query.count()
     total_users_count = User.query.count()
     total_products_count = Product.query.count()
+    delivery_person_filter = request.args.get('delivery_person', type=int)
 
     # Query with pagination
-    orders_pagination = db.session.query(
+    orders_query = db.session.query(
         Order, User.name.label('customer_name')
-    ).join(User, Order.buyer_id == User.id).order_by(Order.created_at.desc()).paginate(page=page, per_page=per_page, error_out=False)
+    ).join(User, Order.buyer_id == User.id)\
+     .options(db.joinedload(Order.delivery_person))
 
-    # Convert orders to a JSON-serializable format for the template
-    orders_data = [
-        {'id': order.id, 'customer_name': customer_name, 'total_amount': order.total_amount, 'status': order.status, 'created_at': order.created_at.strftime('%b %d, %Y %I:%M %p')} for order, customer_name in orders_pagination.items
-    ]
+    if delivery_person_filter:
+        orders_query = orders_query.filter(Order.delivery_person_id == delivery_person_filter)
+
+    orders_pagination = orders_query.order_by(Order.created_at.desc()).paginate(page=page, per_page=per_page, error_out=False)
+
+    # Fetch active delivery persons for the assignment modal
+    delivery_persons = DeliveryPerson.query.filter_by(is_active=True).order_by(DeliveryPerson.name).all()
+
     return render_template('admin_orders.html', 
                            orders_pagination=orders_pagination, 
-                           orders_data=orders_data, 
+                           delivery_persons=delivery_persons,
+                           delivery_person_filter=delivery_person_filter,
                            active_page='orders',
                            pending_orders_count=pending_orders_count,
                            low_stock_count=low_stock_count,
@@ -1036,6 +1349,33 @@ def admin_orders():
                            total_orders_count=total_orders_count,
                            total_users_count=total_users_count,
                            total_products_count=total_products_count)
+
+@app.route('/admin/assign_delivery_person/<int:order_id>', methods=['POST'])
+@roles_required('admin')
+def assign_delivery_person(order_id):
+    order = Order.query.get_or_404(order_id)
+    data = request.get_json()
+    person_id = data.get('person_id')
+
+    # Handle un-assignment
+    if not person_id or person_id == 'None' or person_id == '':
+        order.delivery_person_id = None
+        db.session.commit()
+        return jsonify({'success': True, 'message': f'Order #{order.id} unassigned.'})
+
+    person = DeliveryPerson.query.get(person_id)
+    if not person or not person.is_active:
+        return jsonify({'success': False, 'error': 'Invalid or inactive delivery person.'}), 400
+
+    order.delivery_person_id = person.id
+    db.session.commit()
+
+    if person.phone:
+        buyer = User.query.get(order.buyer_id)
+        message = f"New delivery: Order #{order.id} for {buyer.name}. Address: {order.shipping_address}. Amount: Rs.{order.total_amount:.2f}"
+        send_sms(person.phone, message)
+
+    return jsonify({'success': True, 'message': f'{person.name} assigned to order #{order.id}.', 'person_name': person.name})
 
 @app.route('/admin/analytics')
 @roles_required('admin')
@@ -1186,7 +1526,10 @@ def admin_users():
     users_data = [
         {
             'id': u.id, 'name': u.name, 'email': u.email, 'phone': u.phone, 
-            'role': u.role, 'created_at': u.created_at.strftime('%Y-%m-%d')
+            'role': u.role, 'created_at': u.created_at.strftime('%Y-%m-%d'),
+            'account_number': u.account_number,
+            'upi_phone_number': u.upi_phone_number,
+            'is_approved': u.is_approved
         } for u in users_pagination.items
     ]
 
@@ -1201,6 +1544,19 @@ def admin_users():
                            total_users_count=total_users_count,
                            total_products_count=total_products_count,
                            search_query=search_query)
+
+@app.route('/admin/approve_user/<int:user_id>', methods=['POST'])
+@roles_required('admin')
+def admin_approve_user(user_id):
+    user = User.query.get_or_404(user_id)
+    user.is_approved = True
+    db.session.commit()
+    
+    if user.phone:
+        send_sms(user.phone, "Your account has been approved! You can now log in and start selling.")
+    
+    flash(f'User {user.name} approved successfully.', 'success')
+    return redirect(url_for('admin_users'))
 
 @app.route('/admin/categories')
 @roles_required('admin')
@@ -1236,6 +1592,7 @@ def admin_settings():
         shipping_fee = request.form.get('shipping_fee')
         free_shipping_threshold = request.form.get('free_shipping_threshold')
         delivery_partner_cost = request.form.get('delivery_partner_cost')
+        commission_rate_percent = request.form.get('commission_rate')
         
         settings_map = {
             'shipping_fee': shipping_fee,
@@ -1252,12 +1609,29 @@ def admin_settings():
                 else:
                     setting.value = str(val)
         
+        # Handle commission rate separately to convert from %
+        if commission_rate_percent is not None:
+            try:
+                rate_as_float = float(commission_rate_percent) / 100.0
+                commission_setting = SiteSetting.query.get('commission_rate')
+                if not commission_setting:
+                    commission_setting = SiteSetting(key='commission_rate', value=str(rate_as_float))
+                    db.session.add(commission_setting)
+                else:
+                    commission_setting.value = str(rate_as_float)
+            except (ValueError, TypeError):
+                flash('Invalid commission rate. Please enter a number.', 'error')
+
         db.session.commit()
         flash('Settings updated successfully!', 'success')
         return redirect(url_for('admin_settings'))
 
     settings = {s.key: s.value for s in SiteSetting.query.all()}
-    return render_template('admin_settings.html', settings=settings, active_page='settings')
+    pending_orders_count = Order.query.filter_by(status='Pending').count()
+    low_stock_count = Product.query.filter(Product.quantity <= 5).count()
+    return render_template('admin_settings.html', settings=settings, active_page='settings',
+                           pending_orders_count=pending_orders_count,
+                           low_stock_count=low_stock_count)
 
 @app.route('/admin/reviews')
 @roles_required('admin')
@@ -1287,7 +1661,7 @@ def admin_reviews():
 def remove_user(user_id):
     """Remove a user from the database"""
     try:
-        user = User.query.get(user_id)
+        user = db.session.get(User, user_id)
         if not user:
             return {'error': 'User not found'}, 404
         
@@ -1307,7 +1681,7 @@ def remove_user(user_id):
 def admin_delete_product(product_id):
     """Allows an admin to delete any product."""
     try:
-        product = Product.query.get(product_id)
+        product = db.session.get(Product, product_id)
         if not product:
             return jsonify({'success': False, 'error': 'Product not found'}), 404
 
@@ -1438,10 +1812,14 @@ def admin_update_order_status(order_id):
     new_status = data.get('status')
     if new_status in ['Pending', 'Confirmed', 'Shipped', 'Delivered', 'Cancelled', 'Completed']:
         order.status = new_status
+        log_order_status(order.id, new_status, commit=False)
         db.session.commit()
         buyer = User.query.get(order.buyer_id)
-        if buyer and buyer.phone:
-            send_sms(buyer.phone, f'Order #{order_id} status updated to {new_status}')
+        if buyer and buyer.phone and new_status in ['Shipped', 'Delivered']:
+            send_sms(buyer.phone, f'Update: Your Order #{order_id} has been {new_status}.')
+        elif buyer and buyer.phone:
+             # Generic update for other statuses
+             send_sms(buyer.phone, f'Order #{order_id} status updated to {new_status}')
         return jsonify({'success': True, 'message': f'Order #{order_id} status updated to {new_status}.'})
     return jsonify({'success': False, 'error': 'Invalid status provided.'}), 400
 
@@ -1479,6 +1857,230 @@ def admin_export_report():
     mem.seek(0)
     return send_file(mem, mimetype='text/csv', as_attachment=True, download_name='orders_report.csv')
 
+@app.route('/admin/track_order/<int:order_id>')
+@roles_required('admin')
+def admin_track_order(order_id):
+    order = Order.query.get_or_404(order_id)
+    order_items = OrderItem.query.filter_by(order_id=order.id).all()
+    status_history = OrderStatusHistory.query.filter_by(order_id=order.id).order_by(OrderStatusHistory.timestamp.asc()).all()
+    order_notes = OrderNote.query.filter_by(order_id=order.id).options(db.joinedload(OrderNote.author)).order_by(OrderNote.created_at.asc()).all()
+    buyer = User.query.get(order.buyer_id)
+
+    # Backfill initial status if it's missing for older orders
+    if not status_history:
+        log_order_status(order.id, order.status)
+        status_history = OrderStatusHistory.query.filter_by(order_id=order.id).order_by(OrderStatusHistory.timestamp.asc()).all()
+
+    # Combine and sort timeline events
+    timeline_events = []
+    for history in status_history:
+        timeline_events.append({'type': 'status', 'data': history, 'timestamp': history.timestamp})
+    for note in order_notes:
+        timeline_events.append({'type': 'note', 'data': note, 'timestamp': note.created_at})
+    
+    timeline_events.sort(key=lambda x: x['timestamp'])
+
+    return render_template('admin_track_order.html', 
+                           order=order, 
+                           order_items=order_items, 
+                           timeline_events=timeline_events, 
+                           buyer=buyer,
+                           active_page='orders')
+
+@app.route('/admin/add_order_note/<int:order_id>', methods=['POST'])
+@roles_required('admin')
+def add_order_note(order_id):
+    order = Order.query.get_or_404(order_id)
+    note_text = request.form.get('note_text')
+    is_public = 'is_public' in request.form
+
+    if not note_text or not note_text.strip():
+        flash('Note cannot be empty.', 'error')
+        return redirect(url_for('admin_track_order', order_id=order_id))
+    
+    new_note = OrderNote(order_id=order_id, author_id=session['user_id'], note_text=note_text, is_public=is_public)
+    db.session.add(new_note)
+    db.session.commit()
+    flash('Note added successfully.', 'success')
+    return redirect(url_for('admin_track_order', order_id=order_id))
+
+@app.route('/admin/edit_order_note/<int:note_id>', methods=['POST'])
+@roles_required('admin')
+def edit_order_note(note_id):
+    note = OrderNote.query.get_or_404(note_id)
+    data = request.get_json()
+    new_text = data.get('note_text')
+
+    if not new_text or not new_text.strip():
+        return jsonify({'success': False, 'error': 'Note text cannot be empty.'}), 400
+
+    note.note_text = new_text
+    db.session.commit()
+
+    return jsonify({'success': True, 'message': 'Note updated successfully.'})
+
+@app.route('/admin/delivery_persons')
+@roles_required('admin')
+def admin_delivery_persons():
+    persons = DeliveryPerson.query.order_by(DeliveryPerson.name.asc()).all()
+    return render_template('admin_delivery_persons.html', 
+                           persons=persons, 
+                           active_page='delivery_persons')
+
+@app.route('/admin/delivery_person/add', methods=['POST'])
+@roles_required('admin')
+def add_delivery_person():
+    data = request.form
+    files = request.files
+    # Basic validation
+    if not all(k in data for k in ['name', 'phone', 'vehicle_number', 'license_number']):
+        return jsonify({'success': False, 'error': 'Missing required fields.'}), 400
+
+    # Check for uniqueness
+    if DeliveryPerson.query.filter_by(phone=data['phone']).first():
+        return jsonify({'success': False, 'error': 'Phone number already exists.'}), 400
+    if DeliveryPerson.query.filter_by(vehicle_number=data['vehicle_number']).first():
+        return jsonify({'success': False, 'error': 'Vehicle number already exists.'}), 400
+    if DeliveryPerson.query.filter_by(license_number=data['license_number']).first():
+        return jsonify({'success': False, 'error': 'License number already exists.'}), 400
+
+    # Handle file uploads
+    profile_pic_path = None
+    if 'profile_picture' in files and files['profile_picture'].filename != '':
+        file = files['profile_picture']
+        filename = secure_filename(file.filename)
+        timestamp = datetime.now().strftime("%Y%m%d%H%M%S")
+        unique_filename = f"{timestamp}_{filename}"
+        upload_path = os.path.join(app.config['UPLOAD_FOLDER'], 'delivery_persons', unique_filename)
+        os.makedirs(os.path.dirname(upload_path), exist_ok=True)
+        file.save(upload_path)
+        profile_pic_path = f"uploads/delivery_persons/{unique_filename}"
+
+    license_image_path = None
+    if 'license_image' in files and files['license_image'].filename != '':
+        file = files['license_image']
+        filename = secure_filename(file.filename)
+        timestamp = datetime.now().strftime("%Y%m%d%H%M%S")
+        unique_filename = f"{timestamp}_{filename}"
+        upload_path = os.path.join(app.config['UPLOAD_FOLDER'], 'delivery_persons', unique_filename)
+        os.makedirs(os.path.dirname(upload_path), exist_ok=True)
+        file.save(upload_path)
+        license_image_path = f"uploads/delivery_persons/{unique_filename}"
+
+    new_person = DeliveryPerson(
+        name=data['name'],
+        phone=data['phone'],
+        address=data.get('address'),
+        vehicle_type=data.get('vehicle_type', 'Bike'),
+        vehicle_number=data['vehicle_number'],
+        license_number=data['license_number'],
+        is_active='is_active' in data,
+        profile_picture=profile_pic_path,
+        license_image=license_image_path
+    )
+    db.session.add(new_person)
+    db.session.commit()
+    return jsonify({'success': True, 'message': 'Delivery person added successfully.'}), 201
+
+@app.route('/admin/delivery_person/<int:person_id>')
+@roles_required('admin')
+def get_delivery_person(person_id):
+    person = DeliveryPerson.query.get_or_404(person_id)
+    return jsonify({
+        'id': person.id,
+        'name': person.name,
+        'phone': person.phone,
+        'address': person.address,
+        'vehicle_type': person.vehicle_type,
+        'vehicle_number': person.vehicle_number,
+        'license_number': person.license_number,
+        'is_active': person.is_active,
+        'profile_picture': person.profile_picture,
+        'license_image': person.license_image
+    })
+
+@app.route('/admin/delivery_person/edit/<int:person_id>', methods=['POST'])
+@roles_required('admin')
+def edit_delivery_person(person_id):
+    person = DeliveryPerson.query.get_or_404(person_id)
+    data = request.form
+    files = request.files
+
+    # Uniqueness checks (if changed)
+    if 'phone' in data and data['phone'] != person.phone and DeliveryPerson.query.filter_by(phone=data['phone']).first():
+        return jsonify({'success': False, 'error': 'Phone number already exists.'}), 400
+    if 'vehicle_number' in data and data['vehicle_number'] != person.vehicle_number and DeliveryPerson.query.filter_by(vehicle_number=data['vehicle_number']).first():
+        return jsonify({'success': False, 'error': 'Vehicle number already exists.'}), 400
+    if 'license_number' in data and data['license_number'] != person.license_number and DeliveryPerson.query.filter_by(license_number=data['license_number']).first():
+        return jsonify({'success': False, 'error': 'License number already exists.'}), 400
+
+    person.name = data.get('name', person.name)
+    person.phone = data.get('phone', person.phone)
+    person.address = data.get('address', person.address)
+    person.vehicle_type = data.get('vehicle_type', person.vehicle_type)
+    person.vehicle_number = data.get('vehicle_number', person.vehicle_number)
+    person.license_number = data.get('license_number', person.license_number)
+    person.is_active = 'is_active' in data
+
+    # Handle file uploads
+    if 'profile_picture' in files and files['profile_picture'].filename != '':
+        file = files['profile_picture']
+        filename = secure_filename(file.filename)
+        timestamp = datetime.now().strftime("%Y%m%d%H%M%S")
+        unique_filename = f"{timestamp}_{filename}"
+        upload_path = os.path.join(app.config['UPLOAD_FOLDER'], 'delivery_persons', unique_filename)
+        os.makedirs(os.path.dirname(upload_path), exist_ok=True)
+        file.save(upload_path)
+        person.profile_picture = f"uploads/delivery_persons/{unique_filename}"
+
+    if 'license_image' in files and files['license_image'].filename != '':
+        file = files['license_image']
+        filename = secure_filename(file.filename)
+        timestamp = datetime.now().strftime("%Y%m%d%H%M%S")
+        unique_filename = f"{timestamp}_{filename}"
+        upload_path = os.path.join(app.config['UPLOAD_FOLDER'], 'delivery_persons', unique_filename)
+        os.makedirs(os.path.dirname(upload_path), exist_ok=True)
+        file.save(upload_path)
+        person.license_image = f"uploads/delivery_persons/{unique_filename}"
+
+    db.session.commit()
+    return jsonify({'success': True, 'message': 'Details updated successfully.'})
+
+@app.route('/admin/delivery_person/delete/<int:person_id>', methods=['POST'])
+@roles_required('admin')
+def delete_delivery_person(person_id):
+    person = DeliveryPerson.query.get_or_404(person_id)
+    db.session.delete(person)
+    db.session.commit()
+    return jsonify({'success': True, 'message': 'Delivery person removed successfully.'})
+
+@app.route('/admin/delivery_person/details/<int:person_id>')
+@roles_required('admin')
+def delivery_person_details(person_id):
+    person = DeliveryPerson.query.get_or_404(person_id)
+    
+    # Fetch orders assigned to this person
+    assigned_orders = db.session.query(
+        Order, User.name.label('customer_name')
+    ).join(User, Order.buyer_id == User.id)\
+     .filter(Order.delivery_person_id == person_id)\
+     .order_by(Order.created_at.desc()).all()
+
+    # Calculate summary stats
+    summary_stats = db.session.query(
+        db.func.count(Order.id).label('total_deliveries'),
+        db.func.sum(Order.delivery_fee).label('total_earnings')
+    ).filter(
+        Order.delivery_person_id == person_id,
+        Order.status.in_(['Delivered', 'Completed'])
+    ).first()
+
+    return render_template('admin_delivery_person_details.html', 
+                           person=person, 
+                           assigned_orders=assigned_orders, 
+                           total_deliveries=summary_stats.total_deliveries or 0,
+                           total_earnings=summary_stats.total_earnings or 0.0,
+                           active_page='delivery_persons')
 
 @app.route('/admin/create_invoice')
 @roles_required('admin')
@@ -1487,7 +2089,7 @@ def admin_create_invoice():
     latest = Order.query.order_by(Order.created_at.desc()).first()
     if not latest:
         return jsonify({'success': False, 'error': 'No orders found'}), 404
-    buyer = User.query.get(latest.buyer_id)
+    buyer = db.session.get(User, latest.buyer_id)
     invoice_text = [
         f"Invoice for Order #{latest.id}",
         f"Buyer: {buyer.name if buyer else 'Unknown'} ({buyer.email if buyer else 'N/A'})",
@@ -1507,10 +2109,10 @@ def admin_create_invoice():
 @roles_required('admin')
 def admin_get_order(order_id):
     """Return basic order details as JSON for admin view."""
-    order = Order.query.get(order_id)
+    order = db.session.get(Order, order_id)
     if not order:
         return {'error': 'Order not found'}, 404
-    buyer = User.query.get(order.buyer_id)
+    buyer = db.session.get(User, order.buyer_id)
     return {
         'id': order.id,
         'buyer': {'id': buyer.id, 'name': buyer.name, 'email': buyer.email} if buyer else None,
@@ -1541,7 +2143,7 @@ def admin_low_stock():
 @app.route('/admin/edit_user/<int:user_id>', methods=['GET', 'POST'])
 @roles_required('admin')
 def admin_edit_user(user_id):
-    user = User.query.get(user_id)
+    user = db.session.get(User, user_id)
     if not user:
         return {'error': 'User not found'}, 404
     if request.method == 'GET':
@@ -1549,7 +2151,11 @@ def admin_edit_user(user_id):
             'id': user.id,
             'name': user.name,
             'email': user.email,
-            'role': user.role
+            'role': user.role,
+            'phone': user.phone,
+            'account_number': user.account_number,
+            'upi_phone_number': user.upi_phone_number,
+            'is_approved': user.is_approved
         }, 200
 
     # POST - update user fields (expects JSON body)
@@ -1557,6 +2163,9 @@ def admin_edit_user(user_id):
     name = data.get('name')
     email = data.get('email')
     role = data.get('role')
+    phone = data.get('phone')
+    account_number = data.get('account_number')
+    upi_phone_number = data.get('upi_phone_number')
     try:
         if name:
             user.name = name
@@ -1564,11 +2173,104 @@ def admin_edit_user(user_id):
             user.email = email
         if role:
             user.role = role
+        if phone:
+            user.phone = phone
+        if account_number:
+            user.account_number = account_number
+        if upi_phone_number:
+            user.upi_phone_number = upi_phone_number
         db.session.commit()
         return {'success': True, 'message': 'User updated'}, 200
     except Exception as e:
         db.session.rollback()
         return {'error': str(e)}, 500
+
+@app.route('/admin/payouts')
+@roles_required('admin')
+def admin_payouts():
+    """View for managing seller payouts."""
+    # Get all sellers
+    sellers = User.query.filter(User.role.in_(['seller', 'farmer'])).all()
+    payout_data = []
+    
+    for seller in sellers:
+        # Calculate pending balance: Sum of items sold that are Delivered/Completed but not paid out
+        pending_items_query = db.session.query(
+            db.func.sum(OrderItem.price * OrderItem.quantity).label('gross_total'),
+            db.func.sum(OrderItem.commission_amount).label('total_commission')
+        ).join(Order, OrderItem.order_id == Order.id)\
+         .filter(
+             OrderItem.seller_id == seller.id,
+             OrderItem.is_paid_to_seller == False,
+             Order.status.in_(['Delivered', 'Completed'])
+         ).first()
+        
+        gross_amount = pending_items_query.gross_total or 0
+        total_commission = pending_items_query.total_commission or 0
+        pending_amount = gross_amount - total_commission
+         
+        last_payout = Payout.query.filter_by(seller_id=seller.id).order_by(Payout.created_at.desc()).first()
+        
+        payout_data.append({
+            'seller': seller,
+            'pending_amount': pending_amount,
+            'gross_amount': gross_amount,
+            'total_commission': total_commission,
+            'last_payout_date': last_payout.created_at if last_payout else None,
+            'last_payout_amount': last_payout.amount if last_payout else 0
+        })
+    
+    # Payout History
+    payout_history = db.session.query(Payout, User.name).join(User, Payout.seller_id == User.id).order_by(Payout.created_at.desc()).all()
+    
+    # Add context for the layout
+    pending_orders_count = Order.query.filter_by(status='Pending').count()
+    low_stock_count = Product.query.filter(Product.quantity <= 5).count()
+
+    return render_template('admin_payouts.html', payout_data=payout_data, payout_history=payout_history, active_page='payouts', pending_orders_count=pending_orders_count, low_stock_count=low_stock_count)
+
+@app.route('/admin/process_payout', methods=['POST'])
+@roles_required('admin')
+def admin_process_payout():
+    seller_id = request.form.get('seller_id')
+    transaction_ref = request.form.get('transaction_ref', 'CASH')
+    
+    # Get pending items to calculate commission and mark as paid
+    pending_items = db.session.query(OrderItem).join(Order, OrderItem.order_id == Order.id)\
+        .filter(
+             OrderItem.seller_id == seller_id,
+             OrderItem.is_paid_to_seller == False,
+             Order.status.in_(['Delivered', 'Completed'])
+         ).all()
+
+    if not pending_items:
+        flash('No pending items found for this seller.', 'info')
+        return redirect(url_for('admin_payouts'))
+
+    gross_amount = sum(item.price * item.quantity for item in pending_items)
+    total_commission_for_payout = sum(item.commission_amount for item in pending_items)
+    net_amount = gross_amount - total_commission_for_payout
+         
+    # Create Payout Record
+    payout = Payout(seller_id=seller_id, amount=net_amount, transaction_ref=transaction_ref, commission_total=total_commission_for_payout)
+    db.session.add(payout)
+         
+    for item in pending_items:
+        item.is_paid_to_seller = True
+        
+    db.session.commit()
+    
+    # Notify Seller/Farmer about payout
+    seller = db.session.get(User, seller_id)
+    if seller:
+        msg = f"Payout of Rs.{net_amount:.2f} processed. Ref: {transaction_ref}."
+        if seller.phone:
+            send_sms(seller.phone, msg)
+        if seller.email:
+            send_notification_email(seller.email, "Payout Processed", f"Dear {seller.name},\n\n{msg}\n\nThank you.")
+
+    flash(f'Payout of ₹{net_amount:.2f} recorded successfully.', 'success')
+    return redirect(url_for('admin_payouts'))
 
 @app.route('/profile')
 @roles_required('buyer', 'seller', 'admin', 'farmer')
@@ -1702,42 +2404,69 @@ def product_detail(product_id):
 @roles_required('seller', 'farmer')
 def seller_dashboard():
     user_id = session['user_id']
-    # Fetch products belonging to this seller
+    
+    # --- Products ---
     products = Product.query.filter_by(seller_id=user_id).order_by(Product.created_at.desc()).all()
     
-    # Calculate earnings and total items sold for this seller
-    # Note: This only calculates based on products currently in the database
-    sales_data = db.session.query(
-        db.func.sum(OrderItem.price * OrderItem.quantity),
-        db.func.sum(OrderItem.quantity)
-    ).join(Product, OrderItem.product_id == Product.id).filter(Product.seller_id == user_id).first()
+    # --- Sales Stats ---
+    # Total lifetime earnings (gross)
+    total_earnings = db.session.query(db.func.sum(OrderItem.price * OrderItem.quantity))\
+        .filter(OrderItem.seller_id == user_id).scalar() or 0
     
-    total_earnings = sales_data[0] or 0
-    total_sold = sales_data[1] or 0
+    # Total items sold
+    total_sold = db.session.query(db.func.sum(OrderItem.quantity))\
+        .filter(OrderItem.seller_id == user_id).scalar() or 0
+
+    # --- Pending Payout ---
+    pending_items_query = db.session.query(
+        db.func.sum(OrderItem.price * OrderItem.quantity).label('gross_total'),
+        db.func.sum(OrderItem.commission_amount).label('total_commission')
+    ).join(Order, OrderItem.order_id == Order.id)\
+     .filter(
+         OrderItem.seller_id == user_id,
+         OrderItem.is_paid_to_seller == False,
+         Order.status.in_(['Delivered', 'Completed'])
+     ).first()
     
-    # Chart Data (last 7 days)
+    gross_pending = pending_items_query.gross_total or 0
+    commission_pending = pending_items_query.total_commission or 0
+    pending_amount = gross_pending - commission_pending
+
+    # --- Chart Data (last 7 days) ---
     today = datetime.now().date()
     sales_labels = []
     sales_values = []
     
     for i in range(7):
         day = today - timedelta(days=i)
-        day_sales = db.session.query(
-            db.func.sum(OrderItem.price * OrderItem.quantity)
-        ).join(Product, OrderItem.product_id == Product.id)\
+        day_sales = db.session.query(db.func.sum(OrderItem.price * OrderItem.quantity))\
          .join(Order, OrderItem.order_id == Order.id)\
-         .filter(Product.seller_id == user_id)\
+         .filter(OrderItem.seller_id == user_id)\
          .filter(db.func.date(Order.created_at) == day).scalar() or 0
         
         sales_labels.insert(0, day.strftime('%b %d'))
         sales_values.insert(0, day_sales)
 
     return render_template('seller_dashboard.html', 
+                           active_page='dashboard',
                            products=products, 
                            total_earnings=total_earnings, 
                            total_sold=total_sold,
+                           pending_amount=pending_amount,
                            sales_labels=sales_labels,
                            sales_values=sales_values)
+
+@app.route('/seller/payouts')
+@roles_required('seller', 'farmer')
+def seller_payouts():
+    user_id = session['user_id']
+    
+    # Payout History
+    payout_history = Payout.query.filter_by(seller_id=user_id).order_by(Payout.created_at.desc()).all()
+    
+    return render_template('seller_payouts.html', 
+                           active_page='payouts',
+                           payout_history=payout_history)
 
 @app.route('/seller/edit_product/<int:product_id>', methods=['GET', 'POST'])
 @roles_required('seller', 'farmer')
@@ -1793,5 +2522,17 @@ def seller_delete_product(product_id):
         db.session.rollback()
         return jsonify({'success': False, 'error': str(e)}), 500
 
+@app.route('/payout_invoice/<int:payout_id>')
+@roles_required('admin', 'seller', 'farmer')
+def payout_invoice(payout_id):
+    payout = Payout.query.get_or_404(payout_id)
+    # Security check: Admin can see any, seller can only see their own.
+    if session['user_role'] != 'admin' and payout.seller_id != session['user_id']:
+        flash('You are not authorized to view this invoice.', 'error')
+        return redirect(url_for('index'))
+    
+    seller = db.session.get(User, payout.seller_id)
+    return render_template('payout_invoice.html', payout=payout, seller=seller)
+
 if __name__ == '__main__':
-    app.run(debug=True, reloader_type='stat')
+    app.run(debug=True)

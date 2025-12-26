@@ -9,11 +9,12 @@
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <style>
         :root {
-            --primary-dark: #005f73;
-            --primary-orange: #ee9b00;
-            --secondary-green: #94d2bd;
-            --light-bg: #f8f9fa;
-            --dark-text: #333333;
+            --primary-dark: #2c6e49;
+            --primary-light: #4c956c;
+            --primary-orange: #f8961e;
+            --secondary-green: #d6e2e9;
+            --light-bg: #fcfdfd;
+            --dark-text: #2b2d42;
         }
 
         body {
@@ -32,13 +33,15 @@
         }
 
         .navbar-brand {
-            font-weight: 800;
-            font-size: 1.5rem;
+            font-weight: 700;
+            font-size: 1.6rem;
             color: white !important;
+            letter-spacing: 0.5px;
         }
 
         .bg-success {
             background-color: var(--primary-dark) !important;
+            background: linear-gradient(135deg, var(--primary-dark), #1a4d2e) !important;
         }
 
         .btn-success {
@@ -56,50 +59,69 @@
         }
 
         .card {
-            box-shadow: 0 0.125rem 0.25rem rgba(0, 0, 0, 0.075);
-            border: 1px solid rgba(0, 0, 0, 0.125);
+            box-shadow: 0 5px 20px rgba(0, 0, 0, 0.05);
+            border: none;
             transition: all 0.3s ease;
             height: 100%;
-            border-radius: 10px;
-            overflow: hidden;
+            border-radius: 15px;
+            display: flex;
+            flex-direction: column;
+            background: white;
         }
 
         .card:hover {
-            transform: translateY(-5px);
-            box-shadow: 0 10px 25px rgba(0, 0, 0, 0.1);
+            transform: translateY(-7px);
+            box-shadow: 0 15px 30px rgba(0, 0, 0, 0.1);
         }
 
         .list-group-item.active {
-            background-color: var(--secondary-green);
-            border-color: var(--secondary-green);
-            color: var(--primary-dark);
+            background-color: var(--primary-dark);
+            border-color: var(--primary-dark);
+            color: white;
             font-weight: 600;
+            box-shadow: 0 4px 10px rgba(44, 110, 73, 0.3);
         }
 
         .list-group-item {
-            border: 1px solid rgba(0, 0, 0, 0.125);
-            margin-bottom: 5px;
-            border-radius: 5px !important;
+            border: none;
+            margin-bottom: 8px;
+            border-radius: 10px !important;
             transition: all 0.2s ease;
+            color: #555;
+            font-weight: 500;
+            padding: 12px 15px;
         }
 
         .list-group-item:hover {
-            background-color: rgba(148, 210, 189, 0.1);
+            background-color: #eef4ed;
+            color: var(--primary-dark);
             transform: translateX(5px);
         }
 
+        .list-group-item.bg-light {
+            background-color: transparent !important;
+            color: #888;
+            font-size: 0.75rem;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            padding-left: 5px;
+            pointer-events: none;
+            margin-top: 15px !important;
+        }
+
         .product-image {
-            height: 200px;
+            height: 150px;
             object-fit: cover;
             width: 100%;
             border-bottom: 1px solid #eee;
+            transition: transform 0.3s ease;
         }
 
         .product-category-badge {
             position: absolute;
             top: 10px;
             right: 10px;
-            background: rgba(0, 95, 115, 0.9);
+            background: rgba(0, 0, 0, 0.5);
             color: white;
             padding: 5px 10px;
             border-radius: 20px;
@@ -107,14 +129,28 @@
             font-weight: 600;
         }
 
+        .card-body {
+            display: flex;
+            flex-direction: column;
+            flex-grow: 1;
+            padding: 0.8rem;
+        }
+
+        .card-title {
+            font-size: 1rem;
+            margin-bottom: 0.3rem;
+        }
+
         .main-content {
             flex: 1;
             padding-bottom: 20px;
+            display: flex;
         }
 
         /* Footer Styles */
         footer {
-            background-color: #001219;
+            background-color: var(--primary-dark);
+            background: linear-gradient(180deg, #1a4d2e 0%, #0f2e1b 100%);
             color: white;
             padding: 60px 0 20px;
             margin-top: auto;
@@ -234,18 +270,18 @@
         }
 
         .price-tag {
-            font-size: 1.4rem;
+            font-size: 1.1rem;
             font-weight: 700;
             color: var(--primary-dark);
-            margin: 10px 0;
+            margin: 5px 0;
         }
 
         .quantity-badge {
-            background-color: var(--secondary-green);
+            background-color: rgba(0, 95, 115, 0.1);
             color: var(--primary-dark);
             padding: 3px 10px;
-            border-radius: 15px;
-            font-size: 0.9rem;
+            border-radius: 5px;
+            font-size: 0.75rem;
             font-weight: 600;
         }
 
@@ -320,8 +356,52 @@
 
         /* Category icons */
         .category-icon {
-            font-size: 1.2rem;
-            margin-right: 8px;
+            font-size: 0.9rem;
+            margin-right: 12px;
+            width: 30px;
+            height: 30px;
+            line-height: 30px;
+            text-align: center;
+            background: rgba(248, 150, 30, 0.1);
+            color: var(--primary-orange);
+            border-radius: 50%;
+        }
+
+        .product-list-header {
+            background: white;
+            padding: 1rem 1.5rem;
+            border-radius: 15px;
+            box-shadow: 0 5px 20px rgba(0,0,0,0.03);
+            margin-bottom: 1.5rem;
+            border: 1px solid rgba(0,0,0,0.02);
+        }
+
+        .btn-outline-success {
+            color: var(--primary-dark);
+            border-color: var(--primary-dark);
+        }
+        .btn-outline-success:hover {
+            background-color: var(--primary-dark);
+            color: white;
+        }
+
+        .pagination .page-item.active .page-link {
+            background-color: var(--primary-dark);
+            border-color: var(--primary-dark);
+            color: white;
+            z-index: 2;
+        }
+
+        .pagination .page-link {
+            color: var(--primary-dark);
+        }
+
+        .pagination .page-link:hover {
+            background-color: #eef4ed;
+        }
+
+        .pagination .page-item.disabled .page-link {
+            color: #6c757d;
         }
     </style>
 </head>
@@ -363,6 +443,10 @@
                             <li><a class="dropdown-item" href="{{ url_for('my_orders') }}"><i
                                         class="fas fa-history me-2"></i>My Orders</a></li>
                             {% endif %}
+                            <li><a class="dropdown-item" href="{{ url_for('cart') }}">
+                                <i class="fas fa-shopping-cart me-2"></i> Cart
+                                <span id="cart-count-dd" class="badge rounded-pill bg-danger ms-2">{{ cart_count or 0 }}</span>
+                            </a></li>
                             <li><a class="dropdown-item" href="{{ url_for('profile') }}"><i
                                         class="fas fa-user-circle me-2"></i>Profile</a></li>
                             <li>
@@ -387,69 +471,52 @@
 
     <div class="main-content">
         <div class="container mt-4">
-            <div class="row mb-4">
-                <div class="col-md-8 mx-auto">
-                    <form action="{{ url_for('product') }}" method="GET" class="d-flex shadow-sm p-2 bg-white rounded">
-                        {% if category and category != 'all' %}
-                        <input type="hidden" name="category" value="{{ category }}">
-                        {% endif %}
-                        <input class="form-control border-0 me-2" type="search" name="q"
-                            placeholder="Search for fresh fruits, vegetables..." aria-label="Search"
-                            value="{{ request.args.get('q', '') }}">
-                        <button class="btn btn-success px-4" type="submit"><i class="fas fa-search"></i></button>
-                        {% if request.args.get('q') %}
-                        <a href="{{ url_for('product', category=category) }}"
-                            class="btn btn-outline-secondary ms-2">Clear</a>
-                        {% endif %}
-                    </form>
-                </div>
-            </div>
             <div class="row">
                 <!-- Sidebar -->
                 <div class="col-lg-3 col-md-4 mb-4">
                     <div class="list-group mb-4">
                         <a href="{{ url_for('product') }}"
-                            class="list-group-item list-group-item-action {% if not category or category == 'all' %}active{% endif %}">
+                            class="list-group-item list-group-item-action d-flex align-items-center {% if not category or category == 'all' %}active{% endif %}">
                             <i class="fas fa-boxes category-icon"></i> All Products
                         </a>
 
                         <div class="list-group-item bg-light fw-bold text-muted small py-2 mt-2">FRESH PRODUCE</div>
                         <a href="{{ url_for('product', category='fruits') }}"
-                            class="list-group-item list-group-item-action {% if category == 'fruits' %}active{% endif %}">
+                            class="list-group-item list-group-item-action d-flex align-items-center {% if category == 'fruits' %}active{% endif %}">
                             <i class="fas fa-apple-alt category-icon"></i> Fruits
                         </a>
                         <a href="{{ url_for('product', category='vegetables') }}"
-                            class="list-group-item list-group-item-action {% if category == 'vegetables' %}active{% endif %}">
+                            class="list-group-item list-group-item-action d-flex align-items-center {% if category == 'vegetables' %}active{% endif %}">
                             <i class="fas fa-carrot category-icon"></i> Vegetables
                         </a>
                         <a href="{{ url_for('product', category='grains') }}"
-                            class="list-group-item list-group-item-action {% if category == 'grains' %}active{% endif %}">
+                            class="list-group-item list-group-item-action d-flex align-items-center {% if category == 'grains' %}active{% endif %}">
                             <i class="fas fa-wheat-alt category-icon"></i> Grains
                         </a>
                         <a href="{{ url_for('product', category='dairy') }}"
-                            class="list-group-item list-group-item-action {% if category == 'dairy' %}active{% endif %}">
+                            class="list-group-item list-group-item-action d-flex align-items-center {% if category == 'dairy' %}active{% endif %}">
                             <i class="fas fa-cheese category-icon"></i> Dairy
                         </a>
 
                         <div class="list-group-item bg-light fw-bold text-muted small py-2 mt-2">FARMING SUPPLIES</div>
                         <a href="{{ url_for('product', category='seeds') }}"
-                            class="list-group-item list-group-item-action {% if category == 'seeds' %}active{% endif %}">
+                            class="list-group-item list-group-item-action d-flex align-items-center {% if category == 'seeds' %}active{% endif %}">
                             <i class="fas fa-seedling category-icon"></i> Seeds
                         </a>
                         <a href="{{ url_for('product', category='fertilizers') }}"
-                            class="list-group-item list-group-item-action {% if category == 'fertilizers' %}active{% endif %}">
+                            class="list-group-item list-group-item-action d-flex align-items-center {% if category == 'fertilizers' %}active{% endif %}">
                             <i class="fas fa-flask category-icon"></i> Fertilizers
                         </a>
                         <a href="{{ url_for('product', category='pesticides') }}"
-                            class="list-group-item list-group-item-action {% if category == 'pesticides' %}active{% endif %}">
+                            class="list-group-item list-group-item-action d-flex align-items-center {% if category == 'pesticides' %}active{% endif %}">
                             <i class="fas fa-spray-can category-icon"></i> Pesticides
                         </a>
                         <a href="{{ url_for('product', category='tools') }}"
-                            class="list-group-item list-group-item-action {% if category == 'tools' %}active{% endif %}">
+                            class="list-group-item list-group-item-action d-flex align-items-center {% if category == 'tools' %}active{% endif %}">
                             <i class="fas fa-hammer category-icon"></i> Tools
                         </a>
                         <a href="{{ url_for('product', category='machinery') }}"
-                            class="list-group-item list-group-item-action {% if category == 'machinery' %}active{% endif %}">
+                            class="list-group-item list-group-item-action d-flex align-items-center {% if category == 'machinery' %}active{% endif %}">
                             <i class="fas fa-tractor category-icon"></i> Machinery
                         </a>
                     </div>
@@ -457,16 +524,25 @@
 
                 <!-- Main Content -->
                 <div class="col-lg-9 col-md-8" id="product-list-container">
-                    <div class="d-flex justify-content-between align-items-center mb-4">
+                    <div class="product-list-header d-flex justify-content-between align-items-center flex-wrap gap-3">
                         <h2 class="mb-0">
                             {% if category %}
                             {{ category|capitalize }}
                             {% else %}
                             All Products
                             {% endif %}
-                            <span class="badge bg-success ms-2">{{ product|length }}</span>
+                            <span class="badge bg-light text-dark ms-2">{{ product|length }}</span>
                         </h2>
-                        <div class="d-flex gap-2">
+                        <div class="d-flex align-items-center gap-2">
+                            <form action="{{ url_for('product') }}" method="GET" class="d-flex">
+                                {% if category and category != 'all' %}
+                                <input type="hidden" name="category" value="{{ category }}">
+                                {% endif %}
+                                <div class="input-group">
+                                    <input class="form-control" type="search" name="q" placeholder="Search..." value="{{ request.args.get('q', '') }}">
+                                    <button class="btn btn-outline-success" type="submit"><i class="fas fa-search"></i></button>
+                                </div>
+                            </form>
                             {% if 'user_id' in session and session.user_role in ['seller', 'farmer', 'admin'] %}
                             <a href="{{ url_for('addproduct') }}" class="btn btn-success">
                                 <i class="fas fa-plus-circle me-2"></i> Add Product
@@ -498,9 +574,9 @@
                     {% if product %}
                     <div class="row">
                         {% for p in product %}
-                        <div class="col-xl-3 col-lg-4 col-md-6 mb-4" id="p-{{ p.id }}">
-                            <div class="card h-100">
-                                <div class="position-relative">
+                        <div class="col-xl-3 col-lg-3 col-md-4 col-6 mb-3" id="p-{{ p.id }}">
+                            <div class="card">
+                                <div class="product-image-wrapper position-relative">
                                     {% set image_url = p.image %}
                                     {% if image_url %}
                                     {% if image_url.startswith('data:') or image_url.startswith('http') or
@@ -533,13 +609,13 @@
                                         {{ p.category|capitalize }}
                                     </span>
                                 </div>
-                                <div class="card-body d-flex flex-column">
+                                <div class="card-body">
                                     <h5 class="card-title">
                                         <a href="{{ url_for('product_detail', product_id=p.id) }}"
-                                            class="text-dark text-decoration-none">{{ p.name }}</a>
+                                            class="text-dark text-decoration-none text-truncate d-block">{{ p.name }}</a>
                                     </h5>
-                                    <p class="card-text text-muted mb-2">
-                                        <small>{{ p.description or 'Fresh farm product' }}</small>
+                                    <p class="card-text text-muted mb-2 flex-grow-1">
+                                        <small class="text-truncate d-block">{{ p.description or 'Fresh farm product' }}</small>
                                     </p>
                                     <div class="d-flex align-items-center mb-2">
                                         {% for i in range(p.avg_rating|round|int) %}
@@ -550,7 +626,7 @@
                                         {% endfor %}
                                         <span class="ms-2 text-muted small">({{ p.review_count }})</span>
                                     </div>
-                                    <div class="price-tag mt-auto">
+                                    <div class="price-tag">
                                         ₹{{ "%.2f"|format(p.price) }}
                                     </div>
                                     <div class="d-flex justify-content-between align-items-center mt-2">
@@ -562,7 +638,7 @@
                                         </small>
                                     </div>
                                 </div>
-                                <div class="card-footer bg-transparent border-top-0 pt-0">
+                                <div class="card-footer bg-white border-top p-3">
                                     <div class="d-flex gap-2">
                                         <a href="{{ url_for('product_detail', product_id=p.id) }}"
                                             class="btn btn-outline-secondary flex-fill">
@@ -584,18 +660,41 @@
                         </div>
                         {% endfor %}
                     </div>
+
+                    <!-- Pagination -->
+                    {% if pagination and pagination.pages > 1 %}
+                    <nav aria-label="Product navigation" class="mt-4">
+                        <ul class="pagination justify-content-center">
+                            <li class="page-item {% if not pagination.has_prev %}disabled{% endif %}">
+                                <a class="page-link" href="{{ url_for('product', page=pagination.prev_num, category=category, q=request.args.get('q'), sort=sort_by) if pagination.has_prev else '#' }}">Previous</a>
+                            </li>
+                            {% for page_num in pagination.iter_pages(left_edge=1, right_edge=1, left_current=1, right_current=2) %}
+                                {% if page_num %}
+                                    <li class="page-item {% if page_num == pagination.page %}active{% endif %}">
+                                        <a class="page-link" href="{{ url_for('product', page=page_num, category=category, q=request.args.get('q'), sort=sort_by) }}">{{ page_num }}</a>
+                                    </li>
+                                {% else %}
+                                    <li class="page-item disabled"><span class="page-link">...</span></li>
+                                {% endif %}
+                            {% endfor %}
+                            <li class="page-item {% if not pagination.has_next %}disabled{% endif %}">
+                                <a class="page-link" href="{{ url_for('product', page=pagination.next_num, category=category, q=request.args.get('q'), sort=sort_by) if pagination.has_next else '#' }}">Next</a>
+                            </li>
+                        </ul>
+                    </nav>
+                    {% endif %}
                     {% else %}
                     <div class="empty-state">
                         <i class="fas fa-box-open"></i>
                         <h3>No Products Found</h3>
-                        <p class="text-muted mb-4">
+                        <p class="text-muted mb-4 mx-auto" style="max-width: 400px;">
                             {% if category %}
-                            No products available in the {{ category }} category.
+                            There are currently no products available in the '{{ category|capitalize }}' category.
                             {% else %}
-                            No products available at the moment.
+                            There are currently no products available. Why not add one?
                             {% endif %}
                         </p>
-                        <a href="{{ url_for('addproduct') }}" class="btn btn-success">
+                        <a href="{{ url_for('addproduct') }}" class="btn btn-success btn-lg">
                             <i class="fas fa-plus-circle me-2"></i> Add Your First Product
                         </a>
                     </div>

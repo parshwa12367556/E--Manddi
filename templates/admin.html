@@ -491,8 +491,8 @@
                     <button class="btn btn-outline-light btn-sm dropdown-toggle position-relative" type="button"
                         data-bs-toggle="dropdown">
                         <i class="fas fa-bell"></i>
-                        {% if pending_orders_count > 0 or low_stock_count > 0 %}
-                        <span class="notification-badge">{{ pending_orders_count + low_stock_count }}</span>
+                        {% if pending_orders_count > 0 or low_stock_count > 0 or pending_approvals_count > 0 %}
+                        <span class="notification-badge">{{ pending_orders_count + low_stock_count + pending_approvals_count }}</span>
                         {% endif %}
                     </button>
                     <div class="dropdown-menu dropdown-menu-end">
@@ -503,13 +503,19 @@
                             {{ pending_orders_count }} pending orders
                         </a>
                         {% endif %}
+                        {% if pending_approvals_count > 0 %}
+                        <a class="dropdown-item" href="{{ url_for('admin_users') }}">
+                            <i class="fas fa-user-check text-info me-2"></i>
+                            {{ pending_approvals_count }} users waiting approval
+                        </a>
+                        {% endif %}
                         {% if low_stock_count > 0 %}
                         <a class="dropdown-item" href="#">
                             <i class="fas fa-exclamation-triangle text-danger me-2"></i>
                             {{ low_stock_count }} low stock items
                         </a>
                         {% endif %}
-                        {% if pending_orders_count == 0 and low_stock_count == 0 %}
+                        {% if pending_orders_count == 0 and low_stock_count == 0 and pending_approvals_count == 0 %}
                         <span class="dropdown-item text-muted">No new notifications</span>
                         {% endif %}
                         <div class="dropdown-divider"></div>
@@ -532,7 +538,7 @@
                         <a class="dropdown-item" href="{{ url_for('index') }}">
                             <i class="fas fa-external-link-alt me-2"></i>View Site
                         </a>
-                        <a class="dropdown-item" href="#">
+                        <a class="dropdown-item" href="{{ url_for('admin_settings') }}">
                             <i class="fas fa-cog me-2"></i>Settings
                         </a>
                         <div class="dropdown-divider"></div>
@@ -582,24 +588,36 @@
                                 <i class="fas fa-chart-bar"></i>Analytics
                             </a>
                         </li>
+                        <li class="nav-item">
+                            <a class="nav-link {% if active_page == 'delivery_persons' %}active{% endif %}"
+                                href="{{ url_for('admin_delivery_persons') }}">
+                                <i class="fas fa-motorcycle"></i>Delivery Persons
+                            </a>
+                        </li>
+                        <li class="nav-item">
+                            <a class="nav-link {% if active_page == 'payouts' %}active{% endif %}"
+                                href="{{ url_for('admin_payouts') }}">
+                                <i class="fas fa-hand-holding-usd"></i>Payouts
+                            </a>
+                        </li>
                     </ul>
 
                     <h6 class="text-uppercase text-muted mt-4 mb-3">Management</h6>
                     <ul class="nav flex-column">
                         <li class="nav-item">
                             <a class="nav-link {% if active_page == 'categories' %}active{% endif %}"
-                                href="{{ url_for('admin') }}">
+                                href="{{ url_for('admin_categories') }}">
                                 <i class="fas fa-tags"></i>Categories
                             </a>
                         </li>
                         <li class="nav-item">
                             <a class="nav-link {% if active_page == 'reviews' %}active{% endif %}"
-                                href="{{ url_for('admin') }}">
+                                href="{{ url_for('admin_reviews') }}">
                                 <i class="fas fa-star"></i>Reviews
                             </a>
                         </li>
                         <li class="nav-item">
-                            <a class="nav-link" href="#">
+                            <a class="nav-link {% if active_page == 'settings' %}active{% endif %}" href="{{ url_for('admin_settings') }}">
                                 <i class="fas fa-cog"></i>Settings
                             </a>
                         </li>
@@ -746,6 +764,26 @@
                                 <p class="card-text">₹{{ "%.2f"|format(total_delivery_earnings) }}</p>
                                 <p class="card-subtext">Net profit from delivery</p>
                                 <i class="fas fa-truck icon"></i>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col-xl-3 col-md-4 col-sm-6 mb-4">
+                        <div class="card stat-card sales">
+                            <div class="card-body">
+                                <h5 class="card-title">Platform Earnings</h5>
+                                <p class="card-text">₹{{ "%.2f"|format(total_platform_earnings) }}</p>
+                                <p class="card-subtext">Total commission earned</p>
+                                <i class="fas fa-hand-holding-usd icon"></i>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col-xl-3 col-md-4 col-sm-6 mb-4">
+                        <div class="card stat-card pending">
+                            <div class="card-body">
+                                <h5 class="card-title">Pending Payouts</h5>
+                                <p class="card-text">₹{{ "%.2f"|format(total_pending_payouts) }}</p>
+                                <p class="card-subtext">To be paid to sellers</p>
+                                <i class="fas fa-file-invoice-dollar icon"></i>
                             </div>
                         </div>
                     </div>
@@ -1010,6 +1048,9 @@
                                                         class="badge bg-{{ 'primary' if user.role == 'admin' else 'secondary' }}">
                                                         {{ user.role|capitalize }}
                                                     </span>
+                                                    {% if not user.is_approved %}
+                                                    <span class="badge bg-warning text-dark ms-1">Pending</span>
+                                                    {% endif %}
                                                 </td>
                                                 <td>{{ user.created_at.strftime('%Y-%m-%d') }}</td>
                                                 <td class="action-buttons">
@@ -1021,6 +1062,13 @@
                                                         data-user-id="{{ user.id }}">
                                                         <i class="fas fa-edit"></i>
                                                     </button>
+                                                    {% if not user.is_approved %}
+                                                    <form action="{{ url_for('admin_approve_user', user_id=user.id) }}" method="POST" class="d-inline ms-1">
+                                                        <button type="submit" class="btn btn-sm btn-success" title="Approve User">
+                                                            <i class="fas fa-check"></i>
+                                                        </button>
+                                                    </form>
+                                                    {% endif %}
                                                 </td>
                                             </tr>
                                             {% else %}

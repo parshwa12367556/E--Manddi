@@ -136,3 +136,50 @@ The platform implements a profit margin system for logistics:
 ---
 
 *This README was generated based on the project's HTML templates. The backend setup instructions are inferred and may need to be adjusted based on the actual implementation in `app.py`.*
+
+3. Buyer Experience
+These features are common in e-commerce sites and can significantly increase user engagement and sales.
+
+Product Wishlist:
+
+What it is: Allow buyers to save products they are interested in to a "Wishlist" to purchase later.
+Why it's important: This encourages return visits and can lead to future sales. It also provides you with valuable data on what products are popular, even if they aren't being purchased immediately.
+More Detailed Order Tracking:
+
+What it is: On the "My Orders" page, expand the status tracker to include timestamps for each status change (e.g., "Confirmed on Nov 2, 10:30 AM", "Shipped on Nov 3, 4:00 PM").
+Why it's important: This gives customers more precise information and a better sense of where their order is, improving their post-purchase experience.
+4. Admin & Operational Features
+These will make managing the platform easier and more secure.
+
+Seller/Farmer Approval System:
+
+What it is: When a new user registers as a "farmer" or "seller", their account is initially set to a "pending" state. An admin must manually approve their account before they can start adding products.
+Why it's important: This gives you control over who can sell on your platform, allowing you to vet sellers and maintain a higher standard of quality and trust.
+Expanded Notifications:
+
+What it is: Use the send_sms or an email function to automatically notify users at key moments.
+Why it's important: Good communication is key to a great service.
+Examples:
+Notify a seller when one of their products has been sold.
+Notify a buyer via SMS when their order status changes to "Shipped" or "Delivered".
+Send an email to a farmer when a payout has been processed for them.
+
+2. Seller & Farmer Experience
+Improving the tools for your sellers will keep them engaged and happy.
+
+Seller Payout History:
+
+What it is: A new section in the Seller Dashboard where farmers can see their own payout history, including dates, amounts paid, and transaction references.
+Why it's important: This provides transparency and builds trust. Farmers can track their earnings and see exactly when they were paid, reducing the need to contact the admin for inquiries.
+Product Image Uploads:
+
+What it is: Instead of asking sellers to provide an image URL, implement a feature that allows them to directly upload image files from their computer or phone.
+Why it's important: This is a major user experience improvement. Most sellers will not have their product images hosted online, so a file upload system is much more practical and user-friendly.
+
+Can you also update the footer to match this new modern green theme?
+
+How can I add a search bar to the product list header?
+
+Can you also apply the distance-based fee logic to the Razorpay online payment method?
+
+How can I make the distance-based shipping fee update dynamically on the checkout page as I type?

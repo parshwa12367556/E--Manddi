@@ -219,6 +219,12 @@
                                 <textarea class="form-control" id="shipping_address" name="shipping_address" rows="4"
                                     placeholder="Enter your full delivery address here..." required></textarea>
                             </div>
+                            
+                            <div class="mb-3">
+                                <label for="distance" class="form-label fw-bold text-muted">Distance from warehouse (km) <span class="text-danger">*</span></label>
+                                <input type="number" class="form-control" id="distance" name="distance" step="0.1" min="0" placeholder="e.g., 7.5" required>
+                                <div class="form-text">Enter a distance in km to simulate distance-based pricing.</div>
+                            </div>
 
                             <h5 class="mt-4 mb-3 fw-bold text-muted">Payment Method</h5>
 
@@ -295,7 +301,7 @@
                         <li class="list-group-item d-flex justify-content-between lh-sm px-0">
                             <div>
                                 <h6 class="my-0">Shipping Charge</h6>
-                                <small class="text-muted">
+                                <small class="text-muted" id="shipping-desc">
                                     {% if shipping_charge == 0 %}
                                     Free (Orders > ₹600)
                                     {% else %}
@@ -303,7 +309,7 @@
                                     {% endif %}
                                 </small>
                             </div>
-                            <span class="text-muted">
+                            <span class="text-muted" id="shipping-val">
                                 {% if shipping_charge == 0 %}
                                 <span class="text-success">Free</span>
                                 {% else %}
@@ -314,7 +320,7 @@
 
                         <li class="summary-item total d-flex justify-content-between px-0">
                             <span>Total (INR)</span>
-                            <span class="text-success">₹{{ "%.2f"|format(grand_total) }}</span>
+                            <span class="text-success" id="total-val">₹{{ "%.2f"|format(grand_total) }}</span>
                         </li>
                     </ul>
                 </div>
@@ -325,6 +331,47 @@
     <script>
         const placeOrderBtn = document.getElementById('place-order-btn');
         const upiSection = document.getElementById('upi-section');
+        
+        // Dynamic Shipping Calculation
+        const distanceInput = document.getElementById('distance');
+        const shippingDesc = document.getElementById('shipping-desc');
+        const shippingVal = document.getElementById('shipping-val');
+        const totalVal = document.getElementById('total-val');
+        let debounceTimer;
+
+        if (distanceInput) {
+            distanceInput.addEventListener('input', function() {
+                clearTimeout(debounceTimer);
+                const distance = this.value;
+                
+                if (!distance || distance < 0) return;
+
+                // Debounce to avoid too many requests while typing
+                debounceTimer = setTimeout(() => {
+                    fetch("{{ url_for('api_calculate_shipping') }}", {
+                        method: 'POST',
+                        headers: {
+                            'Content-Type': 'application/json',
+                        },
+                        body: JSON.stringify({ distance: distance })
+                    })
+                    .then(response => response.json())
+                    .then(data => {
+                        if (data.success) {
+                            if (data.is_free) {
+                                shippingDesc.textContent = 'Free (Orders > Threshold)';
+                                shippingVal.innerHTML = '<span class="text-success">Free</span>';
+                            } else {
+                                shippingDesc.textContent = 'Distance-based Delivery';
+                                shippingVal.textContent = '₹' + data.shipping_charge.toFixed(2);
+                            }
+                            totalVal.textContent = '₹' + data.grand_total.toFixed(2);
+                        }
+                    })
+                    .catch(err => console.error('Error calculating shipping:', err));
+                }, 500); // 500ms delay
+            });
+        }
 
         // Helper to handle payment option styling and UI updates
         function selectPayment(id) {
@@ -368,9 +415,16 @@
         document.getElementById('checkout-form').addEventListener('submit', function (e) {
             const paymentMode = document.querySelector('input[name="payment_mode"]:checked').value;
             const address = document.getElementById('shipping_address').value;
+            const distance = document.getElementById('distance').value;
 
             if (!address.trim()) {
                 alert('Please enter a valid shipping address.');
+                e.preventDefault();
+                return;
+            }
+            
+            if (!distance || distance < 0) {
+                alert('Please enter a valid distance.');
                 e.preventDefault();
                 return;
             }
@@ -382,7 +436,10 @@
                 placeOrderBtn.innerHTML = '<span class="spinner-border spinner-border-sm" role="status" aria-hidden="true"></span> Processing...';
                 placeOrderBtn.disabled = true;
 
-                fetch("{{ url_for('create_payment') }}", { method: 'POST' })
+                fetch("{{ url_for('create_payment') }}", { 
+                dheaders: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ distance: distance })
+                })
                     .then(response => response.json())
                     .then(data => {
                         if (data.error) {
@@ -409,7 +466,7 @@
                                         razorpay_order_id: response.razorpay_order_id,
                                         razorpay_payment_id: response.razorpay_payment_id,
                                         razorpay_signature: response.razorpay_signature,
-                                        shipping_address: address // Send address for saving
+                                        shipping_address: address, // Send address for sion
                                     })
                                 })
                                     .then(res => res.json())

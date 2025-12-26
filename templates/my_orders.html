@@ -31,6 +31,10 @@
                 <span class="navbar-toggler-icon"></span>
             </button>
             <div class="collapse navbar-collapse" id="navbarNav">
+                <form class="d-flex mx-auto" action="{{ url_for('product') }}" method="GET" style="max-width: 400px;">
+                    <input class="form-control me-2" type="search" name="q" placeholder="Search for products..." aria-label="Search" value="{{ request.args.get('q', '') }}">
+                    <button class="btn btn-outline-light" type="submit"><i class="fas fa-search"></i></button>
+                </form>
                 <div class="navbar-nav ms-auto">
                     <a class="nav-link" href="{{ url_for('product') }}">Continue Shopping</a>
                     <a class="nav-link" href="{{ url_for('logout') }}">Logout</a>
@@ -77,6 +81,9 @@
                                     <a href="{{ url_for('orderconformation', order_id=order.id) }}"
                                         class="btn btn-sm btn-outline-primary">
                                         View Details
+                                    </a>
+                                    <a href="{{ url_for('track_order', order_id=order.id) }}" class="btn btn-sm btn-outline-info ms-1" title="Track Order">
+                                        <i class="fas fa-truck"></i>
                                     </a>
                                 </td>
                             </tr>
